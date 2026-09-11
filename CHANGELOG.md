@@ -54,8 +54,19 @@
   - Após o agendamento, 09:00 fica indisponível para João e continua livre para Carlos; agendamento com "qualquer profissional" foi alocado corretamente ao Carlos.
   - Platinado (120 min) na segunda só oferece 09:30, 09:45, 10:00 e 13:00-16:00 — respeitando o intervalo 12:00-13:00 e o fechamento às 18:00.
   - Sábado 09:00-14:00 com horários livres; domingo sem atendimento; horários passados do dia atual bloqueados.
-  - Privacidade: com a chave pública, clientes, agendamentos, vínculos de usuários, perfis, planos, bloqueios e notificações retornam vazio; apenas estabelecimento, serviços, profissionais e horários são legíveis.
+  - Privacidade: com a chave pública, clientes, agendamentos, vínculos de usuários, perfis, planos, bloqueios e notificações retornam vazio; apenas estabelecimento, serviços e profissionais são legíveis.
   - Autenticação: cadastro exibe aviso de confirmação de e-mail; `/dashboard` sem sessão redireciona para `/auth`; login válido abre o painel; onboarding criou estabelecimento com o usuário como admin; cadastro de serviço gravado e listado.
   - Typecheck do projeto sem erros. Dados de teste removidos ao final.
 - **Problemas encontrados**: a disponibilidade de "qualquer profissional" marcava como ocupado um horário livre para outro profissional — corrigido combinando as agendas individuais.
 - **Pendências relacionadas**: edição de horários, exceções e bloqueios pela tela; convite de profissionais para a equipe; gestão de planos de clientes na interface; login social; notificações, pagamentos e WhatsApp (fora do escopo).
+
+## 2026-09-11 (3)
+- **Objetivo da alteração**: Tornar a agenda pública reutilizável por qualquer estabelecimento, sem depender do slug fixo da barbearia de demonstração.
+- **Funcionalidades implementadas**:
+  - `/schedule` agora aceita o parâmetro opcional `slug` na URL.
+  - O loader e as chamadas de disponibilidade/agendamento usam o slug recebido, mantendo a barbearia de demonstração como fallback para links antigos.
+  - O link público exibido em Configurações agora aponta para o slug real do estabelecimento e pode ser aberto em nova aba ou copiado.
+- **Arquivos alterados**: `src/routes/schedule.tsx`, `src/routes/_authenticated/dashboard/settings.tsx`, `CHANGELOG.md`.
+- **Testes realizados**: validação estrutural da alteração no código e preservação do fluxo existente; ainda é necessário validar o build/typecheck no ambiente de execução.
+- **Problemas encontrados**: nenhum conhecido nesta etapa.
+- **Pendências relacionadas**: criação de uma rota amigável dedicada como `/agenda/{slug}` continua planejada; gestão de horários pela tela ainda não implementada.
