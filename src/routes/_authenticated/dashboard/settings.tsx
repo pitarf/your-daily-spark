@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useEstablishment } from "@/lib/auth/establishment-context";
@@ -12,6 +13,7 @@ const WEEKDAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "
 
 function SettingsPage() {
   const { membership } = useEstablishment();
+  const [copied, setCopied] = useState(false);
 
   const query = useQuery({
     queryKey: ["admin-settings", membership.establishmentId],
@@ -39,6 +41,18 @@ function SettingsPage() {
 
   const est = query.data?.establishment;
   const schedules = query.data?.schedules ?? [];
+  const publicPath = est?.slug ? `/schedule?slug=${encodeURIComponent(est.slug)}` : "/schedule";
+  const publicUrl = typeof window !== "undefined" ? `${window.location.origin}${publicPath}` : publicPath;
+
+  async function copyPublicLink() {
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -49,15 +63,48 @@ function SettingsPage() {
 
       <section className="rounded-xl border border-border bg-card p-4 text-sm">
         <h2 className="text-base font-semibold text-foreground">Estabelecimento</h2>
-        <dl className="mt-3 grid gap-2 sm:grid-cols-2">
+        <dl className="mt-3 grid gap-3 sm:grid-cols-2">
           <Info label="Nome" value={est?.name} />
           <Info label="Tipo" value={est?.business_type} />
-          <Info label="Link público" value={`/schedule`} />
           <Info label="Fuso horário" value={est?.timezone} />
           <Info label="Telefone" value={est?.phone} />
           <Info label="E-mail" value={est?.email} />
           <Info label="Endereço" value={est?.address} />
         </dl>
+      </section>
+
+      <section className="rounded-xl border border-border bg-card p-4 text-sm">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-base font-semibold text-foreground">Link público da agenda</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Compartilhe este link com seus clientes para que eles façam o agendamento.
+            </p>
+          </div>
+          <a
+            href={publicPath}
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-md border border-input px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent"
+          >
+            Abrir agenda
+          </a>
+        </div>
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <input
+            readOnly
+            value={publicUrl}
+            className="min-w-0 flex-1 rounded-md border border-input bg-muted/30 px-3 py-2 text-xs text-foreground"
+            onFocus={(e) => e.currentTarget.select()}
+          />
+          <button
+            type="button"
+            onClick={copyPublicLink}
+            className="rounded-md bg-primary px-4 py-2 text-xs font-medium text-primary-foreground"
+          >
+            {copied ? "Copiado" : "Copiar link"}
+          </button>
+        </div>
       </section>
 
       <section className="rounded-xl border border-border bg-card p-4 text-sm">
@@ -89,7 +136,7 @@ function SettingsPage() {
           </ul>
         )}
         <p className="mt-3 text-xs text-muted-foreground">
-          A edição de horários pela tela ainda será liberada em uma próxima etapa.
+          A edição dos horários pela tela será liberada em uma próxima etapa.
         </p>
       </section>
     </div>
