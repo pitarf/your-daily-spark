@@ -1,0 +1,18 @@
+{
+  "batch": 8,
+  "objective": "Recuperação Automática - Implementação de Lógica de Notificações",
+  "subtasks": [
+    {
+      "id": "8.1",
+      "description": "Implementar a lógica básica de disparo de notificações no arquivo src/lib/notifications.ts",
+      "files": ["src/lib/notifications.ts"],
+      "responsibility": "Core Notification Logic"
+    },
+    {
+      "id": "8.2",
+      "description": "Integrar o sistema de notificações com a interface de usuário via sonner",
+      "files": ["src/lib/notifications.ts", "src/components/ui/sonner.tsx"],
+      "responsibility": "UI Notification Integration"
+    }
+  ]
+}
