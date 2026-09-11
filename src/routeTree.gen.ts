@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ScheduleRouteImport } from './routes/schedule'
 import { Route as EstablishmentPlansRouteImport } from './routes/establishment/plans'
 import { Route as EstablishmentSettingsRouteImport } from './routes/establishment/settings'
@@ -17,6 +18,11 @@ import { Route as EstablishmentSettingsRouteImport } from './routes/establishmen
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ScheduleRoute = ScheduleRouteImport.update({
@@ -37,12 +43,14 @@ const EstablishmentSettingsRoute = EstablishmentSettingsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/schedule': typeof ScheduleRoute
   '/establishment/plans': typeof EstablishmentPlansRoute
   '/establishment/settings': typeof EstablishmentSettingsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/schedule': typeof ScheduleRoute
   '/establishment/plans': typeof EstablishmentPlansRoute
   '/establishment/settings': typeof EstablishmentSettingsRoute
@@ -50,6 +58,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/schedule': typeof ScheduleRoute
   '/establishment/plans': typeof EstablishmentPlansRoute
   '/establishment/settings': typeof EstablishmentSettingsRoute
@@ -57,12 +66,22 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/schedule' | '/establishment/plans' | '/establishment/settings'
+    | '/'
+    | '/auth'
+    | '/schedule'
+    | '/establishment/plans'
+    | '/establishment/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/schedule' | '/establishment/plans' | '/establishment/settings'
+  to:
+    | '/'
+    | '/auth'
+    | '/schedule'
+    | '/establishment/plans'
+    | '/establishment/settings'
   id:
     | '__root__'
     | '/'
+    | '/auth'
     | '/schedule'
     | '/establishment/plans'
     | '/establishment/settings'
@@ -70,6 +89,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
   ScheduleRoute: typeof ScheduleRoute
   EstablishmentPlansRoute: typeof EstablishmentPlansRoute
   EstablishmentSettingsRoute: typeof EstablishmentSettingsRoute
@@ -82,6 +102,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/schedule': {
@@ -110,6 +137,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
   ScheduleRoute: ScheduleRoute,
   EstablishmentPlansRoute: EstablishmentPlansRoute,
   EstablishmentSettingsRoute: EstablishmentSettingsRoute,
