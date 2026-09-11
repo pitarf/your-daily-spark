@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
+import { z } from "zod";
 
 import {
   createAppointment,
@@ -14,6 +15,8 @@ import { formatDate, formatPrice, formatTime } from "@/lib/scheduling/format";
 const DEMO_SLUG = "barbearia-marca-minha-vez";
 
 export const Route = createFileRoute("/schedule")({
+  validateSearch: z.object({ slug: z.string().min(1).optional() }),
+  loaderDeps: ({ search }) => ({ slug: search.slug ?? DEMO_SLUG }),
   head: () => ({
     meta: [
       { title: "Agendar horário | Marca Minha Vez" },
@@ -31,7 +34,7 @@ export const Route = createFileRoute("/schedule")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  loader: () => getEstablishmentScheduling({ data: { slug: DEMO_SLUG } }),
+  loader: ({ deps }) => getEstablishmentScheduling({ data: { slug: deps.slug } }),
   component: SchedulePage,
   errorComponent: () => (
     <div className="p-8 text-center text-sm text-muted-foreground">
@@ -59,6 +62,7 @@ type Success = Extract<CreateAppointmentResult, { ok: true }>["appointment"];
 
 function SchedulePage() {
   const data = Route.useLoaderData();
+  const { slug = DEMO_SLUG } = Route.useSearch();
   const fetchAvailability = useServerFn(getAvailability);
   const submitAppointment = useServerFn(createAppointment);
 
@@ -76,11 +80,11 @@ function SchedulePage() {
   const timezone = data?.establishment.timezone ?? "America/Sao_Paulo";
 
   const slotsQuery = useQuery({
-    queryKey: ["availability", DEMO_SLUG, date, serviceId, professionalId],
+    queryKey: ["availability", slug, date, serviceId, professionalId],
     enabled: Boolean(serviceId) && !success,
     queryFn: () =>
       fetchAvailability({
-        data: { slug: DEMO_SLUG, date, serviceId, professionalId: professionalId || null },
+        data: { slug, date, serviceId, professionalId: professionalId || null },
       }),
   });
 
@@ -88,7 +92,7 @@ function SchedulePage() {
     mutationFn: async () => {
       const result = await submitAppointment({
         data: {
-          slug: DEMO_SLUG,
+          slug,
           date,
           serviceId,
           professionalId: professionalId || null,
