@@ -19,6 +19,7 @@ import { Route as EstablishmentPlansRouteImport } from './routes/establishment/p
 import { Route as EstablishmentSettingsRouteImport } from './routes/establishment/settings'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard/index'
 import { Route as AuthenticatedDashboardAppointmentsRouteImport } from './routes/_authenticated/dashboard/appointments'
+import { Route as AuthenticatedDashboardProfessionalsRouteImport } from './routes/_authenticated/dashboard/professionals'
 import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard/services'
 
 const IndexRoute = IndexRouteImport.update({
@@ -73,6 +74,12 @@ const AuthenticatedDashboardAppointmentsRoute =
     path: '/appointments',
     getParentRoute: () => AuthenticatedDashboardRouteRoute,
   } as any)
+const AuthenticatedDashboardProfessionalsRoute =
+  AuthenticatedDashboardProfessionalsRouteImport.update({
+    id: '/professionals',
+    path: '/professionals',
+    getParentRoute: () => AuthenticatedDashboardRouteRoute,
+  } as any)
 const AuthenticatedDashboardServicesRoute =
   AuthenticatedDashboardServicesRouteImport.update({
     id: '/services',
@@ -89,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/establishment/plans': typeof EstablishmentPlansRoute
   '/establishment/settings': typeof EstablishmentSettingsRoute
   '/dashboard/appointments': typeof AuthenticatedDashboardAppointmentsRoute
+  '/dashboard/professionals': typeof AuthenticatedDashboardProfessionalsRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
 }
@@ -100,6 +108,7 @@ export interface FileRoutesByTo {
   '/establishment/plans': typeof EstablishmentPlansRoute
   '/establishment/settings': typeof EstablishmentSettingsRoute
   '/dashboard/appointments': typeof AuthenticatedDashboardAppointmentsRoute
+  '/dashboard/professionals': typeof AuthenticatedDashboardProfessionalsRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
 }
@@ -114,6 +123,7 @@ export interface FileRoutesById {
   '/establishment/plans': typeof EstablishmentPlansRoute
   '/establishment/settings': typeof EstablishmentSettingsRoute
   '/_authenticated/dashboard/appointments': typeof AuthenticatedDashboardAppointmentsRoute
+  '/_authenticated/dashboard/professionals': typeof AuthenticatedDashboardProfessionalsRoute
   '/_authenticated/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
 }
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/establishment/plans'
     | '/establishment/settings'
     | '/dashboard/appointments'
+    | '/dashboard/professionals'
     | '/dashboard/services'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
@@ -139,6 +150,7 @@ export interface FileRouteTypes {
     | '/establishment/plans'
     | '/establishment/settings'
     | '/dashboard/appointments'
+    | '/dashboard/professionals'
     | '/dashboard/services'
     | '/dashboard'
   id:
@@ -152,6 +164,7 @@ export interface FileRouteTypes {
     | '/establishment/plans'
     | '/establishment/settings'
     | '/_authenticated/dashboard/appointments'
+    | '/_authenticated/dashboard/professionals'
     | '/_authenticated/dashboard/services'
     | '/_authenticated/dashboard/'
   fileRoutesById: FileRoutesById
@@ -238,6 +251,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAppointmentsRouteImport
       parentRoute: typeof AuthenticatedDashboardRouteRoute
     }
+    '/_authenticated/dashboard/professionals': {
+      id: '/_authenticated/dashboard/professionals'
+      path: '/professionals'
+      fullPath: '/dashboard/professionals'
+      preLoaderRoute: typeof AuthenticatedDashboardProfessionalsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
     '/_authenticated/dashboard/services': {
       id: '/_authenticated/dashboard/services'
       path: '/services'
@@ -250,6 +270,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedDashboardRouteRouteChildren {
   AuthenticatedDashboardAppointmentsRoute: typeof AuthenticatedDashboardAppointmentsRoute
+  AuthenticatedDashboardProfessionalsRoute: typeof AuthenticatedDashboardProfessionalsRoute
   AuthenticatedDashboardServicesRoute: typeof AuthenticatedDashboardServicesRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
 }
@@ -258,6 +279,8 @@ const AuthenticatedDashboardRouteRouteChildren: AuthenticatedDashboardRouteRoute
   {
     AuthenticatedDashboardAppointmentsRoute:
       AuthenticatedDashboardAppointmentsRoute,
+    AuthenticatedDashboardProfessionalsRoute:
+      AuthenticatedDashboardProfessionalsRoute,
     AuthenticatedDashboardServicesRoute: AuthenticatedDashboardServicesRoute,
     AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
   }
