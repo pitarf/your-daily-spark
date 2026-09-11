@@ -20,3 +20,6 @@
 
 ## Bloqueado ⚠️
 - Nenhum no momento.
+
+---
+*Última atualização: 2025-05-20*
