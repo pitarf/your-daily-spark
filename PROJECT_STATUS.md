@@ -12,11 +12,14 @@
 - **Painel do estabelecimento** (`/dashboard`): rota protegida com visão geral, agenda do dia, serviços, profissionais, clientes e configurações, lendo e gravando dados reais.
 - **Onboarding**: criar estabelecimento (o criador vira admin) ou assumir a barbearia de demonstração quando ela ainda não tem responsável.
 - **Link público no painel**: Configurações mostra o link gerado pelo slug do estabelecimento, com abertura em nova aba e cópia para a área de transferência.
+- **Gestão do expediente geral**: administrador pode ativar/desativar dias, alterar início/fim e adicionar, editar ou remover múltiplos intervalos pelo painel.
+- **Exceções de fechamento**: administrador pode cadastrar e remover fechamentos de datas específicas sem alterar o expediente semanal.
 
 ## Em Desenvolvimento 🟡
-- **Gestão de agenda pela tela**: edição de horários de funcionamento, exceções (feriados) e bloqueios ainda só existem no banco.
+- **Horários individuais por profissional**: edição da agenda específica de cada profissional ainda não está disponível na interface.
 - **Equipe**: convidar profissionais para acessar o painel e ligar cada profissional a um usuário.
 - **Planos de clientes**: já existem no banco, sem tela de gestão.
+- **Exceções com horário personalizado**: a interface atual cadastra somente fechamentos de dia inteiro.
 
 ## Pendente 🔴
 - **Rota amigável dedicada** (`/agenda/{slug}`) em vez do parâmetro de query atual.
