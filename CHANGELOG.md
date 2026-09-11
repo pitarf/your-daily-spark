@@ -31,3 +31,19 @@
 - **Testes realizados**: Revisão estática do código e validação da integração entre a tela e o motor de disponibilidade. Execução do build local não foi possível neste ambiente por indisponibilidade de resolução de rede externa.
 - **Problemas encontrados**: O projeto ainda não possui persistência, autenticação ou criação real de agendamentos. O cadastro e as regras ainda são dados de demonstração.
 - **Pendências relacionadas**: Modelagem persistente do domínio, autenticação, configuração de estabelecimento, serviços e profissionais via banco, criação/cancelamento de agendamentos e regras completas de disponibilidade.
+
+## 2026-09-11 — Fundação orientada por configuração
+- **Objetivo da alteração**: Evitar que a tela pública fique acoplada a dados específicos de uma barbearia e preparar o motor para receber configuração de qualquer tipo de estabelecimento.
+- **Funcionalidades implementadas**:
+  - Criado `src/lib/scheduling/config.ts` com uma configuração de estabelecimento de demonstração.
+  - Serviços e profissionais passaram a ser consumidos da configuração centralizada.
+  - Horários semanais e intervalos passaram a ser definidos por dia da semana.
+  - A tela pública passou a indicar dias fechados e consumir a configuração do estabelecimento.
+  - `src/lib/scheduling/types.ts` ampliado com tipos reutilizáveis para dia da semana, janelas, serviços, profissionais e exceções.
+- **Arquivos alterados**:
+  - `src/lib/scheduling/config.ts`
+  - `src/lib/scheduling/types.ts`
+  - `src/routes/schedule.tsx`
+- **Testes realizados**: Revisão estática da tipagem e do fluxo entre configuração, tela e motor de disponibilidade.
+- **Problemas encontrados**: A configuração ainda é estática. Persistência, autenticação e regras administrativas continuam pendentes.
+- **Pendências relacionadas**: Transformar a configuração estática em dados persistidos, suportar múltiplas janelas por dia, exceções de calendário e regras específicas por profissional.
