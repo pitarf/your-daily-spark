@@ -15,11 +15,11 @@ const DEMO_SLUG = "barbearia-marca-minha-vez";
 
 const NAV = [
   { to: "/dashboard", label: "Visão geral", exact: true },
-  { to: "/dashboard/appointments", label: "Agenda" },
-  { to: "/dashboard/services", label: "Serviços" },
-  { to: "/dashboard/professionals", label: "Profissionais" },
-  { to: "/dashboard/customers", label: "Clientes" },
-  { to: "/dashboard/settings", label: "Configurações" },
+  { to: "/dashboard/appointments", label: "Agenda", exact: false },
+  { to: "/dashboard/services", label: "Serviços", exact: false },
+  { to: "/dashboard/professionals", label: "Profissionais", exact: false },
+  { to: "/dashboard/customers", label: "Clientes", exact: false },
+  { to: "/dashboard/settings", label: "Configurações", exact: false },
 ] as const;
 
 function DashboardLayout() {
