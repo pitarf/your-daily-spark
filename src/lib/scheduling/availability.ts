@@ -57,7 +57,6 @@ export function toTimeLabel(minutes: number): string {
 export function zonedWallTimeToUtc(date: string, minutes: number, timeZone: string): Date {
   const [y = 1970, mo = 1, d = 1] = date.split("-").map(Number);
   const asUtc = Date.UTC(y, mo - 1, d, Math.floor(minutes / 60), minutes % 60, 0);
-  // Ajusta pelo offset do fuso naquele instante (duas passadas cobrem DST).
   let guess = new Date(asUtc);
   for (let i = 0; i < 2; i++) {
     const offset = timezoneOffsetMs(guess, timeZone);
@@ -81,12 +80,12 @@ function timezoneOffsetMs(instant: Date, timeZone: string): number {
     dtf.formatToParts(instant).map((p) => [p.type, p.value]),
   ) as Record<string, string>;
   const asUtc = Date.UTC(
-    Number(parts['year']),
-    Number(parts['month']) - 1,
-    Number(parts['day']),
-    Number(parts['hour'] === "24" ? "0" : parts['hour']),
-    Number(parts['minute']),
-    Number(parts['second']),
+    Number(parts["year"]),
+    Number(parts["month"]) - 1,
+    Number(parts["day"]),
+    Number(parts["hour"] === "24" ? "0" : parts["hour"]),
+    Number(parts["minute"]),
+    Number(parts["second"]),
   );
   return asUtc - instant.getTime();
 }
@@ -104,6 +103,10 @@ function overlaps(aStart: number, aEnd: number, bStart: number, bEnd: number): b
 /**
  * Gera os slots do dia. Um serviço só entra se couber inteiro dentro da janela
  * de trabalho, fora dos intervalos e sem colidir com ocupações.
+ *
+ * Quando existe uma agenda específica para o profissional em determinado dia,
+ * ela assume o lugar da agenda geral, inclusive quando estiver inativa. Isso
+ * permite representar dias de folga individuais sem alterar o expediente do negócio.
  */
 export function computeAvailability(params: AvailabilityParams): AvailabilitySlot[] {
   const {
@@ -127,19 +130,27 @@ export function computeAvailability(params: AvailabilityParams): AvailabilitySlo
 
   const weekday = weekdayOf(date, timezone);
 
-  // Agenda individual do profissional tem prioridade sobre a do estabelecimento.
-  const active = schedules.filter((s) => s.active && s.weekday === weekday);
-  const specific = active.filter((s) => professionalId && s.professional_id === professionalId);
-  const general = active.filter((s) => s.professional_id === null);
-  let windows = (specific.length > 0 ? specific : general).map((s) => ({
+  const daySchedules = schedules.filter((s) => s.weekday === weekday);
+  const specificRows = professionalId
+    ? daySchedules.filter((s) => s.professional_id === professionalId)
+    : [];
+  const generalRows = daySchedules.filter((s) => s.professional_id === null && s.active);
+
+  // A existência de uma linha específica, mesmo inativa, é um override da agenda geral.
+  const sourceRows = professionalId && specificRows.length > 0
+    ? specificRows.filter((s) => s.active)
+    : generalRows;
+
+  let windows = sourceRows.map((s) => ({
     start: toMinutes(s.start_time),
     end: toMinutes(s.end_time),
     breaks: s.breaks.map((b) => ({ start: toMinutes(b.start), end: toMinutes(b.end) })),
   }));
 
-  const custom = relevantExceptions.find(
-    (e) => e.type === "custom_hours" && e.start_time && e.end_time,
-  );
+  const custom = relevantExceptions
+    .filter((e) => e.type === "custom_hours" && e.start_time && e.end_time)
+    .sort((a, b) => (a.professional_id === professionalId ? -1 : 1))[0];
+
   if (custom) {
     windows = [
       { start: toMinutes(custom.start_time!), end: toMinutes(custom.end_time!), breaks: [] },
@@ -151,6 +162,8 @@ export function computeAvailability(params: AvailabilityParams): AvailabilitySlo
   const slots: AvailabilitySlot[] = [];
 
   for (const window of windows) {
+    if (window.end <= window.start) continue;
+
     for (let start = window.start; start + serviceDurationMinutes <= window.end; start += slotStepMinutes) {
       const end = start + serviceDurationMinutes;
 
