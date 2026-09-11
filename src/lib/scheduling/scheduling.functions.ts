@@ -186,6 +186,79 @@ async function computeDayAvailability(params: {
   });
 }
 
+/** Lista os profissionais ativos que realizam o serviço informado. */
+async function serviceProfessionalIds(
+  supabase: SupabaseClient,
+  establishmentId: string,
+  serviceId: string,
+): Promise<string[]> {
+  const { data } = await supabase
+    .from("professional_services")
+    .select("professional_id, professionals!inner(id, active, establishment_id)")
+    .eq("service_id", serviceId)
+    .eq("professionals.active", true)
+    .eq("professionals.establishment_id", establishmentId);
+  return (data ?? []).map((row) => row.professional_id as string);
+}
+
+/**
+ * Disponibilidade combinada: sem profissional escolhido, o horário fica livre
+ * quando ao menos um profissional que faz o serviço estiver livre.
+ */
+async function availabilityForSelection(params: {
+  supabase: SupabaseClient;
+  establishment: { id: string; timezone: string };
+  serviceId: string;
+  serviceDurationMinutes: number;
+  date: string;
+  professionalId: string | null;
+}): Promise<AvailabilitySlot[]> {
+  const { supabase, establishment, serviceId, serviceDurationMinutes, date, professionalId } = params;
+
+  if (professionalId) {
+    return computeDayAvailability({
+      supabase,
+      establishment,
+      serviceDurationMinutes,
+      date,
+      professionalId,
+    });
+  }
+
+  const candidates = await serviceProfessionalIds(supabase, establishment.id, serviceId);
+  if (candidates.length === 0) {
+    return computeDayAvailability({
+      supabase,
+      establishment,
+      serviceDurationMinutes,
+      date,
+      professionalId: null,
+    });
+  }
+
+  const perProfessional = await Promise.all(
+    candidates.map((id) =>
+      computeDayAvailability({
+        supabase,
+        establishment,
+        serviceDurationMinutes,
+        date,
+        professionalId: id,
+      }),
+    ),
+  );
+
+  const merged = new Map<string, AvailabilitySlot>();
+  for (const slots of perProfessional) {
+    for (const slot of slots) {
+      const current = merged.get(slot.startsAt);
+      if (!current) merged.set(slot.startsAt, { ...slot });
+      else if (slot.available) current.available = true;
+    }
+  }
+  return [...merged.values()].sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+}
+
 /** Disponibilidade pública: devolve apenas livre/ocupado, nunca dados de clientes. */
 export const getAvailability = createServerFn({ method: "GET" })
   .inputValidator((data: unknown) =>
@@ -218,9 +291,10 @@ export const getAvailability = createServerFn({ method: "GET" })
       .maybeSingle();
     if (!service) return [];
 
-    return computeDayAvailability({
+    return availabilityForSelection({
       supabase,
       establishment,
+      serviceId: service.id,
       serviceDurationMinutes: service.duration_minutes,
       date: data.date,
       professionalId: data.professionalId ?? null,
