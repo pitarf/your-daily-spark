@@ -43,7 +43,7 @@ export type AvailabilitySlot = {
 };
 
 export function toMinutes(time: string): number {
-  const [h, m] = time.slice(0, 5).split(":").map(Number);
+  const [h = 0, m = 0] = time.slice(0, 5).split(":").map(Number);
   return h * 60 + m;
 }
 
@@ -55,7 +55,7 @@ export function toTimeLabel(minutes: number): string {
 
 /** Converte uma data/hora local de um fuso em um instante UTC. */
 export function zonedWallTimeToUtc(date: string, minutes: number, timeZone: string): Date {
-  const [y, mo, d] = date.split("-").map(Number);
+  const [y = 1970, mo = 1, d = 1] = date.split("-").map(Number);
   const asUtc = Date.UTC(y, mo - 1, d, Math.floor(minutes / 60), minutes % 60, 0);
   // Ajusta pelo offset do fuso naquele instante (duas passadas cobrem DST).
   let guess = new Date(asUtc);
@@ -81,12 +81,12 @@ function timezoneOffsetMs(instant: Date, timeZone: string): number {
     dtf.formatToParts(instant).map((p) => [p.type, p.value]),
   ) as Record<string, string>;
   const asUtc = Date.UTC(
-    Number(parts.year),
-    Number(parts.month) - 1,
-    Number(parts.day),
-    Number(parts.hour === "24" ? "0" : parts.hour),
-    Number(parts.minute),
-    Number(parts.second),
+    Number(parts['year']),
+    Number(parts['month']) - 1,
+    Number(parts['day']),
+    Number(parts['hour'] === "24" ? "0" : parts['hour']),
+    Number(parts['minute']),
+    Number(parts['second']),
   );
   return asUtc - instant.getTime();
 }
