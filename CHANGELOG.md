@@ -85,3 +85,20 @@
 - **Testes realizados**: validação estrutural do código e conferência da modelagem SQL existente para `weekly_schedules`, `schedule_breaks` e `schedule_exceptions`; build/typecheck ainda precisa ser executado no ambiente do projeto.
 - **Problemas encontrados**: nenhum conhecido nesta etapa.
 - **Pendências relacionadas**: edição de horários individuais de profissionais; exceções com horário personalizado; convite de profissionais para a equipe; gestão de planos de clientes; rota amigável `/agenda/{slug}`.
+
+## 2026-09-11 (5)
+- **Objetivo da alteração**: Consolidar diretamente no código o núcleo restante do MVP e aplicar as regras de negócio pendentes sem consumir créditos do Lovable.
+- **Funcionalidades implementadas**:
+  - Agenda individual por profissional no painel, com dias ativos/inativos, horários próprios e múltiplos intervalos.
+  - Override de agenda individual, permitindo que um profissional tenha um dia de folga sem alterar o expediente geral do estabelecimento.
+  - Gestão de planos de clientes na interface, com criação/edição, limite máximo de duração e serviços permitidos.
+  - Vínculo de plano ativo ao cliente com validade opcional.
+  - Bloqueios de agenda pelo painel, para todos os profissionais ou para um profissional específico.
+  - Exceções de agenda com horário especial personalizado, além do fechamento de dia inteiro.
+  - Regras de plano aplicadas no servidor durante a criação do agendamento, validando serviço permitido e duração máxima pelo cliente identificado por telefone.
+  - Correção da leitura das agendas individuais no servidor para incluir linhas inativas usadas como overrides de folga.
+  - Validação defensiva do horário recebido pelo endpoint antes de convertê-lo para ISO.
+- **Arquivos alterados**: `src/lib/scheduling/scheduling.functions.ts`, `src/lib/scheduling/availability.ts`, `src/routes/_authenticated/dashboard/professionals.tsx`, `src/routes/_authenticated/dashboard/customers.tsx`, `src/routes/_authenticated/dashboard/appointments.tsx`, `src/routes/_authenticated/dashboard/settings.tsx`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
+- **Testes realizados**: revisão estrutural das integrações entre interface, banco e motor de disponibilidade; conferência das queries e regras de persistência existentes. O repositório não possui checks automáticos configurados para este commit, portanto build/typecheck automatizado não foi executado nesta rodada.
+- **Problemas encontrados**: havia um ponto em que a leitura da agenda do servidor filtrava apenas linhas ativas, o que impediria um override individual inativo de representar folga; corrigido.
+- **Pendências relacionadas**: convite/vínculo de profissionais a usuários; rota amigável `/agenda/{slug}`; edição completa do perfil/identidade do estabelecimento; login social; IA; notificações reais; pagamentos e WhatsApp.
