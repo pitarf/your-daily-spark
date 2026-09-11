@@ -14,7 +14,7 @@ function Index() {
       className="flex min-h-screen items-center justify-center"
       style={{ backgroundColor: "#fcfbf8" }}
     >
-      <p className="text-sm text-muted-foreground">Bem-vindo ao Marca Minha Vez!</p>
+      <p className="text-sm text-muted-foreground">Bem-vindo ao Marca Minha Vez! Seu portal de agendamentos e estabelecimentos.</p>
     </div>
   );
 }
