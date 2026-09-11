@@ -7,14 +7,27 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
+// Página inicial do Marca Minha Vez — ponto de partida do MVP.
+// Futuramente será expandida com listagem de serviços, calendário e
+// integração completa de agendamentos.
 function Index() {
   return (
     <div
-      className="flex min-h-screen items-center justify-center"
+      className="flex min-h-screen flex-col items-center justify-center gap-6"
       style={{ backgroundColor: "#fcfbf8" }}
     >
-      <p className="text-sm text-muted-foreground">Organize sua agenda e permita que clientes agendem horários com o Marca Minha Vez.</p>
+      <h1 className="text-3xl font-bold text-foreground">
+        Marca Minha Vez
+      </h1>
+      <p className="max-w-md text-center text-sm text-muted-foreground">
+        Organize sua agenda e permita que clientes agendem horários com você.
+      </p>
+      <a
+        href="/schedule"
+        className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90"
+      >
+        Agendar horário
+      </a>
     </div>
   );
 }
