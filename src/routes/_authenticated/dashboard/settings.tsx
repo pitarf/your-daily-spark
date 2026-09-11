@@ -80,6 +80,9 @@ function SettingsPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [exceptionDate, setExceptionDate] = useState("");
+  const [exceptionType, setExceptionType] = useState<"closed" | "custom_hours">("closed");
+  const [exceptionStartTime, setExceptionStartTime] = useState("09:00");
+  const [exceptionEndTime, setExceptionEndTime] = useState("14:00");
   const [exceptionReason, setExceptionReason] = useState("");
 
   const query = useQuery({
@@ -188,7 +191,11 @@ function SettingsPage() {
           );
         }
 
-        await supabase.from("schedule_breaks").delete().eq("weekly_schedule_id", scheduleId);
+        const { error: deleteBreaksError } = await supabase
+          .from("schedule_breaks")
+          .delete()
+          .eq("weekly_schedule_id", scheduleId);
+        if (deleteBreaksError) throw deleteBreaksError;
 
         if (draft.active && draft.breaks.length > 0) {
           const { error } = await supabase.from("schedule_breaks").insert(
@@ -217,10 +224,16 @@ function SettingsPage() {
   const addException = useMutation({
     mutationFn: async () => {
       if (!exceptionDate) throw new Error("Escolha uma data.");
+      if (exceptionType === "custom_hours" && timeToMinutes(exceptionEndTime) <= timeToMinutes(exceptionStartTime)) {
+        throw new Error("No horário especial, o fim deve ser depois do início.");
+      }
+
       const { error } = await supabase.from("schedule_exceptions").insert({
         establishment_id: membership.establishmentId,
         date: exceptionDate,
-        type: "closed",
+        type: exceptionType,
+        start_time: exceptionType === "custom_hours" ? exceptionStartTime : null,
+        end_time: exceptionType === "custom_hours" ? exceptionEndTime : null,
         reason: exceptionReason.trim() || null,
         professional_id: null,
       });
@@ -228,6 +241,9 @@ function SettingsPage() {
     },
     onSuccess: async () => {
       setExceptionDate("");
+      setExceptionType("closed");
+      setExceptionStartTime("09:00");
+      setExceptionEndTime("14:00");
       setExceptionReason("");
       await queryClient.invalidateQueries({ queryKey: ["admin-settings", membership.establishmentId] });
     },
@@ -477,14 +493,14 @@ function SettingsPage() {
 
       <section className="rounded-xl border border-border bg-card p-4">
         <div>
-          <h2 className="text-base font-semibold text-foreground">Exceções e folgas</h2>
+          <h2 className="text-base font-semibold text-foreground">Exceções de agenda</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Feche um dia específico sem alterar o expediente semanal.
+            Feche um dia específico ou substitua o expediente por um horário especial sem alterar a semana padrão.
           </p>
         </div>
 
         <form
-          className="mt-4 grid gap-2 sm:grid-cols-[180px_1fr_auto]"
+          className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-[150px_170px_130px_130px_1fr_auto]"
           onSubmit={(event) => {
             event.preventDefault();
             addException.mutate();
@@ -497,10 +513,40 @@ function SettingsPage() {
             onChange={(e) => setExceptionDate(e.target.value)}
             className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
           />
+          <select
+            value={exceptionType}
+            onChange={(e) => setExceptionType(e.target.value as "closed" | "custom_hours")}
+            className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+          >
+            <option value="closed">Fechado</option>
+            <option value="custom_hours">Horário especial</option>
+          </select>
+          {exceptionType === "custom_hours" ? (
+            <>
+              <input
+                required
+                type="time"
+                value={exceptionStartTime}
+                onChange={(e) => setExceptionStartTime(e.target.value)}
+                className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+                aria-label="Início do horário especial"
+              />
+              <input
+                required
+                type="time"
+                value={exceptionEndTime}
+                onChange={(e) => setExceptionEndTime(e.target.value)}
+                className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+                aria-label="Fim do horário especial"
+              />
+            </>
+          ) : (
+            <div className="hidden lg:block" />
+          )}
           <input
             value={exceptionReason}
             onChange={(e) => setExceptionReason(e.target.value)}
-            placeholder="Motivo opcional, ex.: feriado, folga, férias"
+            placeholder="Motivo, ex.: feriado, evento"
             className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
           />
           <button
@@ -508,13 +554,13 @@ function SettingsPage() {
             disabled={addException.isPending}
             className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
           >
-            {addException.isPending ? "Adicionando…" : "Adicionar fechamento"}
+            {addException.isPending ? "Salvando…" : "Adicionar"}
           </button>
         </form>
 
         {addException.isError ? (
           <p className="mt-2 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {addException.error instanceof Error ? addException.error.message : "Não foi possível adicionar o fechamento."}
+            {addException.error instanceof Error ? addException.error.message : "Não foi possível adicionar a exceção."}
           </p>
         ) : null}
 
@@ -525,7 +571,11 @@ function SettingsPage() {
             {exceptions.map((item) => (
               <li key={item.id} className="flex flex-wrap items-center gap-3 px-3 py-2.5 text-sm">
                 <span className="font-medium text-foreground">{formatDateOnly(item.date)}</span>
-                <span className="text-muted-foreground">Fechado</span>
+                <span className="text-muted-foreground">
+                  {item.type === "custom_hours"
+                    ? `Horário especial ${item.start_time?.slice(0, 5)}–${item.end_time?.slice(0, 5)}`
+                    : "Fechado"}
+                </span>
                 {item.reason ? <span className="text-muted-foreground">{item.reason}</span> : null}
                 <button
                   type="button"
@@ -545,7 +595,7 @@ function SettingsPage() {
         <section className="rounded-xl border border-border bg-card p-4 text-sm">
           <h2 className="text-base font-semibold text-foreground">Agendas individuais</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Existem horários específicos de profissionais. Eles continuam separados do expediente geral e serão editados na área de cada profissional.
+            Existem horários específicos de profissionais. Eles continuam separados do expediente geral e são editados na área de cada profissional.
           </p>
         </section>
       ) : null}
