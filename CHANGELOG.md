@@ -15,3 +15,19 @@
 - **Testes realizados**: N/A.
 - **Problemas encontrados**: Nenhum.
 - **Pendências relacionadas**: Nenhuma.
+
+## 2026-09-11
+- **Objetivo da alteração**: Iniciar a fundação funcional do motor de agendamento do Marca Minha Vez, preservando a stack existente.
+- **Funcionalidades implementadas**:
+  - Tipos de domínio para horários, reservas, bloqueios e disponibilidade.
+  - Primeiro motor puro de cálculo de horários disponíveis.
+  - Consideração de horário de funcionamento, intervalos, duração do serviço, reservas e bloqueios por profissional.
+  - Tela de agendamento interativa com serviços, profissionais, datas e horários calculados dinamicamente.
+  - Exemplos de serviços com durações de 30, 60 e 120 minutos.
+- **Arquivos alterados**:
+  - `src/lib/scheduling/types.ts`
+  - `src/lib/scheduling/availability.ts`
+  - `src/routes/schedule.tsx`
+- **Testes realizados**: Revisão estática do código e validação da integração entre a tela e o motor de disponibilidade. Execução do build local não foi possível neste ambiente por indisponibilidade de resolução de rede externa.
+- **Problemas encontrados**: O projeto ainda não possui persistência, autenticação ou criação real de agendamentos. O cadastro e as regras ainda são dados de demonstração.
+- **Pendências relacionadas**: Modelagem persistente do domínio, autenticação, configuração de estabelecimento, serviços e profissionais via banco, criação/cancelamento de agendamentos e regras completas de disponibilidade.

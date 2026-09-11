@@ -1,25 +1,33 @@
 # Status do Projeto
 
-## Funcionalidades Concluídas ✅
-- **Página inicial (Marca Minha Vez)**: Implementada em `src/routes/index.tsx`.
-- **Agendamento de horários**: Implementado em `src/routes/schedule.tsx`.
-- **Gerenciamento de planos da estabelecimento**: Implementado em `src/routes/establishment/plans.tsx`.
-- **Configurações da estabelecimento**: Implementado em `src/routes/establishment/settings.tsx`.
-- **Componentes de UI**: Todos os componentes de interface do usuáriofornecidos pelo shadcn/ui estão integrados.
-- **Utilitários e hooks**: `src/lib/utils.ts`, `src/hooks/use-mobile.tsx`, `src/lib/notifications.ts`, `src/lib/error-capture.ts`, `src/lib/error-page.ts`, `src/lib/lovable-error-reporting.ts`.
+## Fundação implementada ✅
+- **Estrutura React/TanStack/Vite/Tailwind**: existente e preservada.
+- **Documentação contínua**: `CHANGELOG.md` e `PROJECT_STATUS.md` mantidos como histórico e estado atual.
+- **Tipos do domínio de agendamento**: implementados em `src/lib/scheduling/types.ts`.
+- **Motor inicial de disponibilidade**: implementado em `src/lib/scheduling/availability.ts`.
+- **Tela de agendamento interativa**: implementada em `src/routes/schedule.tsx`, com seleção de serviço, profissional, data e horários calculados.
+- **Serviços com durações diferentes**: demonstração de 30, 60 e 120 minutos.
 
-## Em Desenvolvimento 🟡
-- **Integração completa de agendamento** (conectividade com backend, seleção de calendário, confirmação de disponibilidade).
-- **Funcionalidades avançadas de estabelecimento** (análises, gerenciamento de equipe).
+## Em desenvolvimento 🟡
+- Configuração real de estabelecimento e horário de funcionamento.
+- Cadastro persistente de serviços e profissionais.
+- Regras completas de disponibilidade, exceções, feriados e bloqueios.
+- Criação e persistência de agendamentos.
+- Dashboard administrativo e agenda por profissional.
 
 ## Pendente 🔴
-- **Autenticação de usuários** (login, registro, proteção de rotas).
-- **Pagamentos e faturamento**.
-- **Funcionalidades móveis nativas** (offline, push notifications).
-- **Otimização de SEO e metadados** para páginas de destino.
+- Autenticação e autorização.
+- Banco de dados multi-tenant.
+- Cadastro e histórico de clientes.
+- Planos de clientes e regras específicas por plano.
+- Cancelamento e remarcação.
+- Agendamento personalizado por intervalo.
+- Notificações.
+- Camada de IA para configuração e consulta da agenda.
+- Pagamentos e faturamento.
 
 ## Bloqueado ⚠️
 - Nenhum no momento.
 
 ---
-*Última atualização: 2025-05-20*
+*Última atualização: 2026-09-11*
