@@ -19,6 +19,7 @@ import { Route as EstablishmentPlansRouteImport } from './routes/establishment/p
 import { Route as EstablishmentSettingsRouteImport } from './routes/establishment/settings'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard/index'
 import { Route as AuthenticatedDashboardAppointmentsRouteImport } from './routes/_authenticated/dashboard/appointments'
+import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard/services'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -72,6 +73,12 @@ const AuthenticatedDashboardAppointmentsRoute =
     path: '/appointments',
     getParentRoute: () => AuthenticatedDashboardRouteRoute,
   } as any)
+const AuthenticatedDashboardServicesRoute =
+  AuthenticatedDashboardServicesRouteImport.update({
+    id: '/services',
+    path: '/services',
+    getParentRoute: () => AuthenticatedDashboardRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/establishment/plans': typeof EstablishmentPlansRoute
   '/establishment/settings': typeof EstablishmentSettingsRoute
   '/dashboard/appointments': typeof AuthenticatedDashboardAppointmentsRoute
+  '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
 }
 export interface FileRoutesByTo {
@@ -92,6 +100,7 @@ export interface FileRoutesByTo {
   '/establishment/plans': typeof EstablishmentPlansRoute
   '/establishment/settings': typeof EstablishmentSettingsRoute
   '/dashboard/appointments': typeof AuthenticatedDashboardAppointmentsRoute
+  '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
 }
 export interface FileRoutesById {
@@ -105,6 +114,7 @@ export interface FileRoutesById {
   '/establishment/plans': typeof EstablishmentPlansRoute
   '/establishment/settings': typeof EstablishmentSettingsRoute
   '/_authenticated/dashboard/appointments': typeof AuthenticatedDashboardAppointmentsRoute
+  '/_authenticated/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
 }
 export interface FileRouteTypes {
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/establishment/plans'
     | '/establishment/settings'
     | '/dashboard/appointments'
+    | '/dashboard/services'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/establishment/plans'
     | '/establishment/settings'
     | '/dashboard/appointments'
+    | '/dashboard/services'
     | '/dashboard'
   id:
     | '__root__'
@@ -140,6 +152,7 @@ export interface FileRouteTypes {
     | '/establishment/plans'
     | '/establishment/settings'
     | '/_authenticated/dashboard/appointments'
+    | '/_authenticated/dashboard/services'
     | '/_authenticated/dashboard/'
   fileRoutesById: FileRoutesById
 }
@@ -225,11 +238,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAppointmentsRouteImport
       parentRoute: typeof AuthenticatedDashboardRouteRoute
     }
+    '/_authenticated/dashboard/services': {
+      id: '/_authenticated/dashboard/services'
+      path: '/services'
+      fullPath: '/dashboard/services'
+      preLoaderRoute: typeof AuthenticatedDashboardServicesRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
   }
 }
 
 interface AuthenticatedDashboardRouteRouteChildren {
   AuthenticatedDashboardAppointmentsRoute: typeof AuthenticatedDashboardAppointmentsRoute
+  AuthenticatedDashboardServicesRoute: typeof AuthenticatedDashboardServicesRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
 }
 
@@ -237,6 +258,7 @@ const AuthenticatedDashboardRouteRouteChildren: AuthenticatedDashboardRouteRoute
   {
     AuthenticatedDashboardAppointmentsRoute:
       AuthenticatedDashboardAppointmentsRoute,
+    AuthenticatedDashboardServicesRoute: AuthenticatedDashboardServicesRoute,
     AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
   }
 
