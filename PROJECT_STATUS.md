@@ -2,21 +2,24 @@
 
 ## Funcionalidades Concluídas ✅
 - **Banco de dados multi-tenant**: 16 tabelas em produção (`establishments`, `profiles`, `establishment_users`, `professionals`, `services`, `professional_services`, `weekly_schedules`, `schedule_breaks`, `schedule_exceptions`, `customers`, `customer_plans`, `customer_plan_services`, `customer_plan_assignments`, `appointments`, `blocked_slots`, `notifications`) com UUIDs, FKs, índices e `updated_at` automático.
-- **Regras de segurança (RLS)**: ativas em todas as tabelas. Acesso restrito ao estabelecimento do usuário; leitura pública apenas de informações não sensíveis (estabelecimento ativo, serviços, profissionais e horários de funcionamento).
+- **Regras de segurança (RLS)**: ativas em todas as tabelas. Acesso restrito ao estabelecimento do usuário; leitura pública apenas de informações não sensíveis (estabelecimento ativo, serviços, profissionais e horários de funcionamento) — validado com a chave pública.
 - **Proteção contra conflitos**: agendamentos sobrepostos do mesmo profissional e conflitos com bloqueios são rejeitados pelo banco (validado por teste).
 - **Dados de demonstração**: Barbearia Marca Minha Vez com 4 serviços, 2 profissionais e agenda semanal com intervalo.
 - **Motor de disponibilidade** (`src/lib/scheduling/availability.ts`): respeita fuso do estabelecimento, intervalos, exceções, bloqueios e duração do serviço.
-- **Página de agendamento** (`src/routes/schedule.tsx`): lê dados reais do banco e mostra horários livres/indisponíveis.
-- **Página inicial** e páginas de planos/configurações do estabelecimento (estáticas).
+- **Agendamento pela página pública** (`src/routes/schedule.tsx`): serviço, profissional (ou "qualquer profissional"), dia, horário, dados do cliente, revisão e confirmação, com revalidação completa no servidor.
+- **Autenticação de usuários**: entrar, criar conta e recuperar senha (`/auth`, `/reset-password`) usando o serviço de autenticação do Lovable Cloud.
+- **Painel do estabelecimento** (`/dashboard`): rota protegida com visão geral, agenda do dia, serviços, profissionais, clientes e configurações, lendo e gravando dados reais.
+- **Onboarding**: criar estabelecimento (o criador vira admin) ou assumir a barbearia de demonstração quando ela ainda não tem responsável.
 
 ## Em Desenvolvimento 🟡
-- **Criação de agendamento pela interface** (o banco já suporta; falta o fluxo de confirmação do cliente).
-- **Painéis do estabelecimento**: gestão de serviços, profissionais, agenda, clientes e planos ainda são telas estáticas.
+- **Gestão de agenda pela tela**: edição de horários de funcionamento, exceções (feriados) e bloqueios ainda só existem no banco.
+- **Equipe**: convidar profissionais para acessar o painel e ligar cada profissional a um usuário.
+- **Planos de clientes**: já existem no banco, sem tela de gestão.
 
 ## Pendente 🔴
-- **Autenticação de usuários** (login/cadastro, papéis admin/profissional e rotas protegidas). A base no banco já está pronta (`profiles`, `establishment_users`, papéis).
+- **Login social** (Google/Apple) — hoje apenas e-mail e senha.
 - **Notificações reais, pagamentos e WhatsApp** (fora do escopo desta etapa).
-- **Exceções de agenda e bloqueios pela interface**.
+- **Página pública por estabelecimento** (`/agenda/{slug}`): hoje `/schedule` aponta para a barbearia de demonstração.
 
 ## Bloqueado ⚠️
 - Nenhum no momento.
