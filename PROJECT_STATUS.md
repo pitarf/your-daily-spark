@@ -1,25 +1,25 @@
 # Status do Projeto
 
 ## Funcionalidades Concluídas ✅
-- **Página inicial (Marca Minha Vez)**: Implementada em `src/routes/index.tsx`.
-- **Agendamento de horários**: Implementado em `src/routes/schedule.tsx`.
-- **Gerenciamento de planos da estabelecimento**: Implementado em `src/routes/establishment/plans.tsx`.
-- **Configurações da estabelecimento**: Implementado em `src/routes/establishment/settings.tsx`.
-- **Componentes de UI**: Todos os componentes de interface do usuáriofornecidos pelo shadcn/ui estão integrados.
-- **Utilitários e hooks**: `src/lib/utils.ts`, `src/hooks/use-mobile.tsx`, `src/lib/notifications.ts`, `src/lib/error-capture.ts`, `src/lib/error-page.ts`, `src/lib/lovable-error-reporting.ts`.
+- **Banco de dados multi-tenant**: 16 tabelas em produção (`establishments`, `profiles`, `establishment_users`, `professionals`, `services`, `professional_services`, `weekly_schedules`, `schedule_breaks`, `schedule_exceptions`, `customers`, `customer_plans`, `customer_plan_services`, `customer_plan_assignments`, `appointments`, `blocked_slots`, `notifications`) com UUIDs, FKs, índices e `updated_at` automático.
+- **Regras de segurança (RLS)**: ativas em todas as tabelas. Acesso restrito ao estabelecimento do usuário; leitura pública apenas de informações não sensíveis (estabelecimento ativo, serviços, profissionais e horários de funcionamento).
+- **Proteção contra conflitos**: agendamentos sobrepostos do mesmo profissional e conflitos com bloqueios são rejeitados pelo banco (validado por teste).
+- **Dados de demonstração**: Barbearia Marca Minha Vez com 4 serviços, 2 profissionais e agenda semanal com intervalo.
+- **Motor de disponibilidade** (`src/lib/scheduling/availability.ts`): respeita fuso do estabelecimento, intervalos, exceções, bloqueios e duração do serviço.
+- **Página de agendamento** (`src/routes/schedule.tsx`): lê dados reais do banco e mostra horários livres/indisponíveis.
+- **Página inicial** e páginas de planos/configurações do estabelecimento (estáticas).
 
 ## Em Desenvolvimento 🟡
-- **Integração completa de agendamento** (conectividade com backend, seleção de calendário, confirmação de disponibilidade).
-- **Funcionalidades avançadas de estabelecimento** (análises, gerenciamento de equipe).
+- **Criação de agendamento pela interface** (o banco já suporta; falta o fluxo de confirmação do cliente).
+- **Painéis do estabelecimento**: gestão de serviços, profissionais, agenda, clientes e planos ainda são telas estáticas.
 
 ## Pendente 🔴
-- **Autenticação de usuários** (login, registro, proteção de rotas).
-- **Pagamentos e faturamento**.
-- **Funcionalidades móveis nativas** (offline, push notifications).
-- **Otimização de SEO e metadados** para páginas de destino.
+- **Autenticação de usuários** (login/cadastro, papéis admin/profissional e rotas protegidas). A base no banco já está pronta (`profiles`, `establishment_users`, papéis).
+- **Notificações reais, pagamentos e WhatsApp** (fora do escopo desta etapa).
+- **Exceções de agenda e bloqueios pela interface**.
 
 ## Bloqueado ⚠️
 - Nenhum no momento.
 
 ---
-*Última atualização: 2025-05-20*
+*Última atualização: 2026-09-11*

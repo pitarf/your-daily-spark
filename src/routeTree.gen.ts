@@ -10,33 +10,69 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ScheduleRouteImport } from './routes/schedule'
+import { Route as EstablishmentPlansRouteImport } from './routes/establishment/plans'
+import { Route as EstablishmentSettingsRouteImport } from './routes/establishment/settings'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ScheduleRoute = ScheduleRouteImport.update({
+  id: '/schedule',
+  path: '/schedule',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EstablishmentPlansRoute = EstablishmentPlansRouteImport.update({
+  id: '/establishment/plans',
+  path: '/establishment/plans',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EstablishmentSettingsRoute = EstablishmentSettingsRouteImport.update({
+  id: '/establishment/settings',
+  path: '/establishment/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/schedule': typeof ScheduleRoute
+  '/establishment/plans': typeof EstablishmentPlansRoute
+  '/establishment/settings': typeof EstablishmentSettingsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/schedule': typeof ScheduleRoute
+  '/establishment/plans': typeof EstablishmentPlansRoute
+  '/establishment/settings': typeof EstablishmentSettingsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/schedule': typeof ScheduleRoute
+  '/establishment/plans': typeof EstablishmentPlansRoute
+  '/establishment/settings': typeof EstablishmentSettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    '/' | '/schedule' | '/establishment/plans' | '/establishment/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/schedule' | '/establishment/plans' | '/establishment/settings'
+  id:
+    | '__root__'
+    | '/'
+    | '/schedule'
+    | '/establishment/plans'
+    | '/establishment/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ScheduleRoute: typeof ScheduleRoute
+  EstablishmentPlansRoute: typeof EstablishmentPlansRoute
+  EstablishmentSettingsRoute: typeof EstablishmentSettingsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +84,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/schedule': {
+      id: '/schedule'
+      path: '/schedule'
+      fullPath: '/schedule'
+      preLoaderRoute: typeof ScheduleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/establishment/plans': {
+      id: '/establishment/plans'
+      path: '/establishment/plans'
+      fullPath: '/establishment/plans'
+      preLoaderRoute: typeof EstablishmentPlansRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/establishment/settings': {
+      id: '/establishment/settings'
+      path: '/establishment/settings'
+      fullPath: '/establishment/settings'
+      preLoaderRoute: typeof EstablishmentSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ScheduleRoute: ScheduleRoute,
+  EstablishmentPlansRoute: EstablishmentPlansRoute,
+  EstablishmentSettingsRoute: EstablishmentSettingsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
