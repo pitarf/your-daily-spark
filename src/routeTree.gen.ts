@@ -10,13 +10,37 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ScheduleRouteImport } from './routes/schedule'
+import { Route as AuthenticatedDashboardRouteRouteImport } from './routes/_authenticated/dashboard/route'
 import { Route as EstablishmentPlansRouteImport } from './routes/establishment/plans'
 import { Route as EstablishmentSettingsRouteImport } from './routes/establishment/settings'
+import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard/index'
+import { Route as AuthenticatedDashboardAppointmentsRouteImport } from './routes/_authenticated/dashboard/appointments'
+import { Route as AuthenticatedDashboardCustomersRouteImport } from './routes/_authenticated/dashboard/customers'
+import { Route as AuthenticatedDashboardProfessionalsRouteImport } from './routes/_authenticated/dashboard/professionals'
+import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard/services'
+import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard/settings'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ScheduleRoute = ScheduleRouteImport.update({
@@ -24,6 +48,12 @@ const ScheduleRoute = ScheduleRouteImport.update({
   path: '/schedule',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedDashboardRouteRoute =
+  AuthenticatedDashboardRouteRouteImport.update({
+    id: '/dashboard',
+    path: '/dashboard',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const EstablishmentPlansRoute = EstablishmentPlansRouteImport.update({
   id: '/establishment/plans',
   path: '/establishment/plans',
@@ -34,42 +64,142 @@ const EstablishmentSettingsRoute = EstablishmentSettingsRouteImport.update({
   path: '/establishment/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedDashboardIndexRoute =
+  AuthenticatedDashboardIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedDashboardRouteRoute,
+  } as any)
+const AuthenticatedDashboardAppointmentsRoute =
+  AuthenticatedDashboardAppointmentsRouteImport.update({
+    id: '/appointments',
+    path: '/appointments',
+    getParentRoute: () => AuthenticatedDashboardRouteRoute,
+  } as any)
+const AuthenticatedDashboardCustomersRoute =
+  AuthenticatedDashboardCustomersRouteImport.update({
+    id: '/customers',
+    path: '/customers',
+    getParentRoute: () => AuthenticatedDashboardRouteRoute,
+  } as any)
+const AuthenticatedDashboardProfessionalsRoute =
+  AuthenticatedDashboardProfessionalsRouteImport.update({
+    id: '/professionals',
+    path: '/professionals',
+    getParentRoute: () => AuthenticatedDashboardRouteRoute,
+  } as any)
+const AuthenticatedDashboardServicesRoute =
+  AuthenticatedDashboardServicesRouteImport.update({
+    id: '/services',
+    path: '/services',
+    getParentRoute: () => AuthenticatedDashboardRouteRoute,
+  } as any)
+const AuthenticatedDashboardSettingsRoute =
+  AuthenticatedDashboardSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedDashboardRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/schedule': typeof ScheduleRoute
+  '/dashboard': typeof AuthenticatedDashboardRouteRouteWithChildren
   '/establishment/plans': typeof EstablishmentPlansRoute
   '/establishment/settings': typeof EstablishmentSettingsRoute
+  '/dashboard/appointments': typeof AuthenticatedDashboardAppointmentsRoute
+  '/dashboard/customers': typeof AuthenticatedDashboardCustomersRoute
+  '/dashboard/professionals': typeof AuthenticatedDashboardProfessionalsRoute
+  '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
+  '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
+  '/dashboard/': typeof AuthenticatedDashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/schedule': typeof ScheduleRoute
   '/establishment/plans': typeof EstablishmentPlansRoute
   '/establishment/settings': typeof EstablishmentSettingsRoute
+  '/dashboard/appointments': typeof AuthenticatedDashboardAppointmentsRoute
+  '/dashboard/customers': typeof AuthenticatedDashboardCustomersRoute
+  '/dashboard/professionals': typeof AuthenticatedDashboardProfessionalsRoute
+  '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
+  '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
+  '/dashboard': typeof AuthenticatedDashboardIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/schedule': typeof ScheduleRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteRouteWithChildren
   '/establishment/plans': typeof EstablishmentPlansRoute
   '/establishment/settings': typeof EstablishmentSettingsRoute
+  '/_authenticated/dashboard/appointments': typeof AuthenticatedDashboardAppointmentsRoute
+  '/_authenticated/dashboard/customers': typeof AuthenticatedDashboardCustomersRoute
+  '/_authenticated/dashboard/professionals': typeof AuthenticatedDashboardProfessionalsRoute
+  '/_authenticated/dashboard/services': typeof AuthenticatedDashboardServicesRoute
+  '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
+  '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/schedule' | '/establishment/plans' | '/establishment/settings'
-  fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/schedule' | '/establishment/plans' | '/establishment/settings'
-  id:
-    | '__root__'
     | '/'
+    | '/auth'
+    | '/reset-password'
+    | '/schedule'
+    | '/dashboard'
+    | '/establishment/plans'
+    | '/establishment/settings'
+    | '/dashboard/appointments'
+    | '/dashboard/customers'
+    | '/dashboard/professionals'
+    | '/dashboard/services'
+    | '/dashboard/settings'
+    | '/dashboard/'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/auth'
+    | '/reset-password'
     | '/schedule'
     | '/establishment/plans'
     | '/establishment/settings'
+    | '/dashboard/appointments'
+    | '/dashboard/customers'
+    | '/dashboard/professionals'
+    | '/dashboard/services'
+    | '/dashboard/settings'
+    | '/dashboard'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/reset-password'
+    | '/schedule'
+    | '/_authenticated/dashboard'
+    | '/establishment/plans'
+    | '/establishment/settings'
+    | '/_authenticated/dashboard/appointments'
+    | '/_authenticated/dashboard/customers'
+    | '/_authenticated/dashboard/professionals'
+    | '/_authenticated/dashboard/services'
+    | '/_authenticated/dashboard/settings'
+    | '/_authenticated/dashboard/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ScheduleRoute: typeof ScheduleRoute
   EstablishmentPlansRoute: typeof EstablishmentPlansRoute
   EstablishmentSettingsRoute: typeof EstablishmentSettingsRoute
@@ -84,12 +214,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/schedule': {
       id: '/schedule'
       path: '/schedule'
       fullPath: '/schedule'
       preLoaderRoute: typeof ScheduleRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/establishment/plans': {
       id: '/establishment/plans'
@@ -105,11 +263,94 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EstablishmentSettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/dashboard/': {
+      id: '/_authenticated/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
+    '/_authenticated/dashboard/appointments': {
+      id: '/_authenticated/dashboard/appointments'
+      path: '/appointments'
+      fullPath: '/dashboard/appointments'
+      preLoaderRoute: typeof AuthenticatedDashboardAppointmentsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
+    '/_authenticated/dashboard/customers': {
+      id: '/_authenticated/dashboard/customers'
+      path: '/customers'
+      fullPath: '/dashboard/customers'
+      preLoaderRoute: typeof AuthenticatedDashboardCustomersRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
+    '/_authenticated/dashboard/professionals': {
+      id: '/_authenticated/dashboard/professionals'
+      path: '/professionals'
+      fullPath: '/dashboard/professionals'
+      preLoaderRoute: typeof AuthenticatedDashboardProfessionalsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
+    '/_authenticated/dashboard/services': {
+      id: '/_authenticated/dashboard/services'
+      path: '/services'
+      fullPath: '/dashboard/services'
+      preLoaderRoute: typeof AuthenticatedDashboardServicesRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
+    '/_authenticated/dashboard/settings': {
+      id: '/_authenticated/dashboard/settings'
+      path: '/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof AuthenticatedDashboardSettingsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
   }
 }
 
+interface AuthenticatedDashboardRouteRouteChildren {
+  AuthenticatedDashboardAppointmentsRoute: typeof AuthenticatedDashboardAppointmentsRoute
+  AuthenticatedDashboardCustomersRoute: typeof AuthenticatedDashboardCustomersRoute
+  AuthenticatedDashboardProfessionalsRoute: typeof AuthenticatedDashboardProfessionalsRoute
+  AuthenticatedDashboardServicesRoute: typeof AuthenticatedDashboardServicesRoute
+  AuthenticatedDashboardSettingsRoute: typeof AuthenticatedDashboardSettingsRoute
+  AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
+}
+
+const AuthenticatedDashboardRouteRouteChildren: AuthenticatedDashboardRouteRouteChildren =
+  {
+    AuthenticatedDashboardAppointmentsRoute:
+      AuthenticatedDashboardAppointmentsRoute,
+    AuthenticatedDashboardCustomersRoute: AuthenticatedDashboardCustomersRoute,
+    AuthenticatedDashboardProfessionalsRoute:
+      AuthenticatedDashboardProfessionalsRoute,
+    AuthenticatedDashboardServicesRoute: AuthenticatedDashboardServicesRoute,
+    AuthenticatedDashboardSettingsRoute: AuthenticatedDashboardSettingsRoute,
+    AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
+  }
+
+const AuthenticatedDashboardRouteRouteWithChildren =
+  AuthenticatedDashboardRouteRoute._addFileChildren(
+    AuthenticatedDashboardRouteRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDashboardRouteRoute: typeof AuthenticatedDashboardRouteRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDashboardRouteRoute:
+    AuthenticatedDashboardRouteRouteWithChildren,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ScheduleRoute: ScheduleRoute,
   EstablishmentPlansRoute: EstablishmentPlansRoute,
   EstablishmentSettingsRoute: EstablishmentSettingsRoute,
