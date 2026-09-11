@@ -70,3 +70,18 @@
 - **Testes realizados**: validação estrutural da alteração no código e preservação do fluxo existente; ainda é necessário validar o build/typecheck no ambiente de execução.
 - **Problemas encontrados**: nenhum conhecido nesta etapa.
 - **Pendências relacionadas**: criação de uma rota amigável dedicada como `/agenda/{slug}` continua planejada; gestão de horários pela tela ainda não implementada.
+
+## 2026-09-11 (4)
+- **Objetivo da alteração**: Liberar a gestão do expediente geral diretamente pelo painel do estabelecimento e permitir fechamentos em datas específicas.
+- **Funcionalidades implementadas**:
+  - Edição dos horários gerais de domingo a sábado, com ativação/desativação de cada dia.
+  - Edição do início e fim do expediente.
+  - Suporte visual a múltiplos intervalos por dia, com inclusão, edição e remoção.
+  - Validações no cliente para impedir expediente inválido e intervalos fora da janela de atendimento antes do envio ao banco.
+  - Persistência dos horários e intervalos em `weekly_schedules` e `schedule_breaks`, respeitando RLS de administrador.
+  - Cadastro e remoção de exceções de fechamento em datas específicas usando `schedule_exceptions` com `type = closed`.
+  - Agendas específicas de profissionais continuam separadas e não são sobrescritas pelo editor do expediente geral.
+- **Arquivos alterados**: `src/routes/_authenticated/dashboard/settings.tsx`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
+- **Testes realizados**: validação estrutural do código e conferência da modelagem SQL existente para `weekly_schedules`, `schedule_breaks` e `schedule_exceptions`; build/typecheck ainda precisa ser executado no ambiente do projeto.
+- **Problemas encontrados**: nenhum conhecido nesta etapa.
+- **Pendências relacionadas**: edição de horários individuais de profissionais; exceções com horário personalizado; convite de profissionais para a equipe; gestão de planos de clientes; rota amigável `/agenda/{slug}`.
