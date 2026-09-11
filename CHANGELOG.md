@@ -38,3 +38,24 @@
   - Typecheck do projeto sem erros.
 - **Problemas encontrados**: A extensão `btree_gist` fica no schema público e as duas funções auxiliares de RLS são executáveis por usuários autenticados — ambos são requisitos das políticas/constraints e foram mantidos de forma intencional.
 - **Pendências relacionadas**: telas de login/cadastro e vínculo de usuários a estabelecimentos; criação de agendamento pela interface; painel do profissional; gestão de clientes e planos na interface.
+
+## 2026-09-11 (2)
+- **Objetivo da alteração**: Habilitar login/cadastro dos estabelecimentos, o painel administrativo e a criação real de agendamentos pela tela pública.
+- **Funcionalidades implementadas**:
+  - Autenticação por e-mail e senha (Lovable Cloud Auth) com telas `/auth` (entrar, criar conta, recuperar senha) e `/reset-password`. Sem senha própria: toda a credencial fica no serviço de autenticação.
+  - Área protegida `/dashboard` (redireciona para `/auth` sem sessão) com visão geral, agenda do dia, serviços, profissionais, clientes e configurações — todos lendo e gravando dados reais sob RLS.
+  - Onboarding: criar um novo estabelecimento (o criador vira admin) ou reivindicar a barbearia de demonstração quando ela ainda não tem responsável.
+  - Criação de agendamento pela página pública `/schedule`: escolha de serviço, profissional (ou "qualquer profissional"), dia, horário, dados do cliente, revisão e confirmação. Toda a validação é refeita no servidor antes de gravar.
+  - Disponibilidade combinada: sem profissional escolhido, o horário aparece livre quando ao menos um profissional que faz o serviço estiver livre; ao confirmar, o sistema aloca um profissional realmente disponível.
+  - Sessão global observada na raiz do app (a interface reage a entrar/sair sem recarregar).
+- **Arquivos alterados**: `src/routes/__root.tsx`, `src/routes/index.tsx`, `src/routes/schedule.tsx`, `src/lib/scheduling/scheduling.functions.ts`, `CHANGELOG.md`, `PROJECT_STATUS.md`; novos: `src/routes/auth.tsx`, `src/routes/reset-password.tsx`, `src/routes/_authenticated/route.tsx`, `src/routes/_authenticated/dashboard/*`, `src/lib/auth/auth-client.ts`, `src/lib/auth/establishment-context.tsx`, `src/lib/scheduling/format.ts`.
+- **Testes realizados** (navegador real + banco):
+  - Agendamento completo pela tela com João às 09:00 de segunda: confirmação exibida e registro conferido no banco (09:00-09:30 no fuso do estabelecimento).
+  - Após o agendamento, 09:00 fica indisponível para João e continua livre para Carlos; agendamento com "qualquer profissional" foi alocado corretamente ao Carlos.
+  - Platinado (120 min) na segunda só oferece 09:30, 09:45, 10:00 e 13:00-16:00 — respeitando o intervalo 12:00-13:00 e o fechamento às 18:00.
+  - Sábado 09:00-14:00 com horários livres; domingo sem atendimento; horários passados do dia atual bloqueados.
+  - Privacidade: com a chave pública, clientes, agendamentos, vínculos de usuários, perfis, planos, bloqueios e notificações retornam vazio; apenas estabelecimento, serviços, profissionais e horários são legíveis.
+  - Autenticação: cadastro exibe aviso de confirmação de e-mail; `/dashboard` sem sessão redireciona para `/auth`; login válido abre o painel; onboarding criou estabelecimento com o usuário como admin; cadastro de serviço gravado e listado.
+  - Typecheck do projeto sem erros. Dados de teste removidos ao final.
+- **Problemas encontrados**: a disponibilidade de "qualquer profissional" marcava como ocupado um horário livre para outro profissional — corrigido combinando as agendas individuais.
+- **Pendências relacionadas**: edição de horários, exceções e bloqueios pela tela; convite de profissionais para a equipe; gestão de planos de clientes na interface; login social; notificações, pagamentos e WhatsApp (fora do escopo).
