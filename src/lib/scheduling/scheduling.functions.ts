@@ -132,11 +132,12 @@ async function computeDayAvailability(params: {
 }): Promise<AvailabilitySlot[]> {
   const { supabase, establishment, date, professionalId } = params;
 
+  // Não filtramos por active aqui: uma linha específica inativa é usada como
+  // override para representar uma folga individual do profissional.
   const { data: schedules } = await supabase
     .from("weekly_schedules")
     .select("id, professional_id, weekday, start_time, end_time, active, schedule_breaks(start_time, end_time)")
-    .eq("establishment_id", establishment.id)
-    .eq("active", true);
+    .eq("establishment_id", establishment.id);
 
   const { data: exceptions } = await supabase
     .from("schedule_exceptions")
@@ -354,6 +355,12 @@ export const createAppointment = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!service) return { ok: false, error: "Serviço indisponível." };
 
+    const startsAt = new Date(data.startsAt);
+    if (Number.isNaN(startsAt.getTime())) {
+      return { ok: false, error: "Horário inválido." };
+    }
+    const startsAtIso = startsAt.toISOString();
+
     // Profissionais ativos que realmente realizam esse serviço.
     const { data: links } = await supabase
       .from("professional_services")
@@ -376,11 +383,6 @@ export const createAppointment = createServerFn({ method: "POST" })
 
     if (data.professionalId && !candidates.some((p) => p.id === data.professionalId)) {
       return { ok: false, error: "Esse profissional não realiza o serviço escolhido." };
-    }
-
-    const startsAtIso = new Date(data.startsAt).toISOString();
-    if (Number.isNaN(new Date(data.startsAt).getTime())) {
-      return { ok: false, error: "Horário inválido." };
     }
 
     const order = data.professionalId
@@ -410,19 +412,19 @@ export const createAppointment = createServerFn({ method: "POST" })
       };
     }
 
-    const endsAt = new Date(
-      new Date(startsAtIso).getTime() + service.duration_minutes * 60_000,
-    ).toISOString();
-
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
     const phone = data.customerPhone.replace(/\s+/g, " ").trim();
-    const { data: existingCustomer } = await supabaseAdmin
+
+    const { data: existingCustomer, error: existingCustomerError } = await supabaseAdmin
       .from("customers")
       .select("id")
       .eq("establishment_id", establishment.id)
       .eq("phone", phone)
       .maybeSingle();
+    if (existingCustomerError) {
+      console.error("findCustomer", existingCustomerError);
+      return { ok: false, error: "Não foi possível validar os dados do cliente. Tente novamente." };
+    }
 
     let customerId = existingCustomer?.id ?? null;
     if (!customerId) {
@@ -450,6 +452,65 @@ export const createAppointment = createServerFn({ method: "POST" })
         .eq("id", customerId);
     }
 
+    // Regras do plano do cliente são aplicadas no servidor, usando o vínculo
+    // ativo mais recente daquele cliente neste estabelecimento.
+    const nowIso = new Date().toISOString();
+    const { data: assignments, error: assignmentError } = await supabaseAdmin
+      .from("customer_plan_assignments")
+      .select(
+        "plan_id, starts_at, expires_at, customer_plans!inner(id, name, active, duration_limit_minutes, establishment_id, customer_plan_services(service_id))",
+      )
+      .eq("customer_id", customerId)
+      .eq("customer_plans.establishment_id", establishment.id)
+      .order("starts_at", { ascending: false })
+      .limit(20);
+
+    if (assignmentError) {
+      console.error("findCustomerPlan", assignmentError);
+      return { ok: false, error: "Não foi possível validar o plano do cliente. Tente novamente." };
+    }
+
+    const activeAssignment = (assignments ?? []).find((assignment) => {
+      const starts = new Date(assignment.starts_at).getTime();
+      const expires = assignment.expires_at ? new Date(assignment.expires_at).getTime() : Infinity;
+      return starts <= Date.now() && expires >= Date.now();
+    });
+
+    if (activeAssignment) {
+      const plan = activeAssignment.customer_plans as unknown as {
+        name: string;
+        active: boolean;
+        duration_limit_minutes: number | null;
+        customer_plan_services: { service_id: string }[];
+      };
+
+      if (plan.active) {
+        const allowedServices = plan.customer_plan_services ?? [];
+        if (allowedServices.length > 0 && !allowedServices.some((item) => item.service_id === service.id)) {
+          return {
+            ok: false,
+            error: `O plano ${plan.name} não permite este serviço. Escolha um serviço incluído no seu plano.`,
+          };
+        }
+
+        if (
+          plan.duration_limit_minutes !== null &&
+          service.duration_minutes > plan.duration_limit_minutes
+        ) {
+          return {
+            ok: false,
+            error: `O plano ${plan.name} permite atendimentos de até ${plan.duration_limit_minutes} minutos.`,
+          };
+        }
+      }
+    }
+
+    // Cliente já foi resolvido e o plano validado. A constraint/trigger do banco
+    // continua sendo a última barreira contra corrida de reservas.
+    const endsAt = new Date(
+      startsAt.getTime() + service.duration_minutes * 60_000,
+    ).toISOString();
+
     const { data: appointment, error: appointmentError } = await supabaseAdmin
       .from("appointments")
       .insert({
@@ -465,7 +526,6 @@ export const createAppointment = createServerFn({ method: "POST" })
       .single();
 
     if (appointmentError || !appointment) {
-      // Última barreira: constraint de exclusão / trigger do banco.
       const code = (appointmentError as { code?: string } | null)?.code;
       if (code === "23P01" || code === "23505" || code === "P0001") {
         return {

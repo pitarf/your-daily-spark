@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useEstablishment } from "@/lib/auth/establishment-context";
@@ -8,59 +9,503 @@ export const Route = createFileRoute("/_authenticated/dashboard/customers")({
   component: CustomersPage,
 });
 
+type Customer = {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  planId: string | null;
+  planName: string | null;
+};
+
+type Plan = {
+  id: string;
+  name: string;
+  description: string | null;
+  duration_limit_minutes: number | null;
+  active: boolean;
+  serviceIds: string[];
+};
+
+type PlanDraft = {
+  id: string | null;
+  name: string;
+  description: string;
+  durationLimitMinutes: string;
+  active: boolean;
+  serviceIds: string[];
+};
+
+const EMPTY_PLAN: PlanDraft = {
+  id: null,
+  name: "",
+  description: "",
+  durationLimitMinutes: "",
+  active: true,
+  serviceIds: [],
+};
+
 function CustomersPage() {
   const { membership } = useEstablishment();
+  const queryClient = useQueryClient();
+  const [view, setView] = useState<"customers" | "plans">("customers");
+  const [planDraft, setPlanDraft] = useState<PlanDraft | null>(null);
+  const [assigningCustomer, setAssigningCustomer] = useState<Customer | null>(null);
+  const [assignPlanId, setAssignPlanId] = useState("");
+  const [assignExpiresAt, setAssignExpiresAt] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  const query = useQuery({
+  const customersQuery = useQuery({
     queryKey: ["admin-customers", membership.establishmentId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: customers, error: customerError } = await supabase
         .from("customers")
         .select("id, name, phone, email, created_at")
         .eq("establishment_id", membership.establishmentId)
         .order("created_at", { ascending: false });
-      if (error) throw error;
+      if (customerError) throw customerError;
+
+      const { data: assignments, error: assignmentError } = await supabase
+        .from("customer_plan_assignments")
+        .select("customer_id, plan_id, starts_at, expires_at, customer_plans(name)")
+        .eq("customer_plans.establishment_id", membership.establishmentId)
+        .order("starts_at", { ascending: false });
+      if (assignmentError) throw assignmentError;
+
+      const byCustomer = new Map<string, { planId: string; planName: string | null }>();
+      for (const assignment of assignments ?? []) {
+        const existing = byCustomer.get(assignment.customer_id);
+        const now = Date.now();
+        const starts = new Date(assignment.starts_at).getTime();
+        const expires = assignment.expires_at ? new Date(assignment.expires_at).getTime() : Infinity;
+        if (!existing && starts <= now && expires >= now) {
+          const plan = assignment.customer_plans as unknown as { name: string } | null;
+          byCustomer.set(assignment.customer_id, { planId: assignment.plan_id, planName: plan?.name ?? null });
+        }
+      }
+
+      return (customers ?? []).map((customer) => ({
+        ...customer,
+        planId: byCustomer.get(customer.id)?.planId ?? null,
+        planName: byCustomer.get(customer.id)?.planName ?? null,
+      })) as Customer[];
+    },
+  });
+
+  const servicesQuery = useQuery({
+    queryKey: ["admin-plan-services", membership.establishmentId],
+    queryFn: async () => {
+      const { data, error: err } = await supabase
+        .from("services")
+        .select("id, name")
+        .eq("establishment_id", membership.establishmentId)
+        .order("name");
+      if (err) throw err;
       return data ?? [];
     },
   });
 
-  const customers = query.data ?? [];
+  const plansQuery = useQuery({
+    queryKey: ["admin-customer-plans", membership.establishmentId],
+    queryFn: async () => {
+      const { data, error: err } = await supabase
+        .from("customer_plans")
+        .select("id, name, description, duration_limit_minutes, active, customer_plan_services(service_id)")
+        .eq("establishment_id", membership.establishmentId)
+        .order("name");
+      if (err) throw err;
+      return (data ?? []).map((plan) => ({
+        id: plan.id,
+        name: plan.name,
+        description: plan.description,
+        duration_limit_minutes: plan.duration_limit_minutes,
+        active: plan.active,
+        serviceIds: (
+          (plan as unknown as { customer_plan_services: { service_id: string }[] }).customer_plan_services ?? []
+        ).map((link) => link.service_id),
+      })) as Plan[];
+    },
+  });
+
+  const savePlan = useMutation({
+    mutationFn: async (value: PlanDraft) => {
+      const duration = value.durationLimitMinutes.trim() === "" ? null : Number(value.durationLimitMinutes);
+      if (value.name.trim().length < 2) throw new Error("Informe um nome válido para o plano.");
+      if (duration !== null && (!Number.isInteger(duration) || duration <= 0)) {
+        throw new Error("A duração máxima deve ser um número inteiro maior que zero.");
+      }
+
+      let planId = value.id;
+      const payload = {
+        establishment_id: membership.establishmentId,
+        name: value.name.trim(),
+        description: value.description.trim() || null,
+        duration_limit_minutes: duration,
+        active: value.active,
+      };
+
+      if (planId) {
+        const { error: updateError } = await supabase
+          .from("customer_plans")
+          .update(payload)
+          .eq("id", planId)
+          .eq("establishment_id", membership.establishmentId);
+        if (updateError) throw updateError;
+      } else {
+        const { data, error: insertError } = await supabase
+          .from("customer_plans")
+          .insert(payload)
+          .select("id")
+          .single();
+        if (insertError || !data) throw insertError ?? new Error("Não foi possível criar o plano.");
+        planId = data.id;
+      }
+
+      const { error: deleteError } = await supabase
+        .from("customer_plan_services")
+        .delete()
+        .eq("plan_id", planId);
+      if (deleteError) throw deleteError;
+
+      if (value.serviceIds.length > 0) {
+        const { error: linkError } = await supabase.from("customer_plan_services").insert(
+          value.serviceIds.map((service_id) => ({ plan_id: planId!, service_id })),
+        );
+        if (linkError) throw linkError;
+      }
+    },
+    onSuccess: async () => {
+      setPlanDraft(null);
+      setError(null);
+      await queryClient.invalidateQueries({ queryKey: ["admin-customer-plans"] });
+      await queryClient.invalidateQueries({ queryKey: ["admin-customers"] });
+    },
+    onError: (err: Error) => setError(err.message),
+  });
+
+  const assignPlan = useMutation({
+    mutationFn: async () => {
+      if (!assigningCustomer) throw new Error("Selecione um cliente.");
+      if (!assignPlanId) {
+        await supabase
+          .from("customer_plan_assignments")
+          .delete()
+          .eq("customer_id", assigningCustomer.id);
+        return;
+      }
+
+      const chosenPlan = plans.find((plan) => plan.id === assignPlanId);
+      if (!chosenPlan || !chosenPlan.active) throw new Error("Selecione um plano ativo.");
+
+      const existing = await supabase
+        .from("customer_plan_assignments")
+        .select("id")
+        .eq("customer_id", assigningCustomer.id);
+      if (existing.error) throw existing.error;
+      if ((existing.data ?? []).length > 0) {
+        const { error: deleteError } = await supabase
+          .from("customer_plan_assignments")
+          .delete()
+          .eq("customer_id", assigningCustomer.id);
+        if (deleteError) throw deleteError;
+      }
+
+      const { error: insertError } = await supabase.from("customer_plan_assignments").insert({
+        customer_id: assigningCustomer.id,
+        plan_id: assignPlanId,
+        starts_at: new Date().toISOString(),
+        expires_at: assignExpiresAt ? new Date(`${assignExpiresAt}T23:59:59`).toISOString() : null,
+      });
+      if (insertError) throw insertError;
+    },
+    onSuccess: async () => {
+      setAssigningCustomer(null);
+      setAssignPlanId("");
+      setAssignExpiresAt("");
+      setError(null);
+      await queryClient.invalidateQueries({ queryKey: ["admin-customers"] });
+    },
+    onError: (err: Error) => setError(err.message),
+  });
+
+  const customers = customersQuery.data ?? [];
+  const plans = plansQuery.data ?? [];
+  const services = servicesQuery.data ?? [];
+
+  const activePlans = useMemo(() => plans.filter((plan) => plan.active), [plans]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Clientes</h1>
-        <p className="text-sm text-muted-foreground">
-          Clientes criados pelos agendamentos do seu estabelecimento.
-        </p>
+        <h1 className="text-2xl font-bold text-foreground">Clientes e planos</h1>
+        <p className="text-sm text-muted-foreground">Gerencie clientes e regras de atendimento por plano.</p>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-border bg-card">
-        {query.isPending ? (
-          <p className="p-4 text-sm text-muted-foreground">Carregando…</p>
-        ) : customers.length === 0 ? (
-          <p className="p-4 text-sm text-muted-foreground">Nenhum cliente ainda.</p>
-        ) : (
-          <table className="w-full text-left text-sm">
-            <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
-              <tr>
-                <th className="px-3 py-2">Nome</th>
-                <th className="px-3 py-2">Telefone</th>
-                <th className="px-3 py-2">E-mail</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {customers.map((c) => (
-                <tr key={c.id}>
-                  <td className="px-3 py-2 font-medium text-foreground">{c.name}</td>
-                  <td className="px-3 py-2 text-muted-foreground">{c.phone ?? "—"}</td>
-                  <td className="px-3 py-2 text-muted-foreground">{c.email ?? "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+      <div className="flex gap-1 rounded-lg border border-border bg-card p-1 w-fit">
+        <button
+          type="button"
+          onClick={() => setView("customers")}
+          className={`rounded-md px-3 py-1.5 text-sm ${view === "customers" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent"}`}
+        >
+          Clientes
+        </button>
+        <button
+          type="button"
+          onClick={() => setView("plans")}
+          className={`rounded-md px-3 py-1.5 text-sm ${view === "plans" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent"}`}
+        >
+          Planos
+        </button>
       </div>
+
+      {error ? <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p> : null}
+
+      {view === "customers" ? (
+        <section className="overflow-x-auto rounded-xl border border-border bg-card">
+          {customersQuery.isPending ? (
+            <p className="p-4 text-sm text-muted-foreground">Carregando…</p>
+          ) : customers.length === 0 ? (
+            <p className="p-4 text-sm text-muted-foreground">Nenhum cliente ainda.</p>
+          ) : (
+            <table className="w-full text-left text-sm">
+              <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
+                <tr>
+                  <th className="px-3 py-2">Nome</th>
+                  <th className="px-3 py-2">Telefone</th>
+                  <th className="px-3 py-2">E-mail</th>
+                  <th className="px-3 py-2">Plano</th>
+                  <th className="px-3 py-2" />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {customers.map((customer) => (
+                  <tr key={customer.id}>
+                    <td className="px-3 py-2 font-medium text-foreground">{customer.name}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{customer.phone ?? "—"}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{customer.email ?? "—"}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{customer.planName ?? "Sem plano"}</td>
+                    <td className="px-3 py-2 text-right">
+                      <button
+                        type="button"
+                        className="text-xs underline"
+                        onClick={() => {
+                          setAssigningCustomer(customer);
+                          setAssignPlanId(customer.planId ?? "");
+                        }}
+                      >
+                        Alterar plano
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">Planos de clientes</h2>
+              <p className="text-xs text-muted-foreground">Sem limite de duração, o plano permite qualquer serviço. Quando houver limite, o serviço precisa caber nele.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPlanDraft({ ...EMPTY_PLAN })}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+            >
+              Novo plano
+            </button>
+          </div>
+
+          {planDraft ? (
+            <form
+              className="space-y-4 rounded-xl border border-border bg-card p-4"
+              onSubmit={(event) => {
+                event.preventDefault();
+                savePlan.mutate(planDraft);
+              }}
+            >
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="space-y-1 text-sm">
+                  <span className="font-medium text-foreground">Nome</span>
+                  <input
+                    required
+                    value={planDraft.name}
+                    onChange={(e) => setPlanDraft({ ...planDraft, name: e.target.value })}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2"
+                  />
+                </label>
+                <label className="space-y-1 text-sm">
+                  <span className="font-medium text-foreground">Duração máxima (minutos)</span>
+                  <input
+                    type="number"
+                    min={1}
+                    step={1}
+                    value={planDraft.durationLimitMinutes}
+                    onChange={(e) => setPlanDraft({ ...planDraft, durationLimitMinutes: e.target.value })}
+                    placeholder="Ex.: 60"
+                    className="w-full rounded-md border border-input bg-background px-3 py-2"
+                  />
+                </label>
+              </div>
+              <label className="block space-y-1 text-sm">
+                <span className="font-medium text-foreground">Descrição</span>
+                <textarea
+                  rows={3}
+                  value={planDraft.description}
+                  onChange={(e) => setPlanDraft({ ...planDraft, description: e.target.value })}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2"
+                />
+              </label>
+              <fieldset className="space-y-2">
+                <legend className="text-sm font-medium text-foreground">Serviços permitidos</legend>
+                <p className="text-xs text-muted-foreground">Deixe todos desmarcados para permitir qualquer serviço.</p>
+                <div className="flex flex-wrap gap-2">
+                  {services.map((service) => {
+                    const checked = planDraft.serviceIds.includes(service.id);
+                    return (
+                      <label
+                        key={service.id}
+                        className={`cursor-pointer rounded-full border px-3 py-1 text-xs ${checked ? "border-primary bg-primary/10" : "border-input"}`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="sr-only"
+                          checked={checked}
+                          onChange={() =>
+                            setPlanDraft({
+                              ...planDraft,
+                              serviceIds: checked
+                                ? planDraft.serviceIds.filter((id) => id !== service.id)
+                                : [...planDraft.serviceIds, service.id],
+                            })
+                          }
+                        />
+                        {service.name}
+                      </label>
+                    );
+                  })}
+                </div>
+              </fieldset>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={planDraft.active}
+                  onChange={(e) => setPlanDraft({ ...planDraft, active: e.target.checked })}
+                />
+                <span className="text-foreground">Plano ativo</span>
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={savePlan.isPending}
+                  className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+                >
+                  {savePlan.isPending ? "Salvando…" : "Salvar plano"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPlanDraft(null)}
+                  className="rounded-md border border-input px-4 py-2 text-sm"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          ) : null}
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {plans.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum plano criado.</p>
+            ) : (
+              plans.map((plan) => (
+                <article key={plan.id} className="rounded-xl border border-border bg-card p-4">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium text-foreground">{plan.name}</h3>
+                    <span className="text-xs text-muted-foreground">{plan.active ? "Ativo" : "Inativo"}</span>
+                  </div>
+                  {plan.description ? <p className="mt-1 text-xs text-muted-foreground">{plan.description}</p> : null}
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {plan.duration_limit_minutes ? `Até ${plan.duration_limit_minutes} min` : "Sem limite de duração"}
+                    {plan.serviceIds.length > 0 ? ` · ${plan.serviceIds.length} serviço(s)` : " · Todos os serviços"}
+                  </p>
+                  <button
+                    type="button"
+                    className="mt-3 text-xs underline"
+                    onClick={() =>
+                      setPlanDraft({
+                        id: plan.id,
+                        name: plan.name,
+                        description: plan.description ?? "",
+                        durationLimitMinutes: plan.duration_limit_minutes?.toString() ?? "",
+                        active: plan.active,
+                        serviceIds: plan.serviceIds,
+                      })
+                    }
+                  >
+                    Editar
+                  </button>
+                </article>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {assigningCustomer ? (
+        <div className="rounded-xl border border-primary/20 bg-card p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="font-semibold text-foreground">Plano de {assigningCustomer.name}</h2>
+              <p className="text-xs text-muted-foreground">A atribuição passa a valer imediatamente.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAssigningCustomer(null)}
+              className="text-xs underline"
+            >
+              Fechar
+            </button>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <label className="space-y-1 text-sm">
+              <span className="font-medium text-foreground">Plano</span>
+              <select
+                value={assignPlanId}
+                onChange={(e) => setAssignPlanId(e.target.value)}
+                className="w-full rounded-md border border-input bg-background px-3 py-2"
+              >
+                <option value="">Sem plano</option>
+                {activePlans.map((plan) => (
+                  <option key={plan.id} value={plan.id}>
+                    {plan.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="space-y-1 text-sm">
+              <span className="font-medium text-foreground">Validade até (opcional)</span>
+              <input
+                type="date"
+                value={assignExpiresAt}
+                onChange={(e) => setAssignExpiresAt(e.target.value)}
+                className="w-full rounded-md border border-input bg-background px-3 py-2"
+              />
+            </label>
+          </div>
+          <div className="mt-4 flex justify-end">
+            <button
+              type="button"
+              onClick={() => assignPlan.mutate()}
+              disabled={assignPlan.isPending}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+            >
+              {assignPlan.isPending ? "Salvando…" : "Salvar plano do cliente"}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
