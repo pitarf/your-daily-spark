@@ -5,6 +5,7 @@ import { BookingPage } from "@/components/scheduling/BookingPage";
 import { CustomDurationBookingPage } from "@/components/scheduling/CustomDurationBookingPage";
 import { StandaloneCustomBookingPage } from "@/components/scheduling/StandaloneCustomBookingPage";
 import { getEstablishmentScheduling } from "@/lib/scheduling/scheduling.functions";
+import { getPublicSchedulingSettings } from "@/lib/scheduling/public-settings.functions";
 import { businessThemeStyle, getBusinessTheme } from "@/lib/theming/business-theme";
 import { getEstablishmentBusinessType } from "@/lib/theming/establishment-theme.functions";
 
@@ -20,12 +21,13 @@ const agendaSearchSchema = z.object({
 export const Route = createFileRoute("/agenda/$slug")({
   validateSearch: agendaSearchSchema,
   loader: async ({ params }) => {
-    const [data, businessType] = await Promise.all([
+    const [data, businessType, publicSettings] = await Promise.all([
       getEstablishmentScheduling({ data: { slug: params.slug } }),
       getEstablishmentBusinessType({ data: { slug: params.slug } }),
+      getPublicSchedulingSettings({ data: { slug: params.slug } }),
     ]);
     if (!data) return data;
-    return { ...data, businessType: businessType ?? "outro" };
+    return { ...data, businessType: businessType ?? "outro", publicSettings };
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -66,7 +68,7 @@ function AgendaPage() {
   }
 
   const theme = getBusinessTheme(data.businessType);
-  const customDurationEnabled = Boolean(data.establishment.allow_custom_duration);
+  const customDurationEnabled = data.publicSettings.allowCustomDuration;
   const requestedUnavailableFeature =
     (custom || standalone) && !customDurationEnabled;
 
