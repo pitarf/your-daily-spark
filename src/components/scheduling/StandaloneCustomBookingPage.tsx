@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState, type FormEvent } from "react";
 
+import { AppointmentManagementButton } from "@/components/scheduling/AppointmentManagementButton";
 import { calendarDataUrl } from "@/lib/calendar/ics";
 import { addDaysInTimezone, formatDate, formatTime, todayInTimezone } from "@/lib/scheduling/format";
 import type { EstablishmentSchedulingData } from "@/lib/scheduling/scheduling.functions";
@@ -107,8 +108,9 @@ export function StandaloneCustomBookingPage({ data, slug }: Props) {
             <Summary label="Horário" value={`${formatTime(success.startsAt, timezone)} às ${formatTime(success.endsAt, timezone)}`} />
             <Summary label="Duração" value={formatDuration(success.durationMinutes)} />
           </dl>
-          <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
+          <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-center">
             <a href={calendarUrl} download="agendamento-avulso.ics" className="rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground">Adicionar ao calendário</a>
+            <AppointmentManagementButton slug={slug} appointmentId={success.id} customerPhone={customerPhone} />
             <button type="button" onClick={() => { setSuccess(null); setSlot(null); setTitle(""); setNotes(""); }} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Novo agendamento</button>
           </div>
         </section>
