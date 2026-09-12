@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useEstablishment } from "@/lib/auth/establishment-context";
 import { getAvailability } from "@/lib/scheduling/scheduling.functions";
-import { dayRangeUtc, formatDateTime, formatTime, todayInTimezone } from "@/lib/scheduling/format";
+import { dayRangeUtc, formatDate, formatDateTime, formatTime, todayInTimezone } from "@/lib/scheduling/format";
 
 export const Route = createFileRoute("/_authenticated/dashboard/")({
   component: DashboardHome,
@@ -104,7 +104,7 @@ function DashboardHome() {
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Painel</p>
           <h1 className="mt-1 text-2xl font-bold text-foreground">Visão geral</h1>
           <p className="text-sm text-muted-foreground">
-            {membership.name} · {formatDateTime(`${today}T12:00:00Z`, tz).split(" às ")[0]}
+            {membership.name} · {formatDate(`${today}T12:00:00Z`, tz)}
           </p>
         </div>
         <Link
@@ -122,11 +122,12 @@ function DashboardHome() {
         <Stat label="Horários ocupados" value={slotsQuery.isPending ? "…" : String(slotsQuery.data?.busy ?? 0)} detail="Inclui indisponibilidades" />
       </div>
 
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <QuickLink to="/dashboard/appointments" title="Gerenciar agenda" description="Dia, semana, mês e bloqueios" />
         <QuickLink to="/dashboard/services" title="Serviços" description="Duração, preço e disponibilidade" />
         <QuickLink to="/dashboard/professionals" title="Profissionais" description="Equipe e horários individuais" />
         <QuickLink to="/dashboard/customers" title="Clientes" description="Cadastros e histórico" />
+        <QuickLink to="/dashboard/plans" title="Planos" description="Regras e serviços permitidos" />
       </section>
 
       <section className="rounded-xl border border-border bg-card p-4">
@@ -209,7 +210,20 @@ function Stat({ label, value, detail }: { label: string; value: string; detail: 
   );
 }
 
-function QuickLink({ to, title, description }: { to: "/dashboard/appointments" | "/dashboard/services" | "/dashboard/professionals" | "/dashboard/customers"; title: string; description: string }) {
+function QuickLink({
+  to,
+  title,
+  description,
+}: {
+  to:
+    | "/dashboard/appointments"
+    | "/dashboard/services"
+    | "/dashboard/professionals"
+    | "/dashboard/customers"
+    | "/dashboard/plans";
+  title: string;
+  description: string;
+}) {
   return (
     <Link to={to} className="rounded-xl border border-border bg-card p-4 transition-colors hover:bg-accent">
       <h2 className="text-sm font-semibold text-foreground">{title}</h2>
