@@ -31,6 +31,10 @@ export const Route = createFileRoute("/agenda/$slug")({
       ...data,
       businessType: themeConfig.businessType ?? "outro",
       themePreset: themeConfig.themePreset ?? "auto",
+      publicBranding: {
+        logoUrl: themeConfig.logoUrl,
+        whatsapp: themeConfig.whatsapp ?? themeConfig.phone,
+      },
       publicSettings,
     };
   },
@@ -135,17 +139,17 @@ function AgendaPage() {
 }
 
 function PublicHeader({ data }: { data: NonNullable<ReturnType<typeof Route.useLoaderData>> }) {
-  const { establishment, businessType } = data;
+  const { establishment, businessType, publicBranding } = data;
   const businessLabel = getBusinessTypeLabel(businessType);
-  const whatsapp = establishment.phone?.replace(/\D/g, "") ?? "";
+  const whatsapp = publicBranding.whatsapp?.replace(/\D/g, "") ?? "";
   const whatsappHref = whatsapp.length >= 10 ? `https://wa.me/${whatsapp}` : null;
 
   return (
     <header className="mx-auto max-w-3xl px-4 pt-6 sm:pt-8">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card/90 px-4 py-3 shadow-sm backdrop-blur sm:px-5">
         <div className="flex min-w-0 items-center gap-3">
-          {"logo_url" in establishment && establishment.logo_url ? (
-            <img src={establishment.logo_url} alt="" className="h-11 w-11 rounded-xl border border-border bg-background object-contain p-1" />
+          {publicBranding.logoUrl ? (
+            <img src={publicBranding.logoUrl} alt="" className="h-11 w-11 rounded-xl border border-border bg-background object-contain p-1" />
           ) : (
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-sm font-black text-primary-foreground" aria-hidden="true">
               {establishment.name.slice(0, 1).toUpperCase()}
