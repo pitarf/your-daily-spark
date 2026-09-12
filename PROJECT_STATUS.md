@@ -69,7 +69,7 @@
 - O acesso direto ao gerenciamento reutiliza o token HMAC já existente e não expõe a chave de assinatura ao navegador.
 - O atalho de gerenciamento está disponível nos fluxos de agendamento normal, duração personalizada e atendimento avulso.
 - Worker de entrega de notificações por e-mail implementado de forma independente do aplicativo web, usando a fila persistente existente.
-- Entrega de e-mail via Resend com templates para confirmação, cancelamento e lembrete.
+- Entrega transacional de e-mail preparada com a API da Brevo para confirmação, cancelamento e lembrete.
 - Comando `bun run notifications:dispatch` criado para processar a fila em lotes e permitir execução por cron/scheduler.
 - Worker usa atualização atômica de status para reduzir risco de processamento concorrente da mesma notificação.
 
@@ -78,7 +78,8 @@
 - Melhorias de experiência no fluxo de agendamento e administração.
 
 ## Pendente 🔴
-- Configurar `RESEND_API_KEY` e o remetente de e-mail no ambiente de produção para ativar a entrega real.
+- Configurar `BREVO_API_KEY` no ambiente de produção.
+- Confirmar o remetente `rfpita.work@gmail.com` como remetente autorizado na Brevo e manter `NOTIFICATION_FROM_NAME=Marca Minha Vez`.
 - Configurar um cron/scheduler de produção para executar `bun run notifications:dispatch` periodicamente.
 - Habilitar o provedor Google no ambiente de autenticação.
 - Worker/provedor para WhatsApp e SMS.
