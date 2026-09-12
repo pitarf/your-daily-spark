@@ -84,12 +84,14 @@
 - Assistente de disponibilidade resolve serviços e profissionais contra os cadastros reais do estabelecimento.
 - Assistente consulta o motor real de disponibilidade no servidor e respeita fuso, expediente, intervalos, exceções, bloqueios, agendamentos, conflitos e múltiplos profissionais.
 - Assistente de disponibilidade retorna somente horários confirmados como livres pelo motor de agenda, sem inventar horários.
+- Assistente de configuração de agenda com IA agora exige autorização server-side dentro da própria server function antes de consultar o Gemini.
 
 ## Em Desenvolvimento 🟡
 - Refinamentos finais de UX e identidade visual por tipo de negócio.
 - Melhorias de experiência no fluxo de agendamento e administração.
 - Validação end-to-end das integrações de Gemini e Brevo no ambiente de produção.
 - Automação de envio da fila de notificações por scheduler de produção.
+- Teste real de entrega do e-mail de confirmação, cancelamento e lembrete com a conta Brevo configurada.
 
 ## Pendente 🔴
 - Confirmar o remetente `rfpita.work@gmail.com` como remetente autorizado na Brevo e manter `NOTIFICATION_FROM_NAME=Marca Minha Vez`.
