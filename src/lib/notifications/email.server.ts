@@ -5,42 +5,46 @@ export type NotificationEmail = {
   text: string;
 };
 
-function getResendConfig() {
-  const apiKey = process.env["RESEND_API_KEY"];
-  const fromEmail = process.env["NOTIFICATION_FROM_EMAIL"];
-  const fromName = process.env["NOTIFICATION_FROM_NAME"]?.trim();
+function getBrevoConfig() {
+  const apiKey = process.env["BREVO_API_KEY"];
+  const fromEmail = process.env["NOTIFICATION_FROM_EMAIL"] || "rfpita.work@gmail.com";
+  const fromName = process.env["NOTIFICATION_FROM_NAME"]?.trim() || "Marca Minha Vez";
 
-  if (!apiKey || !fromEmail) {
-    throw new Error("RESEND_API_KEY and NOTIFICATION_FROM_EMAIL are required to deliver notification emails.");
+  if (!apiKey) {
+    throw new Error("BREVO_API_KEY is required to deliver notification emails.");
   }
 
   return {
     apiKey,
-    from: fromName ? `${fromName} <${fromEmail}>` : fromEmail,
+    sender: {
+      email: fromEmail,
+      name: fromName,
+    },
   };
 }
 
 export async function sendNotificationEmail(message: NotificationEmail) {
-  const config = getResendConfig();
-  const response = await fetch("https://api.resend.com/emails", {
+  const config = getBrevoConfig();
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${config.apiKey}`,
+      "api-key": config.apiKey,
       "Content-Type": "application/json",
+      Accept: "application/json",
     },
     body: JSON.stringify({
-      from: config.from,
-      to: [message.to],
+      sender: config.sender,
+      to: [{ email: message.to }],
       subject: message.subject,
-      html: message.html,
-      text: message.text,
+      htmlContent: message.html,
+      textContent: message.text,
     }),
   });
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Resend rejected the notification (${response.status}): ${body.slice(0, 300)}`);
+    throw new Error(`Brevo rejected the notification (${response.status}): ${body.slice(0, 300)}`);
   }
 
-  return (await response.json()) as { id?: string };
+  return (await response.json()) as { messageId?: string };
 }
