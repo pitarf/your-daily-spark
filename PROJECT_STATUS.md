@@ -9,7 +9,7 @@
 - Precedência determinística das exceções: fechamento individual > horário especial individual > fechamento geral > horário especial geral > agenda semanal.
 - Agendamento público com serviço, profissional/qualquer profissional, data, horário, cliente, revisão e confirmação, validado no servidor.
 - Agenda pública reutilizável por estabelecimento.
-- **URL amigável da agenda**: `/agenda/{slug}` com carregamento por slug e compatibilidade automática com `/schedule?slug={slug}`.
+- URL amigável da agenda: `/agenda/{slug}` com compatibilidade automática com `/schedule?slug={slug}`.
 - Calendário público sensível ao fuso do estabelecimento.
 - Autenticação por e-mail, cadastro e recuperação de senha.
 - Dashboard protegido com agenda, serviços, profissionais, clientes e configurações.
@@ -22,6 +22,7 @@
 - Homepage comercial e fluxo público acessível.
 - Acessibilidade básica na agenda pública.
 - Perfil do estabelecimento: edição de dados comerciais e identidade, incluindo logo.
+- **CI de qualidade**: GitHub Actions executa TypeScript, ESLint e build de produção em PRs e pushes para `main`.
 
 ## Em Desenvolvimento 🟡
 - Equipe: convite e vínculo de profissionais a contas de usuário.
