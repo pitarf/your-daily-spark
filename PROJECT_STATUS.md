@@ -40,11 +40,12 @@
 - Agendamento avulso personalizado sem serviço cadastrado, com título do atendimento, duração de 15 minutos a 4 horas, profissional opcional, observações e validação server-side.
 - Restrição no banco para impedir atendimento sem serviço e sem título personalizado.
 - Tema visual adaptativo na agenda pública conforme o tipo de negócio: barbearia, salão, nail designer, sobrancelhas, estética, clínica, consultório, tatuagem e outro.
+- Apresentação administrativa de atendimentos avulsos sem serviço, exibindo título personalizado, preço quando definido e duração no calendário Dia, Semana e Mês.
+- Painel do profissional exibe corretamente atendimentos avulsos sem serviço, usando o título personalizado e a duração cadastrada.
 
 ## Em Desenvolvimento 🟡
 - Refinamentos finais de UX e identidade visual por tipo de negócio.
 - Melhorias de experiência no fluxo de agendamento e administração.
-- Apresentação administrativa específica para atendimentos avulsos sem serviço.
 
 ## Pendente 🔴
 - Habilitar o provedor Google no ambiente de autenticação.
