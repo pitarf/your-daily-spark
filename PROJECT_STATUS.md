@@ -49,6 +49,12 @@
 - Tentativas diretas de acessar `?custom=true` ou `?standalone=true` quando o recurso está desativado recebem mensagem de indisponibilidade e retorno para a agenda.
 - Dashboard inicial exibe atendimentos avulsos com título personalizado em vez de apresentar um serviço genérico ausente.
 - Painel do profissional classifica “Hoje” usando a data local do estabelecimento, evitando erros de dia causados por timestamps UTC.
+- Fila de notificações no banco para eventos de confirmação e cancelamento de agendamentos, com histórico visível no dashboard.
+- Tema persistente por estabelecimento com presets Automático, Minimalista, Suave, Marcante, Escuro e Quente.
+- Administrador pode escolher o preset visual no perfil do estabelecimento com pré-visualização antes de salvar.
+- Agenda pública aplica o preset selecionado sem perder o tema automático específico do tipo de negócio.
+- Cabeçalho público apresenta logo, tipo de negócio e atalho para WhatsApp quando há telefone cadastrado.
+- Tipos TypeScript do Supabase sincronizados com `theme_preset`.
 
 ## Em Desenvolvimento 🟡
 - Refinamentos finais de UX e identidade visual por tipo de negócio.
@@ -57,7 +63,7 @@
 ## Pendente 🔴
 - Habilitar o provedor Google no ambiente de autenticação.
 - IA para configurar e consultar a agenda.
-- Notificações reais por e-mail, WhatsApp e SMS.
+- Entrega real de notificações por e-mail, WhatsApp e SMS, usando a fila já persistida.
 - Pagamentos e planos de assinatura da plataforma SaaS.
 - Integração oficial com WhatsApp.
 
