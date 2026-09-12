@@ -21,7 +21,7 @@ NOTIFICATION_FROM_EMAIL=rfpita.work@gmail.com
 NOTIFICATION_FROM_NAME=Marca Minha Vez
 ```
 
-O endereço `NOTIFICATION_FROM_EMAIL` deve estar cadastrado e autorizado como remetente na Brevo antes do envio real. A integração usa o endpoint transacional `POST /v3/smtp/email`, com `api-key`, remetente, destinatários, assunto e conteúdo HTML/texto. citeturn821366search0turn821366search1
+O endereço `NOTIFICATION_FROM_EMAIL` deve estar cadastrado e autorizado como remetente na Brevo antes do envio real.
 
 ## Agendamento do worker
 
@@ -37,7 +37,7 @@ O segundo argumento define o número máximo de notificações por execução, l
 
 ## Teste seguro
 
-A Brevo também oferece modo sandbox para validar a requisição sem entregar e-mails reais. Quando necessário, o worker pode ser adaptado para enviar com o cabeçalho `X-Sib-Sandbox: drop`. citeturn821366search4
+A integração pode ser validada em modo sandbox da Brevo antes de fazer entregas reais. Nesse modo, a API confirma a requisição sem enviar o e-mail ao destinatário.
 
 ## Limitação atual
 
