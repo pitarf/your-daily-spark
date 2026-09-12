@@ -11,7 +11,11 @@ export function dateToCalendarParts(date: string) {
 export function addCalendarDays(date: string, days: number) {
   const { year, month, day } = dateToCalendarParts(date);
   const value = new Date(Date.UTC(year, month - 1, day + days, 12));
-  return [value.getUTCFullYear(), String(value.getUTCMonth() + 1).padStart(2, "0"), String(value.getUTCDate()).padStart(2, "0")].join("-");
+  return [
+    value.getUTCFullYear(),
+    String(value.getUTCMonth() + 1).padStart(2, "0"),
+    String(value.getUTCDate()).padStart(2, "0"),
+  ].join("-");
 }
 
 export function startOfWeekMonday(date: string) {
@@ -29,10 +33,13 @@ export function daysInMonth(date: string) {
 
 export function monthGridDates(date: string) {
   const first = `${date.slice(0, 7)}-01`;
-  const weekStart = startOfWeekMonday(first);
-  const last = `${date.slice(0, 7)}-${String(daysInMonth(date)).padStart(2, "0")}`;
-  const weekEnd = addCalendarDays(last, ((8 - new Date(Date.UTC(...Object.values(dateToCalendarParts(last)))).getUTCDay()) % 7));
-  return Array.from({ length: 42 }, (_, index) => addCalendarDays(weekStart, index)).filter((day) => day <= weekEnd);
+  const { year, month } = dateToCalendarParts(first);
+  const firstWeekday = new Date(Date.UTC(year, month - 1, 1, 12)).getUTCDay();
+  const leadingDays = firstWeekday === 0 ? 6 : firstWeekday - 1;
+  const cells = Math.ceil((leadingDays + daysInMonth(date)) / 7) * 7;
+  const gridStart = addCalendarDays(first, -leadingDays);
+
+  return Array.from({ length: cells }, (_, index) => addCalendarDays(gridStart, index));
 }
 
 export function periodDates(view: CalendarView, date: string, timeZone: string) {
@@ -43,7 +50,9 @@ export function periodDates(view: CalendarView, date: string, timeZone: string) 
   }
 
   const days = daysInMonth(date);
-  return Array.from({ length: days }, (_, index) => addDaysInTimezone(`${date.slice(0, 7)}-01`, index, timeZone));
+  return Array.from({ length: days }, (_, index) =>
+    addDaysInTimezone(`${date.slice(0, 7)}-01`, index, timeZone),
+  );
 }
 
 export function periodRangeUtc(view: CalendarView, date: string, timeZone: string) {
