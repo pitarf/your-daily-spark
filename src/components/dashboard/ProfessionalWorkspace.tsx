@@ -21,7 +21,9 @@ type ProfessionalAppointment = {
   status: string;
   notes: string | null;
   customer_id: string;
-  service_id: string;
+  service_id: string | null;
+  custom_title: string | null;
+  duration_minutes_override: number | null;
   customers: AppointmentRelation;
   services: ServiceRelation;
 };
@@ -59,7 +61,7 @@ export function ProfessionalWorkspace() {
       const { data: appointments, error: appointmentsError } = await supabase
         .from("appointments")
         .select(
-          "id, starts_at, ends_at, status, notes, customer_id, service_id, customers(name, phone), services(name, duration_minutes)",
+          "id, starts_at, ends_at, status, notes, customer_id, service_id, custom_title, duration_minutes_override, customers(name, phone), services(name, duration_minutes)",
         )
         .eq("establishment_id", membership.establishmentId)
         .eq("professional_id", professional.id)
@@ -228,7 +230,10 @@ function AppointmentCard({
         </div>
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-foreground">{customer?.name ?? "Cliente"}</p>
-          <p className="text-sm text-muted-foreground">{service?.name ?? "Serviço"}</p>
+          <p className="text-sm text-muted-foreground">{appointment.custom_title?.trim() || service?.name || "Atendimento avulso"}</p>
+          {appointment.duration_minutes_override ? (
+            <p className="text-xs text-muted-foreground">{appointment.duration_minutes_override} min</p>
+          ) : null}
           {customer?.phone ? (
             <p className="mt-1 text-xs text-muted-foreground">{customer.phone}</p>
           ) : null}
