@@ -39,6 +39,7 @@
 - Pipeline final da etapa de duração personalizada validou TypeScript, ESLint e build de produção com sucesso.
 - Agendamento avulso personalizado sem serviço cadastrado, com título do atendimento, duração de 15 minutos a 4 horas, profissional opcional, observações e validação server-side.
 - Restrição no banco para impedir atendimento sem serviço e sem título personalizado.
+- Tema visual adaptativo na agenda pública conforme o tipo de negócio: barbearia, salão, nail designer, sobrancelhas, estética, clínica, consultório, tatuagem e outro.
 
 ## Em Desenvolvimento 🟡
 - Refinamentos finais de UX e identidade visual por tipo de negócio.
