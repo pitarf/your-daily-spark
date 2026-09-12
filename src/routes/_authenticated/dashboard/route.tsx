@@ -23,6 +23,7 @@ const NAV = [
   { to: "/dashboard/plans", label: "Planos", exact: false },
   { to: "/dashboard/team", label: "Equipe", exact: false },
   { to: "/dashboard/assistant", label: "Assistente IA", exact: false },
+  { to: "/dashboard/integrations", label: "Integrações", exact: false },
   { to: "/dashboard/profile", label: "Perfil", exact: false },
   { to: "/dashboard/settings", label: "Configurações", exact: false },
 ] as const;
