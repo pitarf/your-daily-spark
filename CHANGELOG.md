@@ -340,3 +340,31 @@
 - **Testes realizados**: revisão estrutural da validação de telefone, estabelecimento, expiração do token, status do agendamento e regra que impede cancelamento após o início.
 - **Problemas encontrados**: nenhum novo bloqueador conhecido.
 - **Pendências relacionadas**: reagendamento pelo cliente, worker de notificações reais, IA, Google, pagamentos e WhatsApp oficial.
+
+## 2026-09-12 (31)
+- **Objetivo da alteração**: Melhorar a experiência imediatamente após a confirmação pública, entregando ao cliente acesso direto ao gerenciamento do próprio agendamento.
+- **Funcionalidades implementadas**:
+  - Novo botão "Gerenciar agendamento" exibido na confirmação dos fluxos normal, duração personalizada e atendimento avulso.
+  - O link é gerado server-side a partir do mesmo mecanismo HMAC usado na página segura de gerenciamento.
+  - Validação de estabelecimento, telefone e agendamento permanece no servidor antes da emissão do link.
+  - O segredo usado para assinar tokens não é enviado ao navegador.
+  - A confirmação mantém as ações de adicionar ao calendário e realizar novo agendamento.
+- **Arquivos alterados**: novo `src/components/scheduling/AppointmentManagementButton.tsx`, `src/components/scheduling/BookingPage.tsx`, `src/components/scheduling/CustomDurationBookingPage.tsx`, `src/components/scheduling/StandaloneCustomBookingPage.tsx`, `src/lib/scheduling/appointment-management.functions.ts`, `PROJECT_STATUS.md`, `CHANGELOG.md`.
+- **Testes realizados**: GitHub Actions executou TypeScript, ESLint e build de produção com sucesso na etapa de consolidação da implementação.
+- **Problemas encontrados**: nenhum novo bloqueador conhecido.
+- **Pendências relacionadas**: entrega real de notificações, IA, Google, pagamentos e WhatsApp oficial.
+
+## 2026-09-12 (32)
+- **Objetivo da alteração**: Tirar a entrega de notificações da camada de fila interna e preparar o envio real de e-mails sem criar dependência de créditos do Lovable.
+- **Funcionalidades implementadas**:
+  - Integração server-side com a API do Resend.
+  - Templates de e-mail para confirmação, cancelamento e lembrete em português.
+  - Dispatcher para buscar notificações vencidas na fila persistente e processá-las em lote.
+  - Claim atômico do registro para reduzir processamento concorrente duplicado.
+  - Marcação de entrega como `sent` e falhas como `failed`.
+  - Comando `bun run notifications:dispatch` para execução por cron/scheduler.
+  - Documentação em `docs/notifications.md` com variáveis de ambiente e exemplo de execução periódica.
+- **Arquivos alterados**: `src/lib/notifications/email.server.ts`, `src/lib/notifications/dispatch.server.ts`, `scripts/dispatch-notifications.ts`, `package.json`, `docs/notifications.md`, `PROJECT_STATUS.md`, `CHANGELOG.md`.
+- **Testes realizados**: GitHub Actions run #97 validou TypeScript, ESLint e build de produção com sucesso.
+- **Problemas encontrados**: a entrega real depende da configuração de `RESEND_API_KEY`, `NOTIFICATION_FROM_EMAIL` e de um scheduler de produção; nesta etapa o provedor implementado é somente e-mail.
+- **Pendências relacionadas**: configurar o ambiente de produção, WhatsApp/SMS, IA, Google, pagamentos e WhatsApp oficial.
