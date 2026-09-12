@@ -341,6 +341,7 @@ export type Database = {
         Row: {
           active: boolean
           address: string | null
+          allow_custom_duration: boolean
           business_type: string
           created_at: string
           description: string | null
@@ -357,6 +358,7 @@ export type Database = {
         Insert: {
           active?: boolean
           address?: string | null
+          allow_custom_duration?: boolean
           business_type?: string
           created_at?: string
           description?: string | null
@@ -373,6 +375,7 @@ export type Database = {
         Update: {
           active?: boolean
           address?: string | null
+          allow_custom_duration?: boolean
           business_type?: string
           created_at?: string
           description?: string | null
@@ -421,7 +424,7 @@ export type Database = {
           id?: string
           scheduled_at?: string
           sent_at?: string | null
-          status?: Database["public"]["Enums"]["appointment_status"]
+          status?: Database["public"]["Enums"]["notification_status"]
           type?: Database["public"]["Enums"]["notification_type"]
           updated_at?: string
         }
@@ -707,10 +710,9 @@ export type Database = {
           establishment_id?: string
           id?: string
           professional_id?: string | null
-          starts_at?: string
-          weekday?: number
-          weekly_schedule_id?: string
+          start_time?: string
           updated_at?: string
+          weekday?: number
         }
         Relationships: [
           {
@@ -782,7 +784,7 @@ export type Tables<
   schema: keyof DatabaseWithoutInternals
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -795,7 +797,7 @@ export type Tables<
       }
       ? R
       : never
-      : never
+    : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
@@ -820,7 +822,7 @@ export type TablesInsert<
       }
       ? I
       : never
-      : never
+    : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
@@ -845,7 +847,7 @@ export type TablesUpdate<
       }
       ? U
       : never
-      : never
+    : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
