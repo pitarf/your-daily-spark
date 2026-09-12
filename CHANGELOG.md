@@ -115,3 +115,13 @@
 - **Testes realizados**: revisão estrutural das funções de calendário e conferência das integrações afetadas; build/typecheck automático continua indisponível por ausência de pipeline configurado no repositório.
 - **Problemas encontrados**: `todayIso()` e `nextDays()` usavam `toISOString()` diretamente, o que poderia deslocar a data do calendário em viradas de dia ou estabelecimentos com outro fuso; corrigido.
 - **Pendências relacionadas**: rota amigável `/agenda/{slug}`; edição completa do perfil/identidade do estabelecimento; equipe; login social; IA; notificações reais; pagamentos e WhatsApp.
+
+## 2026-09-12 (7)
+- **Objetivo da alteração**: Corrigir a precedência de exceções personalizadas quando existe uma exceção geral e outra específica para o mesmo profissional e data.
+- **Funcionalidades implementadas**:
+  - Exceção `custom_hours` específica do profissional agora vence explicitamente a exceção geral do estabelecimento.
+  - A lógica deixou de depender de ordenação por comparação booleana, tornando a regra determinística.
+- **Arquivos alterados**: `src/lib/scheduling/availability.ts`, `CHANGELOG.md`.
+- **Testes realizados**: revisão estrutural do motor de disponibilidade e conferência da regra de precedência.
+- **Problemas encontrados**: a seleção anterior podia escolher uma exceção personalizada incorreta quando havia mais de uma aplicável.
+- **Pendências relacionadas**: rota amigável `/agenda/{slug}`; equipe; edição completa do perfil/identidade do estabelecimento; login social; IA; notificações reais; pagamentos e WhatsApp.
