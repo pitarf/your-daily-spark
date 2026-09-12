@@ -1,5 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
+const BREVO_API_KEY = "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";
+const GEMINI_API_KEY = "AQ.Ab8RN6IzI1jGYl2-NRkL0MrU5HJWxfmj4Vt-GV6JWRytpKilzQ";
+
 import { useSession } from "@/lib/auth/auth-client";
 
 export const Route = createFileRoute("/")({
