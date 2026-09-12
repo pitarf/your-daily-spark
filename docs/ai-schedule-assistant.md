@@ -1,6 +1,6 @@
 # Assistente de agenda com IA
 
-O Marca Minha Vez agora possui uma primeira camada de assistente de agenda. O objetivo é permitir que o administrador descreva o expediente em linguagem natural e receba uma configuração estruturada antes de aplicar qualquer mudança.
+O Marca Minha Vez possui uma primeira camada de assistente de agenda. O objetivo é permitir que o administrador descreva o expediente em linguagem natural e receba uma configuração estruturada antes de aplicar qualquer mudança.
 
 ## Exemplo
 
@@ -13,14 +13,14 @@ O assistente transforma a descrição em sete dias, janelas de atendimento e int
 1. O administrador abre `/dashboard/assistant`.
 2. O sistema carrega somente o expediente geral atual do estabelecimento.
 3. A descrição é enviada para o provedor de IA exclusivamente no servidor.
-4. A resposta é validada com schema antes de aparecer na tela.
+4. A resposta é solicitada em JSON e validada com Zod antes de aparecer na tela.
 5. O administrador revisa a prévia e confirma explicitamente a alteração.
 6. A aplicação substitui somente o expediente geral (`professional_id IS NULL`).
 7. Agendas individuais dos profissionais não são alteradas.
 
 ## Segurança
 
-O endpoint de aplicação exige token de sessão e membership com papel `admin`. A chamada ao provedor usa `OPENAI_API_KEY` apenas no servidor.
+O endpoint de aplicação exige token de sessão e membership com papel `admin`. A chamada ao provedor usa `GEMINI_API_KEY` apenas no servidor.
 
 A IA não executa automaticamente uma mudança. Sempre existe uma etapa de revisão e confirmação humana antes da gravação.
 
@@ -29,16 +29,16 @@ A IA não executa automaticamente uma mudança. Sempre existe uma etapa de revis
 Variável obrigatória:
 
 ```text
-OPENAI_API_KEY=...
+GEMINI_API_KEY=...
 ```
 
 Opcionalmente, o modelo pode ser alterado com:
 
 ```text
-OPENAI_SCHEDULE_MODEL=gpt-5.6-luna
+GEMINI_SCHEDULE_MODEL=gemini-2.5-flash-lite
 ```
 
-O modelo padrão atual é `gpt-5.6-luna`, escolhido para esse fluxo de alto volume e baixa complexidade relativa. A API usada é a Responses API.
+O assistente usa a API Gemini `generateContent`, com saída JSON estruturada e validação adicional no servidor. O formato estruturado reduz respostas fora do contrato; a validação Zod continua sendo a barreira final antes de qualquer alteração no banco.
 
 ## Limitação atual
 
