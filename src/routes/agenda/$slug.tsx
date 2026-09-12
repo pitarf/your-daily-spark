@@ -1,8 +1,11 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
+import { AppointmentManagementLink } from "@/components/scheduling/AppointmentManagementLink";
 import { BookingPage } from "@/components/scheduling/BookingPage";
+import { CustomerAppointmentLookupPage } from "@/components/scheduling/CustomerAppointmentLookupPage";
 import { CustomDurationBookingPage } from "@/components/scheduling/CustomDurationBookingPage";
+import { ManagedAppointmentPage } from "@/components/scheduling/ManagedAppointmentPage";
 import { StandaloneCustomBookingPage } from "@/components/scheduling/StandaloneCustomBookingPage";
 import { getEstablishmentScheduling } from "@/lib/scheduling/scheduling.functions";
 import { getPublicSchedulingSettings } from "@/lib/scheduling/public-settings.functions";
@@ -10,12 +13,10 @@ import { businessThemeStyle, getBusinessThemeWithPreset, getBusinessTypeLabel } 
 import { getEstablishmentThemeConfig } from "@/lib/theming/establishment-theme.functions";
 
 const agendaSearchSchema = z.object({
-  custom: z
-    .preprocess((value) => value === true || value === "true", z.boolean())
-    .optional(),
-  standalone: z
-    .preprocess((value) => value === true || value === "true", z.boolean())
-    .optional(),
+  custom: z.preprocess((value) => value === true || value === "true", z.boolean()).optional(),
+  standalone: z.preprocess((value) => value === true || value === "true", z.boolean()).optional(),
+  manage: z.string().min(1).max(160).optional(),
+  token: z.string().min(20).optional(),
 });
 
 export const Route = createFileRoute("/agenda/$slug")({
@@ -43,9 +44,7 @@ export const Route = createFileRoute("/agenda/$slug")({
       { title: `${loaderData?.establishment.name ?? "Agendamento"} | Marca Minha Vez` },
       {
         name: "description",
-        content:
-          loaderData?.establishment.description ??
-          "Agende seu atendimento online pelo Marca Minha Vez.",
+        content: loaderData?.establishment.description ?? "Agende seu atendimento online pelo Marca Minha Vez.",
       },
       { property: "og:title", content: loaderData?.establishment.name ?? "Agendamento" },
       {
@@ -70,7 +69,7 @@ export const Route = createFileRoute("/agenda/$slug")({
 function AgendaPage() {
   const data = Route.useLoaderData();
   const { slug } = Route.useParams();
-  const { custom, standalone } = Route.useSearch();
+  const { custom, standalone, manage, token } = Route.useSearch();
 
   if (!data) {
     return <div className="p-8 text-center text-sm text-muted-foreground">Nenhum estabelecimento ativo encontrado.</div>;
@@ -78,11 +77,35 @@ function AgendaPage() {
 
   const theme = getBusinessThemeWithPreset(data.businessType, data.themePreset);
   const customDurationEnabled = data.publicSettings.allowCustomDuration;
+
+  if (manage === "find") {
+    return (
+      <div style={businessThemeStyle(theme)}>
+        <PublicHeader data={data} />
+        <CustomerAppointmentLookupPage
+          slug={slug}
+          timezone={data.establishment.timezone}
+          establishmentName={data.establishment.name}
+        />
+      </div>
+    );
+  }
+
+  if (manage && token) {
+    return (
+      <div style={businessThemeStyle(theme)}>
+        <PublicHeader data={data} />
+        <ManagedAppointmentPage appointmentId={manage} token={token} />
+      </div>
+    );
+  }
+
   const requestedUnavailableFeature = (custom || standalone) && !customDurationEnabled;
 
   if (requestedUnavailableFeature) {
     return (
       <div style={businessThemeStyle(theme)}>
+        <PublicHeader data={data} />
         <div className="mx-auto max-w-xl px-4 py-16 text-center">
           <h1 className="text-2xl font-bold text-foreground">Opção não disponível</h1>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
@@ -110,6 +133,14 @@ function AgendaPage() {
       ) : (
         <>
           <div className="mx-auto flex max-w-3xl flex-wrap justify-end gap-2 px-4 pt-5 sm:pt-7">
+            <Link
+              to="/agenda/$slug"
+              params={{ slug }}
+              search={{ manage: "find" }}
+              className="inline-flex rounded-md border border-input px-3 py-2 text-xs font-medium text-foreground hover:bg-accent"
+            >
+              Gerenciar agendamento
+            </Link>
             {customDurationEnabled ? (
               <>
                 <Link
@@ -160,11 +191,18 @@ function PublicHeader({ data }: { data: NonNullable<ReturnType<typeof Route.useL
             <p className="text-xs text-muted-foreground">{businessLabel}</p>
           </div>
         </div>
-        {whatsappHref ? (
-          <a href={whatsappHref} target="_blank" rel="noreferrer" className="inline-flex shrink-0 rounded-full border border-input px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-accent">
-            WhatsApp
-          </a>
-        ) : null}
+        <div className="flex flex-wrap items-center gap-2">
+          <AppointmentManagementLink
+            appointmentId="00000000-0000-0000-0000-000000000000"
+            slug={establishment.slug}
+            customerPhone=""
+          />
+          {whatsappHref ? (
+            <a href={whatsappHref} target="_blank" rel="noreferrer" className="inline-flex shrink-0 rounded-full border border-input px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-accent">
+              WhatsApp
+            </a>
+          ) : null}
+        </div>
       </div>
     </header>
   );
