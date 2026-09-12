@@ -23,6 +23,8 @@ export const schedulePlanSchema = z.object({
 });
 
 const assistantInput = z.object({
+  accessToken: z.string().min(1),
+  establishmentId: z.string().uuid(),
   prompt: z.string().trim().min(5).max(3000),
   currentSchedule: z.string().max(12000).optional(),
 });
@@ -194,13 +196,13 @@ async function requireAdmin(establishmentId: string, accessToken: string) {
   if (membership?.role !== "admin") {
     throw new Error("Somente administradores podem usar o assistente de agenda.");
   }
-
-  return userData.user;
 }
 
 export const analyzeScheduleWithAI = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => assistantInput.parse(data))
   .handler(async ({ data }) => {
+    await requireAdmin(data.establishmentId, data.accessToken);
+
     const raw = await callGemini(data.prompt, data.currentSchedule);
 
     let parsed: unknown;
