@@ -59,6 +59,9 @@
 - Tipos TypeScript do Supabase sincronizados com `theme_preset`.
 - Confirmação pública oferece exportação do agendamento para calendário no formato `.ics`.
 - Exportação de calendário disponível nos fluxos normal, duração personalizada e agendamento avulso.
+- Busca pública de agendamentos por telefone e data, com link de gerenciamento assinado e expiração.
+- Página segura de gerenciamento de agendamento por token.
+- Cancelamento público de agendamentos pendentes ou confirmados antes do início, respeitando o trigger de notificações.
 
 ## Em Desenvolvimento 🟡
 - Refinamentos finais de UX e identidade visual por tipo de negócio.
@@ -70,7 +73,7 @@
 - IA para configurar e consultar a agenda.
 - Pagamentos e planos de assinatura da plataforma SaaS.
 - Integração oficial com WhatsApp.
-- Gestão posterior do agendamento pelo cliente, incluindo cancelamento e reagendamento por link seguro.
+- Reagendamento pelo cliente por link seguro.
 
 ## Bloqueado ⚠️
 - Nenhum no momento.
