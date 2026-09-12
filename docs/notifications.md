@@ -39,6 +39,8 @@ O segundo argumento define o número máximo de notificações por execução, l
 
 A integração pode ser validada em modo sandbox da Brevo antes de fazer entregas reais. Nesse modo, a API confirma a requisição sem enviar o e-mail ao destinatário.
 
+O dashboard também possui uma área de Integrações que verifica se os secrets estão configurados sem exibir seus valores e permite enviar um e-mail de teste para o e-mail da própria conta administrativa.
+
 ## Limitação atual
 
 A entrega implementada nesta etapa é somente por e-mail via Brevo. WhatsApp oficial e SMS continuam como integrações futuras, sem alterar o formato da fila persistente.
