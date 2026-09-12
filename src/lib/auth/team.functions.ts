@@ -31,12 +31,20 @@ async function requireAdmin(establishmentId: string, accessToken: string) {
   return user;
 }
 
+async function findAuthUserByEmail(email: string) {
+  const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  if (error) throw error;
+  return data.users.find((candidate) => candidate.email?.toLowerCase() === email) ?? null;
+}
+
 export const inviteProfessional = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) =>
-    teamInput.extend({
-      professionalId: z.string().uuid(),
-      email: z.string().email(),
-    }).parse(data),
+    teamInput
+      .extend({
+        professionalId: z.string().uuid(),
+        email: z.string().email(),
+      })
+      .parse(data),
   )
   .handler(async ({ data }) => {
     await requireAdmin(data.establishmentId, data.accessToken);
@@ -55,13 +63,9 @@ export const inviteProfessional = createServerFn({ method: "POST" })
     const email = data.email.trim().toLowerCase();
     let userId: string;
 
-    const existingUser = await supabaseAdmin.auth.admin.getUserByEmail(email);
-    if (existingUser.error && existingUser.error.status !== 404) {
-      throw existingUser.error;
-    }
-
-    if (existingUser.data?.user) {
-      userId = existingUser.data.user.id;
+    const existingUser = await findAuthUserByEmail(email);
+    if (existingUser) {
+      userId = existingUser.id;
       const { data: currentMembership, error: membershipError } = await supabaseAdmin
         .from("establishment_users")
         .select("role")
@@ -98,13 +102,15 @@ export const inviteProfessional = createServerFn({ method: "POST" })
 
     return {
       ok: true as const,
-      invited: !existingUser.data?.user,
-      message: existingUser.data?.user ? "Conta existente vinculada ao profissional." : "Convite enviado por e-mail.",
+      invited: !existingUser,
+      message: existingUser ? "Conta existente vinculada ao profissional." : "Convite enviado por e-mail.",
     };
   });
 
 export const unlinkProfessional = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => teamInput.extend({ professionalId: z.string().uuid() }).parse(data))
+  .inputValidator((data: unknown) =>
+    teamInput.extend({ professionalId: z.string().uuid() }).parse(data),
+  )
   .handler(async ({ data }) => {
     await requireAdmin(data.establishmentId, data.accessToken);
 
