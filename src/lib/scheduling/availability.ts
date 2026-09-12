@@ -147,9 +147,16 @@ export function computeAvailability(params: AvailabilityParams): AvailabilitySlo
     breaks: s.breaks.map((b) => ({ start: toMinutes(b.start), end: toMinutes(b.end) })),
   }));
 
-  const custom = relevantExceptions
-    .filter((e) => e.type === "custom_hours" && e.start_time && e.end_time)
-    .sort((a, b) => (a.professional_id === professionalId ? -1 : 1))[0];
+  // Uma exceção específica do profissional deve prevalecer sobre a exceção geral.
+  const specificCustom = professionalId
+    ? relevantExceptions.find(
+        (e) => e.type === "custom_hours" && e.professional_id === professionalId && e.start_time && e.end_time,
+      )
+    : undefined;
+  const generalCustom = relevantExceptions.find(
+    (e) => e.type === "custom_hours" && e.professional_id === null && e.start_time && e.end_time,
+  );
+  const custom = specificCustom ?? generalCustom;
 
   if (custom) {
     windows = [
