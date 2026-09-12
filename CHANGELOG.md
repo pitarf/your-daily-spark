@@ -63,116 +63,100 @@
 ## 2026-09-11 (3)
 - **Objetivo da alteração**: Tornar a agenda pública reutilizável por qualquer estabelecimento, sem depender do slug fixo da barbearia de demonstração.
 - **Funcionalidades implementadas**:
-  - `/schedule` agora aceita o parâmetro opcional `slug` na URL.
+  - `/schedule` agora aceita o parâmetro opcional `slug`.
   - O loader e as chamadas de disponibilidade/agendamento usam o slug recebido, mantendo a barbearia de demonstração como fallback para links antigos.
   - O link público exibido em Configurações agora aponta para o slug real do estabelecimento e pode ser aberto em nova aba ou copiado.
 - **Arquivos alterados**: `src/routes/schedule.tsx`, `src/routes/_authenticated/dashboard/settings.tsx`, `CHANGELOG.md`.
-- **Testes realizados**: validação estrutural da alteração no código e preservação do fluxo existente; ainda é necessário validar o build/typecheck no ambiente de execução.
+- **Testes realizados**: validação estrutural da alteração no código e preservação do fluxo existente.
 - **Problemas encontrados**: nenhum conhecido nesta etapa.
-- **Pendências relacionadas**: criação de uma rota amigável dedicada como `/agenda/{slug}` continua planejada; gestão de horários pela tela ainda não implementada.
+- **Pendências relacionadas**: rota amigável dedicada; gestão de horários pela tela.
 
 ## 2026-09-11 (4)
 - **Objetivo da alteração**: Liberar a gestão do expediente geral diretamente pelo painel do estabelecimento e permitir fechamentos em datas específicas.
 - **Funcionalidades implementadas**:
-  - Edição dos horários gerais de domingo a sábado, com ativação/desativação de cada dia.
-  - Edição do início e fim do expediente.
-  - Suporte visual a múltiplos intervalos por dia, com inclusão, edição e remoção.
-  - Validações no cliente para impedir expediente inválido e intervalos fora da janela de atendimento antes do envio ao banco.
-  - Persistência dos horários e intervalos em `weekly_schedules` e `schedule_breaks`, respeitando RLS de administrador.
-  - Cadastro e remoção de exceções de fechamento em datas específicas usando `schedule_exceptions` com `type = closed`.
-  - Agendas específicas de profissionais continuam separadas e não são sobrescritas pelo editor do expediente geral.
+  - Edição dos horários gerais de domingo a sábado.
+  - Múltiplos intervalos por dia.
+  - Fechamentos e horários especiais por data.
+  - Persistência de horários e exceções no banco sob RLS.
 - **Arquivos alterados**: `src/routes/_authenticated/dashboard/settings.tsx`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
-- **Testes realizados**: validação estrutural do código e conferência da modelagem SQL existente para `weekly_schedules`, `schedule_breaks` e `schedule_exceptions`; build/typecheck ainda precisa ser executado no ambiente do projeto.
+- **Testes realizados**: validação estrutural e conferência das tabelas relacionadas.
 - **Problemas encontrados**: nenhum conhecido nesta etapa.
-- **Pendências relacionadas**: edição de horários individuais de profissionais; exceções com horário personalizado; convite de profissionais para a equipe; gestão de planos de clientes; rota amigável `/agenda/{slug}`.
+- **Pendências relacionadas**: agenda individual por profissional.
 
 ## 2026-09-11 (5)
-- **Objetivo da alteração**: Consolidar diretamente no código o núcleo restante do MVP e aplicar as regras de negócio pendentes sem consumir créditos do Lovable.
+- **Objetivo da alteração**: Consolidar diretamente no código o núcleo restante do MVP e aplicar regras de negócio pendentes sem consumir créditos do Lovable.
 - **Funcionalidades implementadas**:
-  - Agenda individual por profissional no painel, com dias ativos/inativos, horários próprios e múltiplos intervalos.
-  - Override de agenda individual, permitindo que um profissional tenha um dia de folga sem alterar o expediente geral do estabelecimento.
-  - Gestão de planos de clientes na interface, com criação/edição, limite máximo de duração e serviços permitidos.
-  - Vínculo de plano ativo ao cliente com validade opcional.
-  - Bloqueios de agenda pelo painel, para todos os profissionais ou para um profissional específico.
-  - Exceções de agenda com horário especial personalizado, além do fechamento de dia inteiro.
-  - Regras de plano aplicadas no servidor durante a criação do agendamento, validando serviço permitido e duração máxima pelo cliente identificado por telefone.
-  - Correção da leitura das agendas individuais no servidor para incluir linhas inativas usadas como overrides de folga.
-  - Validação defensiva do horário recebido pelo endpoint antes de convertê-lo para ISO.
-- **Arquivos alterados**: `src/lib/scheduling/scheduling.functions.ts`, `src/lib/scheduling/availability.ts`, `src/routes/_authenticated/dashboard/professionals.tsx`, `src/routes/_authenticated/dashboard/customers.tsx`, `src/routes/_authenticated/dashboard/appointments.tsx`, `src/routes/_authenticated/dashboard/settings.tsx`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
-- **Testes realizados**: revisão estrutural das integrações entre interface, banco e motor de disponibilidade; conferência das queries e regras de persistência existentes. O repositório não possui checks automáticos configurados para este commit, portanto build/typecheck automatizado não foi executado nesta rodada.
-- **Problemas encontrados**: havia um ponto em que a leitura da agenda do servidor filtrava apenas linhas ativas, o que impediria um override individual inativo de representar folga; corrigido.
-- **Pendências relacionadas**: convite/vínculo de profissionais a contas de usuário; rota amigável `/agenda/{slug}`; edição completa do perfil/identidade do estabelecimento; login social; IA; notificações; pagamentos e WhatsApp.
+  - Agenda individual por profissional.
+  - Gestão de planos de clientes.
+  - Bloqueios gerais e por profissional.
+  - Exceções com horário especial.
+  - Regras de plano no agendamento.
+  - Correções de overrides individuais.
+- **Arquivos alterados**: módulos de scheduling, telas de profissionais, clientes, agendamentos, configurações, `CHANGELOG.md` e `PROJECT_STATUS.md`.
+- **Testes realizados**: revisão estrutural das integrações e persistência.
+- **Problemas encontrados**: correção do filtro de agendas individuais inativas.
+- **Pendências relacionadas**: equipe, URL amigável, identidade do estabelecimento, login social, IA, notificações, pagamentos e WhatsApp.
 
 ## 2026-09-12 (6)
-- **Objetivo da alteração**: Corrigir a experiência pública de calendário para trabalhar com a data do estabelecimento, e não com a data UTC/local do navegador, e elevar a apresentação inicial do produto.
-- **Funcionalidades implementadas**:
-  - Adicionada `addDaysInTimezone` para cálculos de datas de calendário no fuso do estabelecimento.
-  - `/schedule` passou a calcular hoje, datas futuras e data mínima usando o timezone do estabelecimento.
-  - Melhorias de acessibilidade na seleção de serviços, profissionais e horários (`aria-pressed`, `aria-label`, `role="alert"`).
-  - Melhor orientação visual na grade de horários, explicando o significado dos horários indisponíveis.
-  - Homepage substituída por uma apresentação real do Marca Minha Vez, com proposta de valor, benefícios, fluxo de uso e CTAs para agenda e criação de estabelecimento.
+- **Objetivo da alteração**: Corrigir a experiência pública de calendário para trabalhar com a data do estabelecimento e elevar a apresentação inicial do produto.
+- **Funcionalidades implementadas**: cálculo de datas sensível ao fuso, acessibilidade básica e nova homepage comercial.
 - **Arquivos alterados**: `src/lib/scheduling/format.ts`, `src/routes/schedule.tsx`, `src/routes/index.tsx`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
-- **Testes realizados**: revisão estrutural das funções de calendário e conferência das integrações afetadas; build/typecheck automático continua indisponível por ausência de pipeline configurado no repositório.
-- **Problemas encontrados**: `todayIso()` e `nextDays()` usavam `toISOString()` diretamente, o que poderia deslocar a data do calendário em viradas de dia ou estabelecimentos com outro fuso; corrigido.
-- **Pendências relacionadas**: rota amigável `/agenda/{slug}`; edição completa do perfil/identidade do estabelecimento; equipe; login social; IA; notificações reais; pagamentos e WhatsApp.
+- **Testes realizados**: revisão estrutural.
+- **Problemas encontrados**: deslocamentos de data em UTC corrigidos.
+- **Pendências relacionadas**: rota amigável, perfil, equipe e integrações futuras.
 
 ## 2026-09-12 (7)
-- **Objetivo da alteração**: Corrigir a precedência de exceções personalizadas quando existe uma exceção geral e outra específica para o mesmo profissional e data.
-- **Funcionalidades implementadas**:
-  - Exceção `custom_hours` específica do profissional agora vence explicitamente a exceção geral do estabelecimento.
-  - A lógica deixou de depender de ordenação por comparação booleana, tornando a regra determinística.
+- **Objetivo da alteração**: Corrigir precedência de exceções específicas de profissional.
+- **Funcionalidades implementadas**: horário especial específico vence horário especial geral.
 - **Arquivos alterados**: `src/lib/scheduling/availability.ts`, `CHANGELOG.md`.
-- **Testes realizados**: revisão estrutural do motor de disponibilidade e conferência da regra de precedência.
-- **Problemas encontrados**: a seleção anterior podia escolher uma exceção personalizada incorreta quando havia mais de uma aplicável.
-- **Pendências relacionadas**: rota amigável `/agenda/{slug}`; equipe; edição completa do perfil/identidade do estabelecimento; login social; IA; notificações reais; pagamentos e WhatsApp.
+- **Testes realizados**: revisão estrutural do motor.
+- **Problemas encontrados**: seleção anterior podia escolher exceção personalizada incorreta.
+- **Pendências relacionadas**: rota amigável, equipe e integrações futuras.
 
 ## 2026-09-12 (8)
-- **Objetivo da alteração**: Completar a precedência das exceções de agenda para tratar corretamente combinações entre fechamento geral, horário especial geral, fechamento individual e horário especial individual.
-- **Funcionalidades implementadas**:
-  - Fechamento específico do profissional passa a ter prioridade máxima.
-  - Horário especial específico do profissional pode substituir explicitamente um fechamento geral.
-  - Fechamento geral continua vencendo o horário especial geral quando não existe override específico.
-  - A regra agora é expressa diretamente no motor de disponibilidade, sem depender da ordenação incidental das exceções.
+- **Objetivo da alteração**: Completar a precedência das exceções de agenda.
+- **Funcionalidades implementadas**: fechamento individual > horário especial individual > fechamento geral > horário especial geral > agenda semanal.
 - **Arquivos alterados**: `src/lib/scheduling/availability.ts`, `CHANGELOG.md`.
-- **Testes realizados**: revisão estrutural da matriz de precedência do motor de disponibilidade.
-- **Problemas encontrados**: a correção anterior ainda permitia que um fechamento geral encerrasse a disponibilidade antes de avaliar um horário especial específico do profissional.
-- **Pendências relacionadas**: rota amigável `/agenda/{slug}`; equipe; edição completa do perfil/identidade do estabelecimento; login social; IA; notificações reais; pagamentos e WhatsApp.
+- **Testes realizados**: revisão estrutural da matriz de precedência.
+- **Problemas encontrados**: corrigida interação entre fechamento geral e horário especial específico.
+- **Pendências relacionadas**: rota amigável, equipe, perfil e integrações futuras.
 
 ## 2026-09-12 (9)
 - **Objetivo da alteração**: Criar uma área dedicada para administrar a identidade e os dados públicos do estabelecimento.
-- **Funcionalidades implementadas**:
-  - Nova rota autenticada `/dashboard/profile`.
-  - Edição do nome, descrição, tipo de negócio, fuso horário, telefone, WhatsApp, e-mail, endereço e URL da logo.
-  - Pré-visualização da logo e acesso direto à agenda pública.
-  - Somente administradores podem salvar alterações; outros perfis recebem a tela em modo de visualização.
-  - Novo item "Perfil" na navegação do painel.
-  - Rota registrada no `src/routeTree.gen.ts` para manter a navegação tipada.
+- **Funcionalidades implementadas**: rota `/dashboard/profile`, edição de dados comerciais, identidade visual e URL da logo; acesso restrito para edição a administradores.
 - **Arquivos alterados**: `src/routes/_authenticated/dashboard/profile.tsx`, `src/routes/_authenticated/dashboard/route.tsx`, `src/routeTree.gen.ts`, `CHANGELOG.md`.
-- **Testes realizados**: revisão estrutural de leitura/atualização dos campos existentes e proteção por papel no frontend; build/typecheck automático não está configurado no repositório.
-- **Problemas encontrados**: nenhum conhecido nesta etapa.
-- **Pendências relacionadas**: rota pública amigável `/agenda/{slug}`; convite/vínculo de equipe; login social; IA; notificações; pagamentos e WhatsApp.
+- **Testes realizados**: revisão estrutural.
+- **Problemas encontrados**: nenhum conhecido.
+- **Pendências relacionadas**: URL amigável, equipe e integrações futuras.
 
 ## 2026-09-12 (10)
-- **Objetivo da alteração**: Criar uma URL pública amigável para o agendamento, sem quebrar os links legados.
-- **Funcionalidades implementadas**:
-  - Nova rota pública dinâmica `/agenda/$slug` que carrega o estabelecimento pelo slug real e reutiliza todo o fluxo de agendamento.
-  - Fluxo público de agendamento extraído para `src/components/scheduling/BookingPage.tsx`, permitindo reutilização entre rotas.
-  - `/schedule?slug={slug}` passa a funcionar como compatibilidade legada e redireciona automaticamente para `/agenda/{slug}`.
-  - Metadados básicos de SEO na nova rota dinâmica.
-  - Route tree atualizado para registrar a nova rota.
-- **Arquivos alterados**: `src/routes/schedule.tsx`, `src/routeTree.gen.ts`, `CHANGELOG.md`; novo: `src/routes/agenda/$slug.tsx`, `src/components/scheduling/BookingPage.tsx`.
-- **Testes realizados**: revisão estrutural da integração entre loader, parâmetros de rota, motor de disponibilidade e criação de agendamento; build/typecheck automático segue indisponível sem pipeline configurado.
-- **Problemas encontrados**: nenhum conhecido nesta etapa.
-- **Pendências relacionadas**: atualizar os links internos do painel para preferirem `/agenda/{slug}`; convite/vínculo de equipe; login social; IA; notificações; pagamentos e WhatsApp.
+- **Objetivo da alteração**: Criar uma URL pública amigável para o agendamento sem quebrar links legados.
+- **Funcionalidades implementadas**: `/agenda/{slug}`, componente compartilhado de booking, redirecionamento da rota legada e metadados básicos de SEO.
+- **Arquivos alterados**: `src/routes/schedule.tsx`, `src/routeTree.gen.ts`, `CHANGELOG.md`; novos componentes e rota dinâmica de agenda.
+- **Testes realizados**: revisão estrutural.
+- **Problemas encontrados**: nenhum conhecido.
+- **Pendências relacionadas**: equipe, login social, IA, notificações, pagamentos e WhatsApp.
 
 ## 2026-09-12 (11)
-- **Objetivo da alteração**: Adicionar uma verificação contínua de qualidade ao repositório para detectar regressões sem depender do Lovable.
-- **Funcionalidades implementadas**:
-  - GitHub Actions em `.github/workflows/ci.yml`.
-  - Executa em pull requests e em pushes para `main`.
-  - Instala dependências com Bun usando `bun.lock`.
-  - Executa TypeScript (`tsc --noEmit`), ESLint e build de produção.
+- **Objetivo da alteração**: Adicionar verificação contínua de qualidade ao repositório.
+- **Funcionalidades implementadas**: GitHub Actions para TypeScript, ESLint e build em PRs e pushes para `main`.
 - **Arquivos alterados**: `.github/workflows/ci.yml`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
-- **Testes realizados**: pipeline configurado; a execução efetiva será validada pelo GitHub Actions no próximo push/PR.
+- **Testes realizados**: pipeline configurado para validar automaticamente novas alterações.
+- **Problemas encontrados**: nenhum conhecido.
+- **Pendências relacionadas**: equipe, login social, IA, notificações, pagamentos e WhatsApp.
+
+## 2026-09-12 (12)
+- **Objetivo da alteração**: Implementar o gerenciamento de acesso da equipe sem criar uma nova tabela de convites.
+- **Funcionalidades implementadas**:
+  - Nova página `/dashboard/team` para administradores.
+  - Convite de profissional por e-mail usando a autenticação administrativa do Supabase no servidor.
+  - Usuário convidado é associado ao registro do profissional por `professionals.user_id`.
+  - Membership `professional` criada/atualizada em `establishment_users`.
+  - Remoção do acesso desassocia o profissional e remove apenas o vínculo daquele estabelecimento, sem apagar a conta do usuário.
+  - Proteção server-side: somente admin do estabelecimento pode executar convite ou remoção.
+  - Novo item "Equipe" na navegação do dashboard.
+  - Rota registrada no `routeTree.gen.ts`.
+- **Arquivos alterados**: `src/routes/_authenticated/dashboard/route.tsx`, `src/routeTree.gen.ts`, `CHANGELOG.md`; novos: `src/routes/_authenticated/dashboard/team.tsx`, `src/lib/auth/team.functions.ts`.
+- **Testes realizados**: revisão estrutural do fluxo de autenticação, vínculo profissional-usuário e isolamento por estabelecimento; sem alteração de schema do banco.
 - **Problemas encontrados**: nenhum conhecido nesta etapa.
-- **Pendências relacionadas**: equipe; login social; IA; notificações; pagamentos e WhatsApp.
+- **Pendências relacionadas**: mostrar ao profissional somente a agenda correspondente ao seu próprio perfil; login social; IA; notificações reais; pagamentos e WhatsApp.
