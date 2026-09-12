@@ -17,48 +17,48 @@ export type Database = {
       appointments: {
         Row: {
           created_at: string
+          custom_price: number | null
+          custom_title: string | null
           customer_id: string
+          duration_minutes_override: number | null
           ends_at: string
           establishment_id: string
           id: string
           notes: string | null
           professional_id: string
           service_id: string | null
-          custom_title: string | null
-          custom_price: number | null
-          duration_minutes_override: number | null
           starts_at: string
           status: Database["public"]["Enums"]["appointment_status"]
           updated_at: string
         }
         Insert: {
           created_at?: string
+          custom_price?: number | null
+          custom_title?: string | null
           customer_id: string
+          duration_minutes_override?: number | null
           ends_at: string
           establishment_id: string
           id?: string
           notes?: string | null
           professional_id: string
           service_id?: string | null
-          custom_title?: string | null
-          custom_price?: number | null
-          duration_minutes_override?: number | null
           starts_at: string
           status?: Database["public"]["Enums"]["appointment_status"]
           updated_at?: string
         }
         Update: {
           created_at?: string
+          custom_price?: number | null
+          custom_title?: string | null
           customer_id?: string
+          duration_minutes_override?: number | null
           ends_at?: string
           establishment_id?: string
           id?: string
           notes?: string | null
           professional_id?: string
           service_id?: string | null
-          custom_title?: string | null
-          custom_price?: number | null
-          duration_minutes_override?: number | null
           starts_at?: string
           status?: Database["public"]["Enums"]["appointment_status"]
           updated_at?: string
@@ -708,6 +708,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          created_at?: string
           end_time?: string
           establishment_id?: string
           id?: string
@@ -738,6 +739,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      current_establishment_professional_id: {
+        Args: { p_establishment_id: string }
+        Returns: string
+      }
+      current_establishment_role: {
+        Args: { p_establishment_id: string }
+        Returns: string
+      }
       has_establishment_role: {
         Args: {
           _establishment_id: string
@@ -786,7 +795,7 @@ export type Tables<
   schema: keyof DatabaseWithoutInternals
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
