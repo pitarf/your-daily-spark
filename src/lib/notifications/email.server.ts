@@ -1,3 +1,5 @@
+import { describeHttpFailure, redactSecrets } from "@/lib/integrations/secret-safe.server";
+
 export type NotificationEmail = {
   to: string;
   subject: string;
