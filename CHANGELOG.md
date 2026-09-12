@@ -101,4 +101,17 @@
 - **Arquivos alterados**: `src/lib/scheduling/scheduling.functions.ts`, `src/lib/scheduling/availability.ts`, `src/routes/_authenticated/dashboard/professionals.tsx`, `src/routes/_authenticated/dashboard/customers.tsx`, `src/routes/_authenticated/dashboard/appointments.tsx`, `src/routes/_authenticated/dashboard/settings.tsx`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
 - **Testes realizados**: revisão estrutural das integrações entre interface, banco e motor de disponibilidade; conferência das queries e regras de persistência existentes. O repositório não possui checks automáticos configurados para este commit, portanto build/typecheck automatizado não foi executado nesta rodada.
 - **Problemas encontrados**: havia um ponto em que a leitura da agenda do servidor filtrava apenas linhas ativas, o que impediria um override individual inativo de representar folga; corrigido.
-- **Pendências relacionadas**: convite/vínculo de profissionais a usuários; rota amigável `/agenda/{slug}`; edição completa do perfil/identidade do estabelecimento; login social; IA; notificações reais; pagamentos e WhatsApp.
+- **Pendências relacionadas**: convite/vínculo de profissionais a contas de usuário; rota amigável `/agenda/{slug}`; edição completa do perfil/identidade do estabelecimento; login social; IA; notificações; pagamentos e WhatsApp.
+
+## 2026-09-12 (6)
+- **Objetivo da alteração**: Corrigir a experiência pública de calendário para trabalhar com a data do estabelecimento, e não com a data UTC/local do navegador, e elevar a apresentação inicial do produto.
+- **Funcionalidades implementadas**:
+  - Adicionada `addDaysInTimezone` para cálculos de datas de calendário no fuso do estabelecimento.
+  - `/schedule` passou a calcular hoje, datas futuras e data mínima usando o fuso configurado para o estabelecimento.
+  - Melhorias de acessibilidade na seleção de serviços, profissionais e horários (`aria-pressed`, `aria-label`, `role="alert"`).
+  - Melhor orientação visual na grade de horários, explicando o significado dos horários indisponíveis.
+  - Homepage substituída por uma apresentação real do Marca Minha Vez, com proposta de valor, benefícios, fluxo de uso e CTAs para agenda e criação de estabelecimento.
+- **Arquivos alterados**: `src/lib/scheduling/format.ts`, `src/routes/schedule.tsx`, `src/routes/index.tsx`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
+- **Testes realizados**: revisão estrutural das funções de calendário e conferência das integrações afetadas; build/typecheck automático continua indisponível por ausência de pipeline configurado no repositório.
+- **Problemas encontrados**: `todayIso()` e `nextDays()` usavam `toISOString()` diretamente, o que poderia deslocar a data do calendário em viradas de dia ou estabelecimentos com outro fuso; corrigido.
+- **Pendências relacionadas**: rota amigável `/agenda/{slug}`; edição completa do perfil/identidade do estabelecimento; equipe; login social; IA; notificações reais; pagamentos e WhatsApp.
