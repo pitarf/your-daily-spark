@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 
 import { BookingPage } from "@/components/scheduling/BookingPage";
 import { getEstablishmentScheduling } from "@/lib/scheduling/scheduling.functions";
@@ -42,5 +42,18 @@ function AgendaPage() {
     return <div className="p-8 text-center text-sm text-muted-foreground">Nenhum estabelecimento ativo encontrado.</div>;
   }
 
-  return <BookingPage data={data} slug={slug} />;
+  return (
+    <div>
+      <div className="mx-auto max-w-3xl px-4 pt-5 text-right sm:pt-7">
+        <Link
+          to="/agenda-personalizada/$slug"
+          params={{ slug }}
+          className="inline-flex rounded-md border border-input px-3 py-2 text-xs font-medium text-foreground hover:bg-accent"
+        >
+          Agendamento personalizado
+        </Link>
+      </div>
+      <BookingPage data={data} slug={slug} />
+    </div>
+  );
 }
