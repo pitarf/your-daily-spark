@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useEstablishment } from "@/lib/auth/establishment-context";
-import { formatDate, formatTime, todayInTimezone } from "@/lib/scheduling/format";
+import { dateKeyInTimezone, formatDate, formatTime, todayInTimezone } from "@/lib/scheduling/format";
 
 type AppointmentRelation =
   | { name: string; phone: string | null }
@@ -107,9 +107,11 @@ export function ProfessionalWorkspace() {
   const timezone = membership.timezone || "America/Sao_Paulo";
   const today = todayInTimezone(timezone);
   const todayAppointments = appointments.filter(
-    (item) => item.starts_at.slice(0, 10) === today,
+    (item) => dateKeyInTimezone(item.starts_at, timezone) === today,
   );
-  const upcoming = appointments.filter((item) => item.starts_at.slice(0, 10) !== today);
+  const upcoming = appointments.filter(
+    (item) => dateKeyInTimezone(item.starts_at, timezone) !== today,
+  );
 
   return (
     <div className="space-y-5">

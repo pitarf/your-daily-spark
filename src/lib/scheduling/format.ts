@@ -33,6 +33,16 @@ export function todayInTimezone(timeZone: string) {
   }).format(new Date());
 }
 
+/** Chave de calendário (YYYY-MM-DD) para um instante no fuso informado. */
+export function dateKeyInTimezone(iso: string, timeZone: string) {
+  return new Intl.DateTimeFormat("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone,
+  }).format(new Date(iso));
+}
+
 /** Soma dias a uma data de calendário, preservando o fuso do estabelecimento. */
 export function addDaysInTimezone(date: string, days: number, timeZone: string) {
   const baseNoon = new Date(`${date}T12:00:00Z`);
