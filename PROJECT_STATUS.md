@@ -77,11 +77,14 @@
 - Prévia da IA mostra sete dias, janelas, intervalos e avisos antes de qualquer alteração.
 - Aplicação da configuração de IA exige confirmação explícita e altera somente o expediente geral, preservando agendas individuais dos profissionais.
 - O assistente foi preparado para uso com a API Gemini, com `GEMINI_API_KEY` somente no servidor e saída JSON estruturada validada por Zod.
+- Assistente operacional em modo somente leitura consulta, no servidor, estabelecimento, profissionais, serviços, agendamentos e bloqueios dos próximos 30 dias.
+- Consulta operacional da IA exige membership de administrador e não envia telefone, e-mail ou outros dados pessoais de clientes ao Gemini.
+- Respostas operacionais do Gemini usam JSON estruturado e validação Zod antes de serem exibidas.
 
 ## Em Desenvolvimento 🟡
 - Refinamentos finais de UX e identidade visual por tipo de negócio.
 - Melhorias de experiência no fluxo de agendamento e administração.
-- Evolução do assistente para consultar agenda, serviços, profissionais, bloqueios e disponibilidade em linguagem natural.
+- Evolução do assistente para interpretar disponibilidade em linguagem natural com maior precisão e, futuramente, executar ações administrativas com confirmação explícita.
 - Validação final e configuração de produção das integrações de e-mail e IA.
 
 ## Pendente 🔴

@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEstablishment } from "@/lib/auth/establishment-context";
 import { analyzeScheduleWithAI, applySchedulePlan, type schedulePlanSchema } from "@/lib/ai/schedule-assistant.functions";
+import { askAgendaAssistant } from "@/lib/ai/agenda-query.functions";
 
 type SchedulePlan = ReturnType<typeof schedulePlanSchema.parse>;
 
@@ -22,9 +23,13 @@ function AssistantPage() {
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [applyError, setApplyError] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState<{ answer: string; highlights: string[] } | null>(null);
+  const [queryError, setQueryError] = useState<string | null>(null);
 
   const analyze = useServerFn(analyzeScheduleWithAI);
   const apply = useServerFn(applySchedulePlan);
+  const ask = useServerFn(askAgendaAssistant);
 
   const currentScheduleQuery = useQuery({
     queryKey: ["assistant-current-schedule", membership.establishmentId],
@@ -87,6 +92,26 @@ function AssistantPage() {
     onError: (error) => setApplyError(error instanceof Error ? error.message : "Não foi possível aplicar a agenda."),
   });
 
+  const queryMutation = useMutation({
+    mutationFn: async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error("Sua sessão expirou. Entre novamente.");
+      return ask({
+        data: {
+          accessToken,
+          establishmentId: membership.establishmentId,
+          question,
+        },
+      });
+    },
+    onSuccess: (result) => {
+      setAnswer(result);
+      setQueryError(null);
+    },
+    onError: (error) => setQueryError(error instanceof Error ? error.message : "Não foi possível consultar o assistente."),
+  });
+
   const planByDay = new Map(plan?.days.map((day) => [day.weekday, day]) ?? []);
 
   return (
@@ -98,6 +123,45 @@ function AssistantPage() {
           Descreva como você trabalha normalmente. O assistente transforma a frase em uma prévia estruturada. Você revisa antes de aplicar.
         </p>
       </header>
+
+      <section className="rounded-2xl border border-border bg-card p-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Consulta operacional</p>
+        <h2 className="mt-1 text-xl font-bold text-foreground">Pergunte sobre sua operação</h2>
+        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+          Consulte agenda, profissionais, serviços, bloqueios e agendamentos dos próximos 30 dias. A consulta é somente leitura.
+        </p>
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+          <input
+            value={question}
+            onChange={(event) => setQuestion(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !event.shiftKey && question.trim().length >= 3) queryMutation.mutate();
+            }}
+            maxLength={1500}
+            className="min-w-0 flex-1 rounded-xl border border-input bg-background px-3 py-2.5 text-sm text-foreground"
+            placeholder="Ex.: quantos agendamentos tenho amanhã?"
+          />
+          <button
+            type="button"
+            onClick={() => queryMutation.mutate()}
+            disabled={queryMutation.isPending || question.trim().length < 3}
+            className="rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60"
+          >
+            {queryMutation.isPending ? "Consultando…" : "Perguntar"}
+          </button>
+        </div>
+        {queryError ? <p className="mt-3 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">{queryError}</p> : null}
+        {answer ? (
+          <div className="mt-4 rounded-xl border border-border bg-muted/20 p-4">
+            <p className="text-sm leading-6 text-foreground">{answer.answer}</p>
+            {answer.highlights.length ? (
+              <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
+                {answer.highlights.map((highlight) => <li key={highlight}>• {highlight}</li>)}
+              </ul>
+            ) : null}
+          </div>
+        ) : null}
+      </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="rounded-2xl border border-border bg-card p-5">
