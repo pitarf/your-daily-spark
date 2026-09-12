@@ -1,7 +1,7 @@
 # Status do Projeto
 
 ## Funcionalidades Concluídas ✅
-- Banco de dados multi-tenant com 16 tabelas, FKs, índices e `updated_at` automático.
+- Banco de dados multi-tenant com tabelas, FKs, índices e `updated_at` automático.
 - RLS ativo em todas as tabelas, com isolamento por estabelecimento e escopos adicionais para profissionais.
 - Proteção de banco contra horários sobrepostos e conflitos com bloqueios.
 - Dados de demonstração da Barbearia Marca Minha Vez.
@@ -13,7 +13,7 @@
 - Calendário público sensível ao fuso do estabelecimento.
 - Autenticação por e-mail, cadastro e recuperação de senha.
 - Login social com Google preparado na interface, pendente apenas da habilitação do provedor no ambiente de autenticação.
-- Dashboard protegido com agenda, serviços, profissionais, clientes e configurações.
+- Dashboard protegido com agenda, serviços, profissionais, clientes, equipe, planos e configurações.
 - Controle de acesso por papel para impedir que profissionais naveguem nas áreas administrativas.
 - Painel do profissional com os próprios atendimentos.
 - Onboarding de estabelecimento.
@@ -26,16 +26,18 @@
 - Agendamento manual pelo administrador usando o mesmo motor de disponibilidade.
 - Gestão de planos de clientes no dashboard, com nome, descrição, duração máxima, ativação/desativação e serviços permitidos.
 - Atribuição de planos aos clientes pelo painel de clientes.
+- Gestão de equipe: convite de profissionais por e-mail, vínculo de contas existentes e remoção de acesso sem apagar a conta.
+- Gestão do perfil do estabelecimento com dados comerciais e identidade visual.
 - Homepage comercial e fluxo público acessível.
 - Acessibilidade básica na agenda pública.
-- Perfil do estabelecimento com edição de dados comerciais e identidade, incluindo logo.
-- Gestão de equipe: convite de profissionais por e-mail, vínculo de contas existentes e remoção de acesso sem apagar a conta.
 - CI de qualidade com TypeScript, ESLint e build de produção em GitHub Actions.
-- Pipeline recente validado com TypeScript, ESLint e build de produção.
 - Migração versionada das regras RLS restritivas de escopo profissional.
+- Base de banco para duração personalizada: configuração por estabelecimento e override por agendamento.
+- Fluxo público de duração personalizada, com seleção de serviço, profissional/qualquer profissional, data, duração de 15 a 240 minutos, disponibilidade real e confirmação server-side.
+- Regra administrativa para ativar/desativar a duração personalizada.
 
 ## Em Desenvolvimento 🟡
-- Refinamentos finais de UX e identidade por tipo de negócio.
+- Refinamentos finais de UX, identidade por tipo de negócio e revisão de publicação.
 
 ## Pendente 🔴
 - Habilitar o provedor Google no ambiente de autenticação.
@@ -43,7 +45,7 @@
 - Notificações reais por e-mail, WhatsApp e SMS.
 - Pagamentos e planos de assinatura da plataforma SaaS.
 - Integração oficial com WhatsApp.
-- Agendamento com duração personalizada independente de um serviço pré-cadastrado.
+- Regras mais avançadas de preço para duração personalizada, caso o estabelecimento queira cobrar proporcionalmente ou por faixa.
 
 ## Bloqueado ⚠️
 - Nenhum no momento.
