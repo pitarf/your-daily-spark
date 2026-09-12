@@ -10,7 +10,7 @@ import {
   getEstablishmentScheduling,
   type CreateAppointmentResult,
 } from "@/lib/scheduling/scheduling.functions";
-import { formatDate, formatPrice, formatTime } from "@/lib/scheduling/format";
+import { addDaysInTimezone, formatDate, formatPrice, formatTime, todayInTimezone } from "@/lib/scheduling/format";
 
 const DEMO_SLUG = "barbearia-marca-minha-vez";
 
@@ -46,16 +46,9 @@ export const Route = createFileRoute("/schedule")({
   ),
 });
 
-function todayIso() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function nextDays(count: number) {
-  const base = new Date();
-  return Array.from({ length: count }, (_, i) => {
-    const d = new Date(base.getTime() + i * 24 * 3600 * 1000);
-    return d.toISOString().slice(0, 10);
-  });
+function nextDays(count: number, timeZone: string) {
+  const base = todayInTimezone(timeZone);
+  return Array.from({ length: count }, (_, i) => addDaysInTimezone(base, i, timeZone));
 }
 
 type Success = Extract<CreateAppointmentResult, { ok: true }>["appointment"];
@@ -65,10 +58,11 @@ function SchedulePage() {
   const { slug = DEMO_SLUG } = Route.useSearch();
   const fetchAvailability = useServerFn(getAvailability);
   const submitAppointment = useServerFn(createAppointment);
+  const timezone = data?.establishment.timezone ?? "America/Sao_Paulo";
 
   const [serviceId, setServiceId] = useState<string>(data?.services[0]?.id ?? "");
   const [professionalId, setProfessionalId] = useState<string>("");
-  const [date, setDate] = useState<string>(todayIso());
+  const [date, setDate] = useState<string>(() => todayInTimezone(timezone));
   const [slot, setSlot] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -77,7 +71,6 @@ function SchedulePage() {
   const [success, setSuccess] = useState<Success | null>(null);
 
   const service = useMemo(() => data?.services.find((s) => s.id === serviceId), [data, serviceId]);
-  const timezone = data?.establishment.timezone ?? "America/Sao_Paulo";
 
   const slotsQuery = useQuery({
     queryKey: ["availability", slug, date, serviceId, professionalId],
@@ -142,7 +135,7 @@ function SchedulePage() {
             <Row label="Data" value={formatDate(success.startsAt, timezone)} />
             <Row
               label="Horário"
-              value={`${formatTime(success.startsAt, timezone)} — ${formatTime(success.endsAt, timezone)}`}
+              value={`${formatTime(success.startsAt, timezone)} até ${formatTime(success.endsAt, timezone)}`}
             />
             <Row label="Duração" value={`${success.durationMinutes} minutos`} />
             <Row label="Valor" value={formatPrice(success.price)} />
@@ -174,6 +167,7 @@ function SchedulePage() {
     (p) => !service || service.professionalIds.includes(p.id),
   );
   const slots = slotsQuery.data ?? [];
+  const minimumDate = todayInTimezone(timezone);
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
@@ -182,6 +176,9 @@ function SchedulePage() {
         {data.establishment.description ? (
           <p className="mt-1 text-sm text-muted-foreground">{data.establishment.description}</p>
         ) : null}
+        <p className="mt-2 text-xs text-muted-foreground">
+          Escolha um horário livre. Horários ocupados aparecem apenas como indisponíveis.
+        </p>
       </header>
 
       <Step number={1} title="Escolha o serviço">
@@ -192,6 +189,7 @@ function SchedulePage() {
               <button
                 key={s.id}
                 type="button"
+                aria-pressed={selected}
                 onClick={() => {
                   setServiceId(s.id);
                   setSlot(null);
@@ -242,12 +240,13 @@ function SchedulePage() {
 
       <Step number={availableProfessionals.length > 1 ? 3 : 2} title="Escolha o dia">
         <div className="flex gap-2 overflow-x-auto pb-1">
-          {nextDays(14).map((d) => {
+          {nextDays(14, timezone).map((d) => {
             const selected = d === date;
             return (
               <button
                 key={d}
                 type="button"
+                aria-pressed={selected}
                 onClick={() => {
                   setDate(d);
                   setSlot(null);
@@ -267,7 +266,7 @@ function SchedulePage() {
             type="date"
             className="rounded-md border border-input bg-background px-2 py-1 text-sm"
             value={date}
-            min={todayIso()}
+            min={minimumDate}
             onChange={(e) => {
               setDate(e.target.value);
               setSlot(null);
@@ -278,7 +277,7 @@ function SchedulePage() {
 
       <Step number={availableProfessionals.length > 1 ? 4 : 3} title="Escolha o horário">
         {slotsQuery.isPending ? (
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6" aria-label="Carregando horários">
             {Array.from({ length: 12 }).map((_, i) => (
               <div key={i} className="h-9 animate-pulse rounded-md bg-muted" />
             ))}
@@ -292,26 +291,33 @@ function SchedulePage() {
             Sem atendimento nesta data para o serviço escolhido.
           </p>
         ) : (
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-            {slots.map((s) => {
-              const selected = slot === s.startsAt;
-              return (
-                <button
-                  key={s.startsAt}
-                  type="button"
-                  disabled={!s.available}
-                  title={s.available ? "Disponível" : "Indisponível"}
-                  onClick={() => setSlot(s.startsAt)}
-                  className={`rounded-md border px-2 py-2 text-sm transition-colors ${
-                    selected
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-input enabled:hover:bg-accent"
-                  } disabled:cursor-not-allowed disabled:border-dashed disabled:bg-muted/40 disabled:text-muted-foreground disabled:line-through`}
-                >
-                  {s.label}
-                </button>
-              );
-            })}
+          <div>
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+              {slots.map((s) => {
+                const selected = slot === s.startsAt;
+                return (
+                  <button
+                    key={s.startsAt}
+                    type="button"
+                    disabled={!s.available}
+                    aria-pressed={selected}
+                    aria-label={`${s.label}: ${s.available ? "disponível" : "indisponível"}`}
+                    title={s.available ? "Disponível" : "Indisponível"}
+                    onClick={() => setSlot(s.startsAt)}
+                    className={`rounded-md border px-2 py-2 text-sm transition-colors ${
+                      selected
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-input enabled:hover:bg-accent"
+                    } disabled:cursor-not-allowed disabled:border-dashed disabled:bg-muted/40 disabled:text-muted-foreground disabled:line-through`}
+                  >
+                    {s.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Os horários riscados já estão ocupados ou não comportam o serviço completo.
+            </p>
           </div>
         )}
       </Step>
@@ -332,6 +338,7 @@ function SchedulePage() {
                 <input
                   required
                   minLength={2}
+                  autoComplete="name"
                   className="w-full rounded-md border border-input bg-background px-3 py-2"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -342,6 +349,7 @@ function SchedulePage() {
                 <input
                   required
                   minLength={8}
+                  autoComplete="tel"
                   className="w-full rounded-md border border-input bg-background px-3 py-2"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
@@ -352,6 +360,7 @@ function SchedulePage() {
                 <span className="font-medium text-foreground">E-mail (opcional)</span>
                 <input
                   type="email"
+                  autoComplete="email"
                   className="w-full rounded-md border border-input bg-background px-3 py-2"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -379,7 +388,9 @@ function SchedulePage() {
             </div>
 
             {error ? (
-              <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
+              <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">
+                {error}
+              </p>
             ) : null}
 
             <div className="flex flex-col gap-2 sm:flex-row">
@@ -401,7 +412,9 @@ function SchedulePage() {
           </form>
         </Step>
       ) : error ? (
-        <p className="mt-4 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
+        <p className="mt-4 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">
+          {error}
+        </p>
       ) : null}
     </main>
   );
@@ -443,6 +456,7 @@ function ProfessionalChip({
   return (
     <button
       type="button"
+      aria-pressed={selected}
       onClick={onClick}
       className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm ${
         selected ? "border-primary bg-primary/5" : "border-border hover:bg-accent"
@@ -450,7 +464,7 @@ function ProfessionalChip({
     >
       <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-muted text-xs font-semibold text-foreground">
         {photoUrl ? (
-          <img src={photoUrl} alt={label} className="h-full w-full object-cover" />
+          <img src={photoUrl} alt="" className="h-full w-full object-cover" />
         ) : (
           label.slice(0, 1)
         )}
