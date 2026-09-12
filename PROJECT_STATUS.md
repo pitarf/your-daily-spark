@@ -31,11 +31,16 @@
 - Perfil do estabelecimento com edição de dados comerciais e identidade, incluindo logo.
 - Gestão de equipe: convite de profissionais por e-mail, vínculo de contas existentes e remoção de acesso sem apagar a conta.
 - CI de qualidade com TypeScript, ESLint e build de produção em GitHub Actions.
-- Pipeline recente validado com TypeScript, ESLint e build de produção.
 - Migração versionada das regras RLS restritivas de escopo profissional.
+- Base de duração personalizada versionada no banco, com `allow_custom_duration` e `duration_minutes_override`.
+- Fluxo público de agendamento personalizado por serviço, com duração de 15 minutos a 4 horas em múltiplos de 15, respeitando profissionais, agenda, intervalos, exceções, bloqueios e conflitos no servidor.
+- Fluxo personalizado consolidado na rota pública `/agenda/{slug}?custom=true`, evitando uma segunda rota dinâmica e mantendo o route tree estável.
+- Verificação do banco do ambiente Lovable: a Barbearia Marca Minha Vez está com `allow_custom_duration = true`.
+- Pipeline final da etapa de duração personalizada validou TypeScript, ESLint e build de produção com sucesso.
 
 ## Em Desenvolvimento 🟡
-- Refinamentos finais de UX e identidade por tipo de negócio.
+- Refinamentos finais de UX e identidade visual por tipo de negócio.
+- Melhorias de experiência no fluxo de agendamento e administração.
 
 ## Pendente 🔴
 - Habilitar o provedor Google no ambiente de autenticação.
@@ -43,7 +48,7 @@
 - Notificações reais por e-mail, WhatsApp e SMS.
 - Pagamentos e planos de assinatura da plataforma SaaS.
 - Integração oficial com WhatsApp.
-- Agendamento com duração personalizada independente de um serviço pré-cadastrado.
+- Agendamento avulso totalmente personalizado, sem depender de um serviço pré-cadastrado.
 
 ## Bloqueado ⚠️
 - Nenhum no momento.
