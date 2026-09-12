@@ -1,0 +1,1 @@
+Custom duration flow is controlled by allow_custom_duration.
