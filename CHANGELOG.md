@@ -325,3 +325,18 @@
 - **Testes realizados**: revisão estrutural da geração do calendário e integração nos três fluxos públicos de confirmação.
 - **Problemas encontrados**: nenhum novo bloqueador conhecido.
 - **Pendências relacionadas**: gestão posterior do agendamento pelo cliente, worker de notificações, IA, Google, pagamentos e WhatsApp oficial.
+
+## 2026-09-12 (30)
+- **Objetivo da alteração**: Permitir que o cliente encontre e gerencie seu próprio agendamento com segurança, sem expor dados de outros clientes.
+- **Funcionalidades implementadas**:
+  - Busca pública por telefone e data, limitada ao estabelecimento informado.
+  - Geração server-side de token HMAC com expiração para cada agendamento encontrado.
+  - Página `/agenda/{slug}?manage={appointmentId}&token={token}` para consulta segura do agendamento.
+  - Exibição de serviço ou título de atendimento avulso, profissional, data, horário, duração, valor e status.
+  - Cancelamento público apenas para agendamentos pendentes ou confirmados que ainda não começaram.
+  - Cancelamento público continua acionando o fluxo existente de notificações e invalidação de lembrete.
+  - Nenhuma credencial de serviço é enviada ao navegador; a chave usada na assinatura permanece apenas no servidor.
+- **Arquivos alterados**: `src/lib/scheduling/appointment-management.functions.ts`, `src/components/scheduling/ManagedAppointmentPage.tsx`, `src/components/scheduling/CustomerAppointmentLookupPage.tsx`, `src/routes/agenda/$slug.tsx`, `PROJECT_STATUS.md`, `CHANGELOG.md`.
+- **Testes realizados**: revisão estrutural da validação de telefone, estabelecimento, expiração do token, status do agendamento e regra que impede cancelamento após o início.
+- **Problemas encontrados**: nenhum novo bloqueador conhecido.
+- **Pendências relacionadas**: reagendamento pelo cliente, worker de notificações reais, IA, Google, pagamentos e WhatsApp oficial.
