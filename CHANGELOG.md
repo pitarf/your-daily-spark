@@ -107,7 +107,7 @@
 - **Objetivo da alteração**: Corrigir a experiência pública de calendário para trabalhar com a data do estabelecimento, e não com a data UTC/local do navegador, e elevar a apresentação inicial do produto.
 - **Funcionalidades implementadas**:
   - Adicionada `addDaysInTimezone` para cálculos de datas de calendário no fuso do estabelecimento.
-  - `/schedule` passou a calcular hoje, datas futuras e data mínima usando o fuso configurado para o estabelecimento.
+  - `/schedule` passou a calcular hoje, datas futuras e data mínima usando o timezone do estabelecimento.
   - Melhorias de acessibilidade na seleção de serviços, profissionais e horários (`aria-pressed`, `aria-label`, `role="alert"`).
   - Melhor orientação visual na grade de horários, explicando o significado dos horários indisponíveis.
   - Homepage substituída por uma apresentação real do Marca Minha Vez, com proposta de valor, benefícios, fluxo de uso e CTAs para agenda e criação de estabelecimento.
@@ -151,3 +151,16 @@
 - **Testes realizados**: revisão estrutural de leitura/atualização dos campos existentes e proteção por papel no frontend; build/typecheck automático não está configurado no repositório.
 - **Problemas encontrados**: nenhum conhecido nesta etapa.
 - **Pendências relacionadas**: rota pública amigável `/agenda/{slug}`; convite/vínculo de equipe; login social; IA; notificações; pagamentos e WhatsApp.
+
+## 2026-09-12 (10)
+- **Objetivo da alteração**: Criar uma URL pública amigável para o agendamento, sem quebrar os links legados.
+- **Funcionalidades implementadas**:
+  - Nova rota pública dinâmica `/agenda/$slug` que carrega o estabelecimento pelo slug real e reutiliza todo o fluxo de agendamento.
+  - Fluxo público de agendamento extraído para `src/components/scheduling/BookingPage.tsx`, permitindo reutilização entre rotas.
+  - `/schedule?slug={slug}` passa a funcionar como compatibilidade legada e redireciona automaticamente para `/agenda/{slug}`.
+  - Metadados básicos de SEO na nova rota dinâmica.
+  - Route tree atualizado para registrar a nova rota.
+- **Arquivos alterados**: `src/routes/schedule.tsx`, `src/routeTree.gen.ts`, `CHANGELOG.md`; novo: `src/routes/agenda/$slug.tsx`, `src/components/scheduling/BookingPage.tsx`.
+- **Testes realizados**: revisão estrutural da integração entre loader, parâmetros de rota, motor de disponibilidade e criação de agendamento; build/typecheck automático segue indisponível sem pipeline configurado.
+- **Problemas encontrados**: nenhum conhecido nesta etapa.
+- **Pendências relacionadas**: atualizar os links internos do painel para preferirem `/agenda/{slug}`; convite/vínculo de equipe; login social; IA; notificações; pagamentos e WhatsApp.
