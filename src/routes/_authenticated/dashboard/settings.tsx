@@ -10,6 +10,16 @@ export const Route = createFileRoute("/_authenticated/dashboard/settings")({
 });
 
 const WEEKDAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+const BUSINESS_TYPES = ["barbearia", "salão", "nail designer", "sobrancelhas", "estética", "clínica", "outro"];
+const TIMEZONES = [
+  "America/Sao_Paulo",
+  "America/Fortaleza",
+  "America/Recife",
+  "America/Manaus",
+  "America/Belem",
+  "America/Rio_Branco",
+  "UTC",
+];
 
 type BreakDraft = {
   startTime: string;
@@ -32,6 +42,18 @@ type ExceptionRow = {
   start_time: string | null;
   end_time: string | null;
   reason: string | null;
+};
+
+type EstablishmentDraft = {
+  name: string;
+  description: string;
+  businessType: string;
+  timezone: string;
+  phone: string;
+  whatsapp: string;
+  email: string;
+  address: string;
+  logoUrl: string;
 };
 
 function createDefaultDrafts(): DayDraft[] {
@@ -71,6 +93,20 @@ function draftsFromSchedules(schedules: any[]): DayDraft[] {
   return drafts;
 }
 
+function initialEstablishmentDraft(data: any): EstablishmentDraft {
+  return {
+    name: data?.name ?? "",
+    description: data?.description ?? "",
+    businessType: data?.business_type ?? "barbearia",
+    timezone: data?.timezone ?? "America/Sao_Paulo",
+    phone: data?.phone ?? "",
+    whatsapp: data?.whatsapp ?? "",
+    email: data?.email ?? "",
+    address: data?.address ?? "",
+    logoUrl: data?.logo_url ?? "",
+  };
+}
+
 function SettingsPage() {
   const { membership } = useEstablishment();
   const queryClient = useQueryClient();
@@ -79,11 +115,17 @@ function SettingsPage() {
   const [hydratedEstablishment, setHydratedEstablishment] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [profileDraft, setProfileDraft] = useState<EstablishmentDraft | null>(null);
+  const [profileSaved, setProfileSaved] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
   const [exceptionDate, setExceptionDate] = useState("");
   const [exceptionType, setExceptionType] = useState<"closed" | "custom_hours">("closed");
   const [exceptionStartTime, setExceptionStartTime] = useState("09:00");
   const [exceptionEndTime, setExceptionEndTime] = useState("14:00");
   const [exceptionReason, setExceptionReason] = useState("");
+
+  const canEditProfile = membership.role === "admin";
+  const canManageSchedule = membership.role === "admin" || membership.role === "staff";
 
   const query = useQuery({
     queryKey: ["admin-settings", membership.establishmentId],
@@ -91,7 +133,7 @@ function SettingsPage() {
       const [establishment, schedules, exceptions] = await Promise.all([
         supabase
           .from("establishments")
-          .select("name, slug, business_type, timezone, phone, whatsapp, email, address")
+          .select("name, slug, business_type, timezone, phone, whatsapp, email, address, description, logo_url")
           .eq("id", membership.establishmentId)
           .maybeSingle(),
         supabase
@@ -120,11 +162,48 @@ function SettingsPage() {
   useEffect(() => {
     if (!query.data || hydratedEstablishment === membership.establishmentId) return;
     setDrafts(draftsFromSchedules(query.data.schedules));
+    setProfileDraft(initialEstablishmentDraft(query.data.establishment));
     setHydratedEstablishment(membership.establishmentId);
   }, [query.data, membership.establishmentId, hydratedEstablishment]);
 
+  const saveProfile = useMutation({
+    mutationFn: async () => {
+      if (!canEditProfile || !profileDraft) throw new Error("Você não tem permissão para editar o perfil.");
+      if (profileDraft.name.trim().length < 2) throw new Error("Informe um nome válido.");
+      if (!profileDraft.email.trim()) throw new Error("Informe um e-mail comercial.");
+
+      const { error } = await supabase
+        .from("establishments")
+        .update({
+          name: profileDraft.name.trim(),
+          description: profileDraft.description.trim() || null,
+          business_type: profileDraft.businessType,
+          timezone: profileDraft.timezone,
+          phone: profileDraft.phone.trim() || null,
+          whatsapp: profileDraft.whatsapp.trim() || null,
+          email: profileDraft.email.trim(),
+          address: profileDraft.address.trim() || null,
+          logo_url: profileDraft.logoUrl.trim() || null,
+        })
+        .eq("id", membership.establishmentId);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      setProfileError(null);
+      setProfileSaved(true);
+      await queryClient.invalidateQueries({ queryKey: ["admin-settings", membership.establishmentId] });
+      await queryClient.invalidateQueries({ queryKey: ["memberships"] });
+      window.setTimeout(() => setProfileSaved(false), 1800);
+    },
+    onError: (error) => {
+      setProfileSaved(false);
+      setProfileError(error instanceof Error ? error.message : "Não foi possível salvar o perfil.");
+    },
+  });
+
   const saveSchedules = useMutation({
     mutationFn: async () => {
+      if (!canManageSchedule) throw new Error("Você não tem permissão para alterar o expediente.");
       const errors: string[] = [];
 
       for (const draft of drafts) {
@@ -223,6 +302,7 @@ function SettingsPage() {
 
   const addException = useMutation({
     mutationFn: async () => {
+      if (!canManageSchedule) throw new Error("Você não tem permissão para alterar as exceções.");
       if (!exceptionDate) throw new Error("Escolha uma data.");
       if (exceptionType === "custom_hours" && timeToMinutes(exceptionEndTime) <= timeToMinutes(exceptionStartTime)) {
         throw new Error("No horário especial, o fim deve ser depois do início.");
@@ -251,6 +331,7 @@ function SettingsPage() {
 
   const deleteException = useMutation({
     mutationFn: async (id: string) => {
+      if (!canManageSchedule) throw new Error("Você não tem permissão para remover exceções.");
       const { error } = await supabase
         .from("schedule_exceptions")
         .delete()
@@ -326,6 +407,12 @@ function SettingsPage() {
     setSaveError(null);
   }
 
+  function updateProfile(patch: Partial<EstablishmentDraft>) {
+    setProfileDraft((current) => (current ? { ...current, ...patch } : current));
+    setProfileError(null);
+    setProfileSaved(false);
+  }
+
   return (
     <div className="space-y-5">
       <div>
@@ -333,16 +420,157 @@ function SettingsPage() {
         <p className="text-sm text-muted-foreground">Seu papel: {membership.role}</p>
       </div>
 
-      <section className="rounded-xl border border-border bg-card p-4 text-sm">
-        <h2 className="text-base font-semibold text-foreground">Estabelecimento</h2>
-        <dl className="mt-3 grid gap-3 sm:grid-cols-2">
-          <Info label="Nome" value={est?.name} />
-          <Info label="Tipo" value={est?.business_type} />
-          <Info label="Fuso horário" value={est?.timezone} />
-          <Info label="Telefone" value={est?.phone} />
-          <Info label="E-mail" value={est?.email} />
-          <Info label="Endereço" value={est?.address} />
-        </dl>
+      <section className="rounded-xl border border-border bg-card p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-base font-semibold text-foreground">Perfil do estabelecimento</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Edite as informações que aparecem para clientes e no painel. O slug público permanece estável para não quebrar links compartilhados.
+            </p>
+          </div>
+          {canEditProfile ? (
+            <button
+              type="button"
+              onClick={() => saveProfile.mutate()}
+              disabled={saveProfile.isPending || !profileDraft}
+              className="rounded-md bg-primary px-4 py-2 text-xs font-medium text-primary-foreground disabled:opacity-60"
+            >
+              {saveProfile.isPending ? "Salvando…" : profileSaved ? "Salvo" : "Salvar perfil"}
+            </button>
+          ) : null}
+        </div>
+
+        {profileDraft ? (
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <label className="space-y-1 text-sm sm:col-span-2">
+              <span className="font-medium text-foreground">Nome do estabelecimento*</span>
+              <input
+                required
+                disabled={!canEditProfile}
+                value={profileDraft.name}
+                onChange={(e) => updateProfile({ name: e.target.value })}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 disabled:cursor-not-allowed disabled:opacity-60"
+              />
+            </label>
+
+            <label className="space-y-1 text-sm sm:col-span-2">
+              <span className="font-medium text-foreground">Descrição</span>
+              <textarea
+                rows={3}
+                disabled={!canEditProfile}
+                value={profileDraft.description}
+                onChange={(e) => updateProfile({ description: e.target.value })}
+                className="w-full resize-y rounded-md border border-input bg-background px-3 py-2 disabled:cursor-not-allowed disabled:opacity-60"
+                placeholder="Conte brevemente sobre o seu negócio."
+              />
+            </label>
+
+            <label className="space-y-1 text-sm">
+              <span className="font-medium text-foreground">Tipo de negócio</span>
+              <select
+                disabled={!canEditProfile}
+                value={profileDraft.businessType}
+                onChange={(e) => updateProfile({ businessType: e.target.value })}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {BUSINESS_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="space-y-1 text-sm">
+              <span className="font-medium text-foreground">Fuso horário</span>
+              <select
+                disabled={!canEditProfile}
+                value={profileDraft.timezone}
+                onChange={(e) => updateProfile({ timezone: e.target.value })}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {TIMEZONES.map((timezone) => (
+                  <option key={timezone} value={timezone}>
+                    {timezone}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="space-y-1 text-sm">
+              <span className="font-medium text-foreground">Telefone</span>
+              <input
+                disabled={!canEditProfile}
+                value={profileDraft.phone}
+                onChange={(e) => updateProfile({ phone: e.target.value })}
+                autoComplete="tel"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 disabled:cursor-not-allowed disabled:opacity-60"
+              />
+            </label>
+
+            <label className="space-y-1 text-sm">
+              <span className="font-medium text-foreground">WhatsApp</span>
+              <input
+                disabled={!canEditProfile}
+                value={profileDraft.whatsapp}
+                onChange={(e) => updateProfile({ whatsapp: e.target.value })}
+                autoComplete="tel"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 disabled:cursor-not-allowed disabled:opacity-60"
+              />
+            </label>
+
+            <label className="space-y-1 text-sm">
+              <span className="font-medium text-foreground">E-mail comercial*</span>
+              <input
+                required
+                type="email"
+                disabled={!canEditProfile}
+                value={profileDraft.email}
+                onChange={(e) => updateProfile({ email: e.target.value })}
+                autoComplete="email"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 disabled:cursor-not-allowed disabled:opacity-60"
+              />
+            </label>
+
+            <label className="space-y-1 text-sm sm:col-span-2">
+              <span className="font-medium text-foreground">Endereço</span>
+              <input
+                disabled={!canEditProfile}
+                value={profileDraft.address}
+                onChange={(e) => updateProfile({ address: e.target.value })}
+                autoComplete="street-address"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 disabled:cursor-not-allowed disabled:opacity-60"
+              />
+            </label>
+
+            <label className="space-y-1 text-sm sm:col-span-2">
+              <span className="font-medium text-foreground">URL da logo</span>
+              <input
+                type="url"
+                disabled={!canEditProfile}
+                value={profileDraft.logoUrl}
+                onChange={(e) => updateProfile({ logoUrl: e.target.value })}
+                placeholder="https://..."
+                className="w-full rounded-md border border-input bg-background px-3 py-2 disabled:cursor-not-allowed disabled:opacity-60"
+              />
+              {profileDraft.logoUrl ? (
+                <img
+                  src={profileDraft.logoUrl}
+                  alt="Pré-visualização da logo"
+                  className="mt-2 h-16 w-16 rounded-xl border border-border bg-muted object-contain p-2"
+                />
+              ) : null}
+            </label>
+
+            <div className="rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground sm:col-span-2">
+              Slug público: <span className="font-medium text-foreground">{est?.slug || "—"}</span>
+            </div>
+          </div>
+        ) : null}
+
+        {profileError ? (
+          <p className="mt-3 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{profileError}</p>
+        ) : null}
       </section>
 
       <section className="rounded-xl border border-border bg-card p-4 text-sm">
@@ -387,14 +615,16 @@ function SettingsPage() {
               Configure o expediente geral. Os intervalos são respeitados pelo motor de disponibilidade.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => saveSchedules.mutate()}
-            disabled={saveSchedules.isPending}
-            className="rounded-md bg-primary px-4 py-2 text-xs font-medium text-primary-foreground disabled:opacity-60"
-          >
-            {saveSchedules.isPending ? "Salvando…" : saved ? "Salvo" : "Salvar agenda"}
-          </button>
+          {canManageSchedule ? (
+            <button
+              type="button"
+              onClick={() => saveSchedules.mutate()}
+              disabled={saveSchedules.isPending}
+              className="rounded-md bg-primary px-4 py-2 text-xs font-medium text-primary-foreground disabled:opacity-60"
+            >
+              {saveSchedules.isPending ? "Salvando…" : saved ? "Salvo" : "Salvar agenda"}
+            </button>
+          ) : null}
         </div>
 
         <div className="mt-4 space-y-3">
@@ -404,6 +634,7 @@ function SettingsPage() {
                 <label className="flex min-w-[110px] items-center gap-2 text-sm font-medium text-foreground">
                   <input
                     type="checkbox"
+                    disabled={!canManageSchedule}
                     checked={day.active}
                     onChange={(e) => updateDay(day.weekday, { active: e.target.checked })}
                     className="h-4 w-4"
@@ -417,18 +648,20 @@ function SettingsPage() {
                       Início
                       <input
                         type="time"
+                        disabled={!canManageSchedule}
                         value={day.startTime}
                         onChange={(e) => updateDay(day.weekday, { startTime: e.target.value })}
-                        className="ml-2 rounded-md border border-input bg-background px-2 py-1.5 text-sm text-foreground"
+                        className="ml-2 rounded-md border border-input bg-background px-2 py-1.5 text-sm text-foreground disabled:opacity-60"
                       />
                     </label>
                     <label className="text-xs text-muted-foreground">
                       Fim
                       <input
                         type="time"
+                        disabled={!canManageSchedule}
                         value={day.endTime}
                         onChange={(e) => updateDay(day.weekday, { endTime: e.target.value })}
-                        className="ml-2 rounded-md border border-input bg-background px-2 py-1.5 text-sm text-foreground"
+                        className="ml-2 rounded-md border border-input bg-background px-2 py-1.5 text-sm text-foreground disabled:opacity-60"
                       />
                     </label>
                   </>
@@ -441,13 +674,15 @@ function SettingsPage() {
                 <div className="mt-3 border-t border-border pt-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Intervalos</span>
-                    <button
-                      type="button"
-                      onClick={() => addBreak(day.weekday)}
-                      className="rounded-md border border-input px-2.5 py-1 text-xs text-foreground hover:bg-accent"
-                    >
-                      + Adicionar intervalo
-                    </button>
+                    {canManageSchedule ? (
+                      <button
+                        type="button"
+                        onClick={() => addBreak(day.weekday)}
+                        className="rounded-md border border-input px-2.5 py-1 text-xs text-foreground hover:bg-accent"
+                      >
+                        + Adicionar intervalo
+                      </button>
+                    ) : null}
                   </div>
 
                   {day.breaks.length === 0 ? (
@@ -458,24 +693,28 @@ function SettingsPage() {
                         <div key={`${day.weekday}-${index}`} className="flex flex-wrap items-center gap-2">
                           <input
                             type="time"
+                            disabled={!canManageSchedule}
                             value={item.startTime}
                             onChange={(e) => updateBreak(day.weekday, index, { startTime: e.target.value })}
-                            className="rounded-md border border-input bg-background px-2 py-1.5 text-sm text-foreground"
+                            className="rounded-md border border-input bg-background px-2 py-1.5 text-sm text-foreground disabled:opacity-60"
                           />
                           <span className="text-xs text-muted-foreground">até</span>
                           <input
                             type="time"
+                            disabled={!canManageSchedule}
                             value={item.endTime}
                             onChange={(e) => updateBreak(day.weekday, index, { endTime: e.target.value })}
-                            className="rounded-md border border-input bg-background px-2 py-1.5 text-sm text-foreground"
+                            className="rounded-md border border-input bg-background px-2 py-1.5 text-sm text-foreground disabled:opacity-60"
                           />
-                          <button
-                            type="button"
-                            onClick={() => removeBreak(day.weekday, index)}
-                            className="rounded-md border border-input px-2 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
-                          >
-                            Remover
-                          </button>
+                          {canManageSchedule ? (
+                            <button
+                              type="button"
+                              onClick={() => removeBreak(day.weekday, index)}
+                              className="rounded-md border border-input px-2 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
+                            >
+                              Remover
+                            </button>
+                          ) : null}
                         </div>
                       ))}
                     </div>
@@ -499,64 +738,68 @@ function SettingsPage() {
           </p>
         </div>
 
-        <form
-          className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-[150px_170px_130px_130px_1fr_auto]"
-          onSubmit={(event) => {
-            event.preventDefault();
-            addException.mutate();
-          }}
-        >
-          <input
-            required
-            type="date"
-            value={exceptionDate}
-            onChange={(e) => setExceptionDate(e.target.value)}
-            className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
-          />
-          <select
-            value={exceptionType}
-            onChange={(e) => setExceptionType(e.target.value as "closed" | "custom_hours")}
-            className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+        {canManageSchedule ? (
+          <form
+            className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-[150px_170px_130px_130px_1fr_auto]"
+            onSubmit={(event) => {
+              event.preventDefault();
+              addException.mutate();
+            }}
           >
-            <option value="closed">Fechado</option>
-            <option value="custom_hours">Horário especial</option>
-          </select>
-          {exceptionType === "custom_hours" ? (
-            <>
-              <input
-                required
-                type="time"
-                value={exceptionStartTime}
-                onChange={(e) => setExceptionStartTime(e.target.value)}
-                className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
-                aria-label="Início do horário especial"
-              />
-              <input
-                required
-                type="time"
-                value={exceptionEndTime}
-                onChange={(e) => setExceptionEndTime(e.target.value)}
-                className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
-                aria-label="Fim do horário especial"
-              />
-            </>
-          ) : (
-            <div className="hidden lg:block" />
-          )}
-          <input
-            value={exceptionReason}
-            onChange={(e) => setExceptionReason(e.target.value)}
-            placeholder="Motivo, ex.: feriado, evento"
-            className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
-          />
-          <button
-            type="submit"
-            disabled={addException.isPending}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
-          >
-            {addException.isPending ? "Salvando…" : "Adicionar"}
-          </button>
-        </form>
+            <input
+              required
+              type="date"
+              value={exceptionDate}
+              onChange={(e) => setExceptionDate(e.target.value)}
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+            />
+            <select
+              value={exceptionType}
+              onChange={(e) => setExceptionType(e.target.value as "closed" | "custom_hours")}
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+            >
+              <option value="closed">Fechado</option>
+              <option value="custom_hours">Horário especial</option>
+            </select>
+            {exceptionType === "custom_hours" ? (
+              <>
+                <input
+                  required
+                  type="time"
+                  value={exceptionStartTime}
+                  onChange={(e) => setExceptionStartTime(e.target.value)}
+                  className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+                  aria-label="Início do horário especial"
+                />
+                <input
+                  required
+                  type="time"
+                  value={exceptionEndTime}
+                  onChange={(e) => setExceptionEndTime(e.target.value)}
+                  className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+                  aria-label="Fim do horário especial"
+                />
+              </>
+            ) : (
+              <div className="hidden lg:block" />
+            )}
+            <input
+              value={exceptionReason}
+              onChange={(e) => setExceptionReason(e.target.value)}
+              placeholder="Motivo, ex.: feriado, evento"
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+            />
+            <button
+              type="submit"
+              disabled={addException.isPending}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+            >
+              {addException.isPending ? "Salvando…" : "Adicionar"}
+            </button>
+          </form>
+        ) : (
+          <p className="mt-4 text-sm text-muted-foreground">Seu perfil tem acesso apenas à visualização destas exceções.</p>
+        )}
 
         {addException.isError ? (
           <p className="mt-2 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -577,14 +820,16 @@ function SettingsPage() {
                     : "Fechado"}
                 </span>
                 {item.reason ? <span className="text-muted-foreground">{item.reason}</span> : null}
-                <button
-                  type="button"
-                  onClick={() => deleteException.mutate(item.id)}
-                  disabled={deleteException.isPending}
-                  className="ml-auto rounded-md border border-input px-2.5 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-60"
-                >
-                  Remover
-                </button>
+                {canManageSchedule ? (
+                  <button
+                    type="button"
+                    onClick={() => deleteException.mutate(item.id)}
+                    disabled={deleteException.isPending}
+                    className="ml-auto rounded-md border border-input px-2.5 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-60"
+                  >
+                    Remover
+                  </button>
+                ) : null}
               </li>
             ))}
           </ul>
@@ -606,13 +851,4 @@ function SettingsPage() {
 function formatDateOnly(value: string) {
   const [year, month, day] = value.split("-");
   return `${day}/${month}/${year}`;
-}
-
-function Info({ label, value }: { label: string; value: string | null | undefined }) {
-  return (
-    <div>
-      <dt className="text-xs uppercase tracking-wide text-muted-foreground">{label}</dt>
-      <dd className="text-foreground">{value || "—"}</dd>
-    </div>
-  );
 }
