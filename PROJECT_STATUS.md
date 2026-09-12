@@ -5,7 +5,7 @@
 - RLS ativo em todas as tabelas, com isolamento por estabelecimento.
 - Proteção de banco contra horários sobrepostos e conflitos com bloqueios.
 - Dados de demonstração da Barbearia Marca Minha Vez.
-- Motor de disponibilidade em `src/lib/scheduling/availability.ts`, com fuso, intervalos, exceções, bloqueios, duração e agenda individual.
+- Motor de disponibilidade com fuso, intervalos, exceções, bloqueios, duração e agenda individual.
 - Precedência determinística das exceções: fechamento individual > horário especial individual > fechamento geral > horário especial geral > agenda semanal.
 - Agendamento público com serviço, profissional/qualquer profissional, data, horário, cliente, revisão e confirmação, validado no servidor.
 - Agenda pública reutilizável por estabelecimento.
@@ -21,11 +21,12 @@
 - Gestão de bloqueios e status dos agendamentos.
 - Homepage comercial e fluxo público acessível.
 - Acessibilidade básica na agenda pública.
-- Perfil do estabelecimento: edição de dados comerciais e identidade, incluindo logo.
-- **CI de qualidade**: GitHub Actions executa TypeScript, ESLint e build de produção em PRs e pushes para `main`.
+- Perfil do estabelecimento com edição de dados comerciais e identidade, incluindo logo.
+- CI de qualidade: GitHub Actions executa TypeScript, ESLint e build de produção em PRs e pushes para `main`.
+- **Equipe**: administradores podem convidar profissionais por e-mail, vincular contas existentes e remover o acesso sem apagar a conta.
 
 ## Em Desenvolvimento 🟡
-- Equipe: convite e vínculo de profissionais a contas de usuário.
+- Restringir a visão do painel de profissionais à própria agenda e aos próprios dados quando o usuário tiver papel `professional`.
 
 ## Pendente 🔴
 - Login social.

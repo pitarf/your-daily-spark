@@ -19,6 +19,7 @@ const NAV = [
   { to: "/dashboard/services", label: "Serviços", exact: false },
   { to: "/dashboard/professionals", label: "Profissionais", exact: false },
   { to: "/dashboard/customers", label: "Clientes", exact: false },
+  { to: "/dashboard/team", label: "Equipe", exact: false },
   { to: "/dashboard/profile", label: "Perfil", exact: false },
   { to: "/dashboard/settings", label: "Configurações", exact: false },
 ] as const;
@@ -69,9 +70,7 @@ function DashboardLayout() {
                 }}
               >
                 {memberships.map((m) => (
-                  <option key={m.establishmentId} value={m.establishmentId}>
-                    {m.name}
-                  </option>
+                  <option key={m.establishmentId} value={m.establishmentId}>{m.name}</option>
                 ))}
               </select>
             ) : null}
@@ -92,11 +91,7 @@ function DashboardLayout() {
                 <Link
                   key={item.to}
                   to={item.to}
-                  className={`whitespace-nowrap rounded-md px-3 py-1.5 ${
-                    active
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-accent"
-                  }`}
+                  className={`whitespace-nowrap rounded-md px-3 py-1.5 ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent"}`}
                 >
                   {item.label}
                 </Link>
@@ -122,9 +117,7 @@ function DashboardLayout() {
                 setActiveId(id);
                 window.localStorage.setItem(ACTIVE_KEY, id);
               },
-              refresh: () => {
-                void membershipsQuery.refetch();
-              },
+              refresh: () => void membershipsQuery.refetch(),
             }}
           >
             <Outlet />
@@ -211,54 +204,24 @@ function Onboarding({ onDone }: { onDone: () => void }) {
   return (
     <div className="mx-auto max-w-lg rounded-2xl border border-border bg-card p-6">
       <h1 className="text-xl font-bold text-foreground">Vamos configurar seu estabelecimento</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Sua conta ainda não está ligada a nenhum estabelecimento.
-      </p>
-
+      <p className="mt-1 text-sm text-muted-foreground">Sua conta ainda não está ligada a nenhum estabelecimento.</p>
       <form className="mt-6 space-y-3" onSubmit={createEstablishment}>
         <label className="block space-y-1">
           <span className="text-sm font-medium text-foreground">Nome do estabelecimento</span>
-          <input
-            required
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
+          <input required className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={name} onChange={(e) => setName(e.target.value)} />
         </label>
         <label className="block space-y-1">
           <span className="text-sm font-medium text-foreground">Tipo de negócio</span>
-          <select
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            value={businessType}
-            onChange={(e) => setBusinessType(e.target.value)}
-          >
-            {["barbearia", "salão", "nail designer", "sobrancelhas", "estética", "clínica", "outro"].map(
-              (t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ),
-            )}
+          <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={businessType} onChange={(e) => setBusinessType(e.target.value)}>
+            {["barbearia", "salão", "nail designer", "sobrancelhas", "estética", "clínica", "outro"].map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
         </label>
-        {error ? (
-          <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
-        ) : null}
-        <button
-          type="submit"
-          disabled={busy}
-          className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60"
-        >
+        {error ? <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p> : null}
+        <button type="submit" disabled={busy} className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60">
           {busy ? "Criando…" : "Criar estabelecimento"}
         </button>
       </form>
-
-      <button
-        type="button"
-        onClick={claimDemo}
-        disabled={busy}
-        className="mt-4 w-full rounded-md border border-input px-4 py-2 text-sm text-foreground hover:bg-accent disabled:opacity-60"
-      >
+      <button type="button" onClick={claimDemo} disabled={busy} className="mt-4 w-full rounded-md border border-input px-4 py-2 text-sm text-foreground hover:bg-accent disabled:opacity-60">
         Usar a Barbearia Marca Minha Vez (demonstração)
       </button>
     </div>
