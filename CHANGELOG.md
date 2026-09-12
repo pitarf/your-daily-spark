@@ -249,7 +249,7 @@
 
 ## 2026-09-12 (23)
 - **Objetivo da alteração**: Atualizar a documentação principal para refletir o produto real Marca Minha Vez.
-- **Funcionalidades implementadas**: README reescrito com proposta do produto, arquitetura, rotas, desenvolvimento local, CI, documentação e próximas integrações.
+- **Funcionalidades implementadas**: README reescrito com proposta do produto, arquitetura, rotas, desenvolvimento local, CI, documentação e roadmap.
 - **Arquivos alterados**: `README.md`, `CHANGELOG.md`.
 - **Testes realizados**: revisão manual da documentação contra a estrutura atual do repositório.
 - **Problemas encontrados**: README anterior ainda descrevia o projeto como "Your Daily Spark".
@@ -407,3 +407,15 @@
 - **Testes realizados**: GitHub Actions run #118 validou TypeScript, ESLint e build de produção com sucesso após correção de tipagem.
 - **Problemas encontrados**: a primeira execução do CI encontrou TS4111 em acesso a índice tipado; corrigido antes da validação final.
 - **Pendências relacionadas**: validação end-to-end com as chaves de produção, notificações Brevo via scheduler, Google, WhatsApp/SMS e pagamentos.
+
+## 2026-09-12 (36)
+- **Objetivo da alteração**: Corrigir a autorização server-side do assistente de configuração de agenda com IA.
+- **Funcionalidades implementadas**:
+  - `analyzeScheduleWithAI` agora exige `accessToken` e `establishmentId`.
+  - A função reutiliza `requireAdmin` antes de enviar qualquer pedido ao Gemini.
+  - A interface autenticada passa a obter a sessão do Supabase e enviar somente o token necessário ao server function.
+  - Usuários sem membership de administrador não conseguem consumir a operação de análise da agenda diretamente pelo endpoint.
+- **Arquivos alterados**: `src/lib/ai/schedule-assistant.functions.ts`, `src/routes/_authenticated/dashboard/assistant.tsx`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
+- **Testes realizados**: TypeScript, ESLint e build executados pelo GitHub Actions na branch da correção.
+- **Problemas encontrados**: a implementação anterior protegia a aplicação pela rota, mas não validava a autorização dentro da server function de análise; a lacuna foi corrigida.
+- **Pendências relacionadas**: habilitação do provedor Google, scheduler de produção da fila Brevo, WhatsApp/SMS, pagamentos e refinamentos de UX.

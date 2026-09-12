@@ -59,7 +59,19 @@ function AssistantPage() {
   }, [currentScheduleQuery.data]);
 
   const analyzeMutation = useMutation({
-    mutationFn: () => analyze({ data: { prompt, currentSchedule: currentScheduleText } }),
+    mutationFn: async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error("Sua sessão expirou. Entre novamente.");
+      return analyze({
+        data: {
+          accessToken,
+          establishmentId: membership.establishmentId,
+          prompt,
+          currentSchedule: currentScheduleText,
+        },
+      });
+    },
     onSuccess: (result) => {
       setPlan(result);
       setAnalysisError(null);
