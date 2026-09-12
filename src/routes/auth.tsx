@@ -36,6 +36,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [socialBusy, setSocialBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
 
@@ -45,6 +46,25 @@ function AuthPage() {
       void navigate({ to: "/dashboard", replace: true });
     }
   }, [loading, session, navigate, router]);
+
+  async function handleGoogleLogin() {
+    setSocialBusy(true);
+    setError(null);
+    setInfo(null);
+    try {
+      const { error: err } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth`,
+        },
+      });
+      if (err) throw err;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Não foi possível entrar com Google.";
+      setError(traduzir(message));
+      setSocialBusy(false);
+    }
+  }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -99,7 +119,25 @@ function AuthPage() {
             : "Acesse o painel do seu estabelecimento."}
         </p>
 
-        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+        {mode !== "recover" ? (
+          <>
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={busy || socialBusy}
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent disabled:opacity-60"
+            >
+              {socialBusy ? "Abrindo Google…" : "Continuar com Google"}
+            </button>
+            <div className="my-5 flex items-center gap-3">
+              <div className="h-px flex-1 bg-border" />
+              <span className="text-xs uppercase tracking-wider text-muted-foreground">ou</span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
+          </>
+        ) : null}
+
+        <form className="space-y-4" onSubmit={handleSubmit}>
           {mode === "register" ? (
             <Field label="Seu nome">
               <input
@@ -146,7 +184,7 @@ function AuthPage() {
 
           <button
             type="submit"
-            disabled={busy}
+            disabled={busy || socialBusy}
             className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
           >
             {busy
@@ -162,12 +200,12 @@ function AuthPage() {
         <div className="mt-6 space-y-2 text-sm text-muted-foreground">
           {mode !== "login" ? (
             <button type="button" className="underline" onClick={() => setMode("login")}>
-              Já tenho conta — entrar
+              Já tenho conta - entrar
             </button>
           ) : (
             <>
               <button type="button" className="block underline" onClick={() => setMode("register")}>
-                Não tenho conta — criar agora
+                Não tenho conta - criar agora
               </button>
               <button type="button" className="block underline" onClick={() => setMode("recover")}>
                 Esqueci minha senha
@@ -193,6 +231,7 @@ function traduzir(message: string) {
   if (/invalid login credentials/i.test(message)) return "E-mail ou senha incorretos.";
   if (/email not confirmed/i.test(message)) return "Confirme seu e-mail antes de entrar.";
   if (/already registered|already exists/i.test(message)) return "Este e-mail já possui conta.";
+  if (/provider.*not enabled|provider.*disabled/i.test(message)) return "O login com Google ainda não foi habilitado no provedor de autenticação.";
   if (/password/i.test(message) && /6/.test(message)) return "A senha precisa ter ao menos 6 caracteres.";
   return message;
 }
