@@ -54,7 +54,7 @@ async function loadContext(supabase: SupabaseClient, slug: string, serviceId: st
   if (establishmentError) throw establishmentError;
   if (!establishment) return null;
 
-  const [{ data: service, error: serviceError }, { data: professionals, error: professionalsError }, { data: links, error: linksError }, { data: schedules, error: schedulesError }, { data: exceptions, error: exceptionsError }] = await Promise.all([
+  const [serviceRes, professionalsRes, linksRes, schedulesRes, exceptionsRes] = await Promise.all([
     supabase
       .from("services")
       .select("id, name, price, duration_minutes")
@@ -82,35 +82,80 @@ async function loadContext(supabase: SupabaseClient, slug: string, serviceId: st
       .eq("establishment_id", establishment.id),
   ]);
 
-  if (serviceError) throw serviceError;
-  if (professionalsError) throw professionalsError;
-  if (linksError) throw linksError;
-  if (schedulesError) throw schedulesError;
-  if (exceptionsError) throw exceptionsError;
-  if (!service) return null;
+  if (serviceRes.error) throw serviceRes.error;
+  if (professionalsRes.error) throw professionalsRes.error;
+  if (linksRes.error) throw linksRes.error;
+  if (schedulesRes.error) throw schedulesRes.error;
+  if (exceptionsRes.error) throw exceptionsRes.error;
+  if (!serviceRes.data) return null;
 
-  const allowedProfessionalIds = new Set((links ?? []).map((item) => item.professional_id as string));
-  const filteredProfessionals = (professionals ?? []).filter((item) => allowedProfessionalIds.has(item.id));
+  const allowedProfessionalIds = new Set(
+    (linksRes.data ?? []).map((item) => item.professional_id as string),
+  );
 
   return {
     establishment: establishment as Establishment,
-    service: service as Service,
-    professionals: filteredProfessionals as Professional[],
-    schedules: ((schedules ?? []) as RawSchedule[]).map((schedule): WeeklyScheduleInput => ({
-      id: schedule.id,
-      professional_id: schedule.professional_id,
-      weekday: schedule.weekday,
-      start_time: schedule.start_time,
-      end_time: schedule.end_time,
-      active: schedule.active,
-      breaks: (schedule.schedule_breaks ?? []).map((item) => ({ start: item.start_time, end: item.end_time })),
-    })),
-    exceptions: (exceptions ?? []) as ScheduleExceptionInput[],
+    service: serviceRes.data as Service,
+    professionals: (professionalsRes.data ?? []).filter((item) => allowedProfessionalIds.has(item.id)) as Professional[],
+    schedules: ((schedulesRes.data ?? []) as RawSchedule[]).map(
+      (schedule): WeeklyScheduleInput => ({
+        id: schedule.id,
+        professional_id: schedule.professional_id,
+        weekday: schedule.weekday,
+        start_time: schedule.start_time,
+        end_time: schedule.end_time,
+        active: schedule.active,
+        breaks: (schedule.schedule_breaks ?? []).map((item) => ({
+          start: item.start_time,
+          end: item.end_time,
+        })),
+      }),
+    ),
+    exceptions: (exceptionsRes.data ?? []) as ScheduleExceptionInput[],
   };
 }
 
+async function busyForProfessional(
+  supabaseAdmin: SupabaseClient,
+  establishmentId: string,
+  date: string,
+  professionalId: string,
+) {
+  const dayStart = new Date(`${date}T00:00:00Z`);
+  const from = new Date(dayStart.getTime() - 24 * 60 * 60 * 1000).toISOString();
+  const to = new Date(dayStart.getTime() + 48 * 60 * 60 * 1000).toISOString();
+
+  const [appointments, blocks] = await Promise.all([
+    supabaseAdmin
+      .from("appointments")
+      .select("starts_at, ends_at")
+      .eq("establishment_id", establishmentId)
+      .eq("professional_id", professionalId)
+      .in("status", ["pending", "confirmed", "completed"])
+      .gte("starts_at", from)
+      .lte("starts_at", to),
+    supabaseAdmin
+      .from("blocked_slots")
+      .select("starts_at, ends_at")
+      .eq("establishment_id", establishmentId)
+      .or(`professional_id.is.null,professional_id.eq.${professionalId}`)
+      .gte("starts_at", from)
+      .lte("starts_at", to),
+  ]);
+
+  if (appointments.error) throw appointments.error;
+  if (blocks.error) throw blocks.error;
+
+  return [
+    ...(appointments.data ?? []),
+    ...(blocks.data ?? []),
+  ].map((item) => ({
+    startsAt: new Date(item.starts_at),
+    endsAt: new Date(item.ends_at),
+  }));
+}
+
 async function availabilityForDuration({
-  supabase,
   establishment,
   professionals,
   schedules,
@@ -129,72 +174,45 @@ async function availabilityForDuration({
   professionalId: string | null;
 }): Promise<AvailabilitySlot[]> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const dayStart = new Date(`${date}T00:00:00Z`);
-  const from = new Date(dayStart.getTime() - 24 * 60 * 60 * 1000).toISOString();
-  const to = new Date(dayStart.getTime() + 48 * 60 * 60 * 1000).toISOString();
+  const relevantProfessionals = professionalId
+    ? professionals.filter((professional) => professional.id === professionalId)
+    : professionals;
 
-  let appointmentsQuery = supabaseAdmin
-    .from("appointments")
-    .select("starts_at, ends_at, professional_id")
-    .eq("establishment_id", establishment.id)
-    .in("status", ["pending", "confirmed", "completed"])
-    .gte("starts_at", from)
-    .lte("starts_at", to);
-  if (professionalId) appointmentsQuery = appointmentsQuery.eq("professional_id", professionalId);
+  if (relevantProfessionals.length === 0) return [];
 
-  const [appointments, blocks] = await Promise.all([
-    appointmentsQuery,
-    supabaseAdmin
-      .from("blocked_slots")
-      .select("starts_at, ends_at, professional_id")
-      .eq("establishment_id", establishment.id)
-      .gte("starts_at", from)
-      .lte("starts_at", to),
-  ]);
+  const perProfessional = await Promise.all(
+    relevantProfessionals.map(async (professional) => {
+      const busy = await busyForProfessional(
+        supabaseAdmin,
+        establishment.id,
+        date,
+        professional.id,
+      );
 
-  const busy = [
-    ...(appointments.data ?? []),
-    ...(blocks.data ?? []).filter(
-      (block) => block.professional_id === null || !professionalId || block.professional_id === professionalId,
-    ),
-  ].map((item) => ({ startsAt: new Date(item.starts_at), endsAt: new Date(item.ends_at) }));
-
-  const relevantProfessionalIds = professionalId
-    ? [professionalId]
-    : professionals.map((professional) => professional.id);
-
-  if (relevantProfessionalIds.length === 0) {
-    return computeAvailability({
-      date,
-      timezone: establishment.timezone,
-      serviceDurationMinutes: durationMinutes,
-      professionalId: null,
-      schedules,
-      exceptions,
-      busy,
-    });
-  }
-
-  const perProfessional = relevantProfessionalIds.map((id) =>
-    computeAvailability({
-      date,
-      timezone: establishment.timezone,
-      serviceDurationMinutes: durationMinutes,
-      professionalId: id,
-      schedules,
-      exceptions,
-      busy,
+      return {
+        professionalId: professional.id,
+        slots: computeAvailability({
+          date,
+          timezone: establishment.timezone,
+          serviceDurationMinutes: durationMinutes,
+          professionalId: professional.id,
+          schedules,
+          exceptions,
+          busy,
+        }),
+      };
     }),
   );
 
   const merged = new Map<string, AvailabilitySlot>();
-  for (const slots of perProfessional) {
-    for (const slot of slots) {
+  for (const result of perProfessional) {
+    for (const slot of result.slots) {
       const current = merged.get(slot.startsAt);
       if (!current) merged.set(slot.startsAt, { ...slot });
       else if (slot.available) current.available = true;
     }
   }
+
   return [...merged.values()].sort((a, b) => a.startsAt.localeCompare(b.startsAt));
 }
 
@@ -202,7 +220,12 @@ const customAvailabilitySchema = z.object({
   slug: z.string().min(1),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   serviceId: z.string().uuid(),
-  durationMinutes: z.number().int().min(15).max(240).refine((value) => value % 15 === 0, "A duração precisa ser múltipla de 15 minutos."),
+  durationMinutes: z
+    .number()
+    .int()
+    .min(15)
+    .max(240)
+    .refine((value) => value % 15 === 0, "A duração precisa ser múltipla de 15 minutos."),
   professionalId: z.string().uuid().nullable().optional(),
 });
 
@@ -214,7 +237,6 @@ export const getCustomDurationAvailability = createServerFn({ method: "GET" })
     if (!context || !context.establishment.allow_custom_duration) return [];
 
     return availabilityForDuration({
-      supabase,
       establishment: context.establishment,
       professionals: context.professionals,
       schedules: context.schedules,
@@ -222,6 +244,7 @@ export const getCustomDurationAvailability = createServerFn({ method: "GET" })
       date: data.date,
       durationMinutes: data.durationMinutes,
       professionalId: data.professionalId ?? null,
+      supabase,
     });
   });
 
@@ -254,36 +277,53 @@ export const createCustomDurationAppointment = createServerFn({ method: "POST" }
     const supabase = publicClient();
     const context = await loadContext(supabase, data.slug, data.serviceId);
     if (!context || !context.establishment.allow_custom_duration) {
-      return { ok: false, error: "A duração personalizada não está disponível neste estabelecimento." };
+      return {
+        ok: false,
+        error: "A duração personalizada não está disponível neste estabelecimento.",
+      };
     }
 
     const startsAt = new Date(data.startsAt);
-    if (Number.isNaN(startsAt.getTime())) return { ok: false, error: "Horário inválido." };
+    if (Number.isNaN(startsAt.getTime())) {
+      return { ok: false, error: "Horário inválido." };
+    }
     const startsAtIso = startsAt.toISOString();
 
-    const slots = await availabilityForDuration({
-      supabase,
-      establishment: context.establishment,
-      professionals: context.professionals,
-      schedules: context.schedules,
-      exceptions: context.exceptions,
-      date: data.date,
-      durationMinutes: data.durationMinutes,
-      professionalId: data.professionalId ?? null,
-    });
-    const selectedSlot = slots.find((slot) => slot.available && slot.startsAt === startsAtIso);
-    if (!selectedSlot) return { ok: false, error: "Esse intervalo não está mais disponível. Escolha outro horário." };
-
-    const orderedProfessionals = data.professionalId
-      ? context.professionals.filter((item) => item.id === data.professionalId)
-      : context.professionals;
-    const chosen = orderedProfessionals.find((professional) => {
-      return true;
-    });
-
-    if (!chosen) return { ok: false, error: "Nenhum profissional disponível para esse serviço." };
-
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const candidateProfessionals = data.professionalId
+      ? context.professionals.filter((professional) => professional.id === data.professionalId)
+      : context.professionals;
+
+    let chosen: Professional | undefined;
+    for (const professional of candidateProfessionals) {
+      const busy = await busyForProfessional(
+        supabaseAdmin,
+        context.establishment.id,
+        data.date,
+        professional.id,
+      );
+      const slots = computeAvailability({
+        date: data.date,
+        timezone: context.establishment.timezone,
+        serviceDurationMinutes: data.durationMinutes,
+        professionalId: professional.id,
+        schedules: context.schedules,
+        exceptions: context.exceptions,
+        busy,
+      });
+      if (slots.some((slot) => slot.available && slot.startsAt === startsAtIso)) {
+        chosen = professional;
+        break;
+      }
+    }
+
+    if (!chosen) {
+      return {
+        ok: false,
+        error: "Esse intervalo não está mais disponível. Escolha outro horário.",
+      };
+    }
+
     const phone = data.customerPhone.replace(/\s+/g, " ").trim();
     const { data: existingCustomer, error: existingCustomerError } = await supabaseAdmin
       .from("customers")
@@ -291,7 +331,9 @@ export const createCustomDurationAppointment = createServerFn({ method: "POST" }
       .eq("establishment_id", context.establishment.id)
       .eq("phone", phone)
       .maybeSingle();
-    if (existingCustomerError) return { ok: false, error: "Não foi possível validar os dados do cliente." };
+    if (existingCustomerError) {
+      return { ok: false, error: "Não foi possível validar os dados do cliente." };
+    }
 
     let customerId = existingCustomer?.id ?? null;
     if (!customerId) {
@@ -305,29 +347,39 @@ export const createCustomDurationAppointment = createServerFn({ method: "POST" }
         })
         .select("id")
         .single();
-      if (customerError || !inserted) return { ok: false, error: "Não foi possível registrar seus dados." };
+      if (customerError || !inserted) {
+        return { ok: false, error: "Não foi possível registrar seus dados." };
+      }
       customerId = inserted.id;
     } else {
-      await supabaseAdmin.from("customers").update({
-        name: data.customerName,
-        ...(data.customerEmail ? { email: data.customerEmail } : {}),
-      }).eq("id", customerId);
+      await supabaseAdmin
+        .from("customers")
+        .update({
+          name: data.customerName,
+          ...(data.customerEmail ? { email: data.customerEmail } : {}),
+        })
+        .eq("id", customerId);
     }
 
     const { data: assignments, error: assignmentError } = await supabaseAdmin
       .from("customer_plan_assignments")
-      .select("plan_id, starts_at, expires_at, customer_plans!inner(id, name, active, duration_limit_minutes, establishment_id, customer_plan_services(service_id))")
+      .select(
+        "plan_id, starts_at, expires_at, customer_plans!inner(id, name, active, duration_limit_minutes, establishment_id, customer_plan_services(service_id))",
+      )
       .eq("customer_id", customerId)
       .eq("customer_plans.establishment_id", context.establishment.id)
       .order("starts_at", { ascending: false })
       .limit(20);
-    if (assignmentError) return { ok: false, error: "Não foi possível validar o plano do cliente." };
+    if (assignmentError) {
+      return { ok: false, error: "Não foi possível validar o plano do cliente." };
+    }
 
     const activeAssignment = (assignments ?? []).find((item) => {
       const starts = new Date(item.starts_at).getTime();
       const expires = item.expires_at ? new Date(item.expires_at).getTime() : Infinity;
       return starts <= Date.now() && expires >= Date.now();
     });
+
     if (activeAssignment) {
       const plan = activeAssignment.customer_plans as unknown as {
         name: string;
@@ -335,18 +387,31 @@ export const createCustomDurationAppointment = createServerFn({ method: "POST" }
         duration_limit_minutes: number | null;
         customer_plan_services: { service_id: string }[];
       };
+
       if (plan.active) {
         const allowedServices = plan.customer_plan_services ?? [];
-        if (allowedServices.length > 0 && !allowedServices.some((item) => item.service_id === context.service.id)) {
+        if (
+          allowedServices.length > 0 &&
+          !allowedServices.some((item) => item.service_id === context.service.id)
+        ) {
           return { ok: false, error: `O plano ${plan.name} não permite este serviço.` };
         }
-        if (plan.duration_limit_minutes !== null && data.durationMinutes > plan.duration_limit_minutes) {
-          return { ok: false, error: `O plano ${plan.name} permite atendimentos de até ${plan.duration_limit_minutes} minutos.` };
+        if (
+          plan.duration_limit_minutes !== null &&
+          data.durationMinutes > plan.duration_limit_minutes
+        ) {
+          return {
+            ok: false,
+            error: `O plano ${plan.name} permite atendimentos de até ${plan.duration_limit_minutes} minutos.`,
+          };
         }
       }
     }
 
-    const endsAt = new Date(startsAt.getTime() + data.durationMinutes * 60_000).toISOString();
+    const endsAt = new Date(
+      startsAt.getTime() + data.durationMinutes * 60_000,
+    ).toISOString();
+
     const { data: appointment, error: appointmentError } = await supabaseAdmin
       .from("appointments")
       .insert({
@@ -365,7 +430,10 @@ export const createCustomDurationAppointment = createServerFn({ method: "POST" }
     if (appointmentError || !appointment) {
       const code = (appointmentError as { code?: string } | null)?.code;
       if (code === "23P01" || code === "23505" || code === "P0001") {
-        return { ok: false, error: "Esse horário acabou de ser reservado. Escolha outro, por favor." };
+        return {
+          ok: false,
+          error: "Esse horário acabou de ser reservado. Escolha outro, por favor.",
+        };
       }
       return { ok: false, error: "Não foi possível concluir o agendamento." };
     }
