@@ -78,8 +78,8 @@ function localDateContext(timeZone: string) {
   ) as Record<string, string>;
 
   return {
-    date: `${parts.year}-${parts.month}-${parts.day}`,
-    weekday: parts.weekday,
+    date: `${parts["year"]}-${parts["month"]}-${parts["day"]}`,
+    weekday: parts["weekday"],
   };
 }
 
@@ -214,9 +214,9 @@ async function computeAssistantAvailability(params: {
   serviceId: string | null;
 }) {
   const { establishmentId, timezone, date, durationMinutes, professionalId, serviceId } = params;
+
   const weekday = new Intl.DateTimeFormat("en-US", { timeZone: timezone, weekday: "short" })
     .format(zonedWallTimeToUtc(date, 12 * 60, timezone));
-  const weekdayNumber = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(weekday);
 
   const [schedulesResult, exceptionsResult, professionalsResult, linksResult] = await Promise.all([
     supabaseAdmin
@@ -275,7 +275,7 @@ async function computeAssistantAvailability(params: {
 
   const allBusy = [
     ...(appointmentsResult.data ?? []),
-    ...(blocksResult.data ?? []).filter((item) => item.professional_id !== undefined),
+    ...(blocksResult.data ?? []),
   ];
 
   const computeForProfessional = (candidateId: string) =>
