@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState, type FormEvent } from "react";
 
+import { calendarDataUrl } from "@/lib/calendar/ics";
 import { addDaysInTimezone, formatDate, formatPrice, formatTime, todayInTimezone } from "@/lib/scheduling/format";
 import type { EstablishmentSchedulingData } from "@/lib/scheduling/scheduling.functions";
 import {
@@ -108,6 +109,13 @@ export function CustomDurationBookingPage({ data, slug }: Props) {
   }
 
   if (success) {
+    const calendarUrl = calendarDataUrl({
+      title: `${success.serviceName} · ${data.establishment.name}`,
+      start: success.startsAt,
+      end: success.endsAt,
+      description: `Agendamento com ${success.professionalName}. Duração: ${success.durationMinutes} minutos.`,
+    });
+
     return (
       <main className="mx-auto max-w-xl px-4 py-10">
         <section className="rounded-2xl border border-border bg-card p-6 text-center shadow-sm">
@@ -123,51 +131,33 @@ export function CustomDurationBookingPage({ data, slug }: Props) {
             <Summary label="Duração" value={formatDuration(success.durationMinutes)} />
             <Summary label="Valor" value={formatPrice(success.price)} />
           </dl>
-          <button
-            type="button"
-            className="mt-6 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
-            onClick={() => {
-              setSuccess(null);
-              setSlot(null);
-              setError(null);
-            }}
-          >
-            Novo agendamento
-          </button>
+          <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
+            <a href={calendarUrl} download="agendamento-personalizado.ics" className="rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground">Adicionar ao calendário</a>
+            <button type="button" className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground" onClick={() => { setSuccess(null); setSlot(null); setError(null); }}>Novo agendamento</button>
+          </div>
         </section>
       </main>
     );
   }
 
   const slots = availabilityQuery.data ?? [];
-  const selectedProfessionalName =
-    professionals.find((item) => item.id === professionalId)?.name ?? "Qualquer profissional disponível";
+  const selectedProfessionalName = professionals.find((item) => item.id === professionalId)?.name ?? "Qualquer profissional disponível";
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
       <header className="text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Agendamento personalizado</p>
         <h1 className="mt-2 text-2xl font-bold text-foreground sm:text-3xl">{data.establishment.name}</h1>
-        <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
-          Defina a duração do atendimento e escolha um horário que comporte o período inteiro.
-        </p>
+        <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">Defina a duração do atendimento e escolha um horário que comporte o período inteiro.</p>
       </header>
 
       <section className="mt-8 space-y-8">
         <Fieldset title="1. Serviço">
           <div className="grid gap-3 sm:grid-cols-2">
             {data.services.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                aria-pressed={item.id === serviceId}
-                onClick={() => selectService(item.id)}
-                className={`rounded-xl border p-4 text-left transition ${item.id === serviceId ? "border-primary bg-primary/5" : "border-border hover:bg-accent"}`}
-              >
+              <button key={item.id} type="button" aria-pressed={item.id === serviceId} onClick={() => selectService(item.id)} className={`rounded-xl border p-4 text-left transition ${item.id === serviceId ? "border-primary bg-primary/5" : "border-border hover:bg-accent"}`}>
                 <span className="block font-medium text-foreground">{item.name}</span>
-                <span className="mt-1 block text-xs text-muted-foreground">
-                  {formatPrice(item.price)} · padrão {formatDuration(item.duration_minutes)}
-                </span>
+                <span className="mt-1 block text-xs text-muted-foreground">{formatPrice(item.price)} · padrão {formatDuration(item.duration_minutes)}</span>
               </button>
             ))}
           </div>
@@ -176,18 +166,8 @@ export function CustomDurationBookingPage({ data, slug }: Props) {
         {professionals.length > 1 ? (
           <Fieldset title="2. Profissional">
             <div className="flex flex-wrap gap-2">
-              <Choice selected={!professionalId} onClick={() => { setProfessionalId(""); setSlot(null); }}>
-                Qualquer profissional
-              </Choice>
-              {professionals.map((professional) => (
-                <Choice
-                  key={professional.id}
-                  selected={professional.id === professionalId}
-                  onClick={() => { setProfessionalId(professional.id); setSlot(null); }}
-                >
-                  {professional.name}
-                </Choice>
-              ))}
+              <Choice selected={!professionalId} onClick={() => { setProfessionalId(""); setSlot(null); }}>Qualquer profissional</Choice>
+              {professionals.map((professional) => <Choice key={professional.id} selected={professional.id === professionalId} onClick={() => { setProfessionalId(professional.id); setSlot(null); }}>{professional.name}</Choice>)}
             </div>
           </Fieldset>
         ) : null}
@@ -195,68 +175,23 @@ export function CustomDurationBookingPage({ data, slug }: Props) {
         <Fieldset title={`${professionals.length > 1 ? 3 : 2}. Data`}>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {dates.map((day) => (
-              <button
-                key={day}
-                type="button"
-                aria-pressed={day === date}
-                onClick={() => { setDate(day); setSlot(null); }}
-                className={`min-w-[92px] rounded-xl border px-3 py-2 text-sm ${day === date ? "border-primary bg-primary/5" : "border-border hover:bg-accent"}`}
-              >
-                {formatDate(`${day}T12:00:00Z`, timezone)}
-              </button>
+              <button key={day} type="button" aria-pressed={day === date} onClick={() => { setDate(day); setSlot(null); }} className={`min-w-[92px] rounded-xl border px-3 py-2 text-sm ${day === date ? "border-primary bg-primary/5" : "border-border hover:bg-accent"}`}>{formatDate(`${day}T12:00:00Z`, timezone)}</button>
             ))}
           </div>
-          <label className="mt-3 block text-xs text-muted-foreground">
-            Outra data
-            <input
-              type="date"
-              value={date}
-              min={todayInTimezone(timezone)}
-              onChange={(event) => { setDate(event.target.value); setSlot(null); }}
-              className="ml-2 rounded-md border border-input bg-background px-2 py-1.5 text-sm text-foreground"
-            />
-          </label>
+          <label className="mt-3 block text-xs text-muted-foreground">Outra data<input type="date" value={date} min={todayInTimezone(timezone)} onChange={(event) => { setDate(event.target.value); setSlot(null); }} className="ml-2 rounded-md border border-input bg-background px-2 py-1.5 text-sm text-foreground" /></label>
         </Fieldset>
 
         <Fieldset title={`${professionals.length > 1 ? 4 : 3}. Duração`}>
           <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
-            {DURATIONS.map((duration) => (
-              <button
-                key={duration}
-                type="button"
-                aria-pressed={duration === durationMinutes}
-                onClick={() => { setDurationMinutes(duration); setSlot(null); }}
-                className={`rounded-md border px-2 py-2 text-xs font-medium ${duration === durationMinutes ? "border-primary bg-primary text-primary-foreground" : "border-input hover:bg-accent"}`}
-              >
-                {formatDuration(duration)}
-              </button>
-            ))}
+            {DURATIONS.map((duration) => <button key={duration} type="button" aria-pressed={duration === durationMinutes} onClick={() => { setDurationMinutes(duration); setSlot(null); }} className={`rounded-md border px-2 py-2 text-xs font-medium ${duration === durationMinutes ? "border-primary bg-primary text-primary-foreground" : "border-input hover:bg-accent"}`}>{formatDuration(duration)}</button>)}
           </div>
           <p className="mt-2 text-xs text-muted-foreground">15 minutos a 4 horas, em intervalos de 15 minutos.</p>
         </Fieldset>
 
         <Fieldset title={`${professionals.length > 1 ? 5 : 4}. Horário disponível`}>
-          {availabilityQuery.isPending ? (
-            <p className="text-sm text-muted-foreground">Calculando disponibilidade...</p>
-          ) : availabilityQuery.isError ? (
-            <p className="text-sm text-destructive" role="alert">Não foi possível carregar os horários.</p>
-          ) : slots.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhum horário comporta {formatDuration(durationMinutes)} nesta data.</p>
-          ) : (
+          {availabilityQuery.isPending ? <p className="text-sm text-muted-foreground">Calculando disponibilidade...</p> : availabilityQuery.isError ? <p className="text-sm text-destructive" role="alert">Não foi possível carregar os horários.</p> : slots.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum horário comporta {formatDuration(durationMinutes)} nesta data.</p> : (
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-              {slots.map((item) => (
-                <button
-                  key={item.startsAt}
-                  type="button"
-                  disabled={!item.available}
-                  aria-pressed={slot === item.startsAt}
-                  aria-label={`${item.label}: ${item.available ? "disponível" : "indisponível"}`}
-                  onClick={() => setSlot(item.startsAt)}
-                  className={`rounded-md border px-2 py-2 text-sm ${slot === item.startsAt ? "border-primary bg-primary text-primary-foreground" : "border-input hover:bg-accent"} disabled:cursor-not-allowed disabled:bg-muted/40 disabled:text-muted-foreground disabled:line-through`}
-                >
-                  {item.label}
-                </button>
-              ))}
+              {slots.map((item) => <button key={item.startsAt} type="button" disabled={!item.available} aria-pressed={slot === item.startsAt} onClick={() => setSlot(item.startsAt)} className={`rounded-md border px-2 py-2 text-sm ${slot === item.startsAt ? "border-primary bg-primary text-primary-foreground" : "border-input hover:bg-accent"} disabled:cursor-not-allowed disabled:bg-muted/40 disabled:text-muted-foreground disabled:line-through`}>{item.label}</button>)}
             </div>
           )}
         </Fieldset>
@@ -269,7 +204,6 @@ export function CustomDurationBookingPage({ data, slug }: Props) {
                 <Input label="Telefone/WhatsApp" value={customerPhone} onChange={setCustomerPhone} required />
                 <Input label="E-mail (opcional)" type="email" value={customerEmail} onChange={setCustomerEmail} />
               </div>
-
               <div className="rounded-xl border border-border bg-muted/30 p-4 text-sm">
                 <p className="font-medium text-foreground">Resumo</p>
                 <dl className="mt-2 space-y-1">
@@ -280,12 +214,8 @@ export function CustomDurationBookingPage({ data, slug }: Props) {
                   <Summary label="Duração" value={formatDuration(durationMinutes)} />
                 </dl>
               </div>
-
               {error ? <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">{error}</p> : null}
-
-              <button type="submit" disabled={booking.isPending} className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60 sm:w-auto">
-                {booking.isPending ? "Confirmando..." : "Confirmar agendamento"}
-              </button>
+              <button type="submit" disabled={booking.isPending} className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60 sm:w-auto">{booking.isPending ? "Confirmando..." : "Confirmar agendamento"}</button>
             </form>
           </Fieldset>
         ) : null}
