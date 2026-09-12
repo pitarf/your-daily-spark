@@ -12,7 +12,7 @@ type SchedulePlan = ReturnType<typeof schedulePlanSchema.parse>;
 type AssistantAnswer = {
   answer: string;
   highlights: string[];
-  availability?: Array<{ label: string; url: string; professionalName?: string }>;
+  availability?: Array<{ label: string; url: string; professionalName?: string | undefined }> | undefined;
 };
 
 const DAY_NAMES = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"] as const;
