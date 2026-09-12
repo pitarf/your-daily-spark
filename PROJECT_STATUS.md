@@ -72,17 +72,23 @@
 - Entrega de e-mail via Resend com templates para confirmação, cancelamento e lembrete.
 - Comando `bun run notifications:dispatch` criado para processar a fila em lotes e permitir execução por cron/scheduler.
 - Worker usa atualização atômica de status para reduzir risco de processamento concorrente da mesma notificação.
+- Assistente de agenda com IA criado para interpretar linguagem natural em português e gerar uma prévia estruturada de expediente geral.
+- Assistente de agenda limitado a administradores e integrado à navegação `/dashboard/assistant`.
+- Prévia da IA mostra sete dias, janelas, intervalos e avisos antes de qualquer alteração.
+- Aplicação da configuração de IA exige confirmação explícita e altera somente o expediente geral, preservando agendas individuais dos profissionais.
+- Chamada ao provedor de IA ocorre exclusivamente no servidor e usa `OPENAI_API_KEY` por variável de ambiente.
 
 ## Em Desenvolvimento 🟡
 - Refinamentos finais de UX e identidade visual por tipo de negócio.
 - Melhorias de experiência no fluxo de agendamento e administração.
+- Evolução do assistente para consultar agenda, serviços, profissionais, bloqueios e disponibilidade em linguagem natural.
 
 ## Pendente 🔴
 - Configurar `RESEND_API_KEY` e o remetente de e-mail no ambiente de produção para ativar a entrega real.
 - Configurar um cron/scheduler de produção para executar `bun run notifications:dispatch` periodicamente.
+- Configurar `OPENAI_API_KEY` no ambiente de produção para ativar o assistente de agenda com IA.
 - Habilitar o provedor Google no ambiente de autenticação.
 - Worker/provedor para WhatsApp e SMS.
-- IA para configurar e consultar a agenda.
 - Pagamentos e planos de assinatura da plataforma SaaS.
 - Integração oficial com WhatsApp.
 
