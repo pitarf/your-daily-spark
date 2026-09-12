@@ -41,6 +41,7 @@ type Draft = {
   email: string;
   address: string;
   logoUrl: string;
+  allowCustomDuration: boolean;
 };
 
 function ProfilePage() {
@@ -57,7 +58,7 @@ function ProfilePage() {
     queryFn: async () => {
       const { data, error: queryError } = await supabase
         .from("establishments")
-        .select("name, slug, description, business_type, timezone, phone, whatsapp, email, address, logo_url")
+        .select("name, slug, description, business_type, timezone, phone, whatsapp, email, address, logo_url, allow_custom_duration")
         .eq("id", membership.establishmentId)
         .maybeSingle();
       if (queryError) throw queryError;
@@ -77,6 +78,7 @@ function ProfilePage() {
       email: query.data.email ?? "",
       address: query.data.address ?? "",
       logoUrl: query.data.logo_url ?? "",
+      allowCustomDuration: Boolean(query.data.allow_custom_duration),
     });
     setHydrated(membership.establishmentId);
   }, [query.data, membership.establishmentId, membership.timezone, hydrated]);
@@ -99,6 +101,7 @@ function ProfilePage() {
           email: draft.email.trim(),
           address: draft.address.trim() || null,
           logo_url: draft.logoUrl.trim() || null,
+          allow_custom_duration: draft.allowCustomDuration,
         })
         .eq("id", membership.establishmentId);
       if (updateError) throw updateError;
@@ -122,7 +125,7 @@ function ProfilePage() {
 
   const establishment = query.data;
   const publicPath = establishment.slug
-    ? `/schedule?slug=${encodeURIComponent(establishment.slug)}`
+    ? `/agenda/${encodeURIComponent(establishment.slug)}`
     : "/schedule";
 
   function update(patch: Partial<Draft>) {
@@ -144,101 +147,37 @@ function ProfilePage() {
         {draft ? (
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Nome do estabelecimento" required>
-              <input
-                disabled={!canEdit}
-                value={draft.name}
-                onChange={(e) => update({ name: e.target.value })}
-                className={inputClass}
-              />
+              <input disabled={!canEdit} value={draft.name} onChange={(e) => update({ name: e.target.value })} className={inputClass} />
             </Field>
             <Field label="Tipo de negócio">
-              <select
-                disabled={!canEdit}
-                value={draft.businessType}
-                onChange={(e) => update({ businessType: e.target.value })}
-                className={inputClass}
-              >
-                {BUSINESS_TYPES.map((type) => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
+              <select disabled={!canEdit} value={draft.businessType} onChange={(e) => update({ businessType: e.target.value })} className={inputClass}>
+                {BUSINESS_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}
               </select>
             </Field>
             <Field label="Descrição" className="sm:col-span-2">
-              <textarea
-                disabled={!canEdit}
-                rows={4}
-                value={draft.description}
-                onChange={(e) => update({ description: e.target.value })}
-                className={inputClass}
-                placeholder="Ex.: barbearia especializada em cortes masculinos e barba."
-              />
+              <textarea disabled={!canEdit} rows={4} value={draft.description} onChange={(e) => update({ description: e.target.value })} className={inputClass} placeholder="Ex.: barbearia especializada em cortes masculinos e barba." />
             </Field>
             <Field label="Telefone">
-              <input
-                disabled={!canEdit}
-                value={draft.phone}
-                onChange={(e) => update({ phone: e.target.value })}
-                autoComplete="tel"
-                className={inputClass}
-              />
+              <input disabled={!canEdit} value={draft.phone} onChange={(e) => update({ phone: e.target.value })} autoComplete="tel" className={inputClass} />
             </Field>
             <Field label="WhatsApp">
-              <input
-                disabled={!canEdit}
-                value={draft.whatsapp}
-                onChange={(e) => update({ whatsapp: e.target.value })}
-                autoComplete="tel"
-                className={inputClass}
-              />
+              <input disabled={!canEdit} value={draft.whatsapp} onChange={(e) => update({ whatsapp: e.target.value })} autoComplete="tel" className={inputClass} />
             </Field>
             <Field label="E-mail comercial" required>
-              <input
-                disabled={!canEdit}
-                type="email"
-                value={draft.email}
-                onChange={(e) => update({ email: e.target.value })}
-                autoComplete="email"
-                className={inputClass}
-              />
+              <input disabled={!canEdit} type="email" value={draft.email} onChange={(e) => update({ email: e.target.value })} autoComplete="email" className={inputClass} />
             </Field>
             <Field label="Fuso horário">
-              <select
-                disabled={!canEdit}
-                value={draft.timezone}
-                onChange={(e) => update({ timezone: e.target.value })}
-                className={inputClass}
-              >
+              <select disabled={!canEdit} value={draft.timezone} onChange={(e) => update({ timezone: e.target.value })} className={inputClass}>
                 {!TIMEZONES.includes(draft.timezone) ? <option value={draft.timezone}>{draft.timezone}</option> : null}
-                {TIMEZONES.map((timezone) => (
-                  <option key={timezone} value={timezone}>{timezone}</option>
-                ))}
+                {TIMEZONES.map((timezone) => <option key={timezone} value={timezone}>{timezone}</option>)}
               </select>
             </Field>
             <Field label="Endereço" className="sm:col-span-2">
-              <input
-                disabled={!canEdit}
-                value={draft.address}
-                onChange={(e) => update({ address: e.target.value })}
-                autoComplete="street-address"
-                className={inputClass}
-              />
+              <input disabled={!canEdit} value={draft.address} onChange={(e) => update({ address: e.target.value })} autoComplete="street-address" className={inputClass} />
             </Field>
             <Field label="URL da logo" className="sm:col-span-2">
-              <input
-                disabled={!canEdit}
-                type="url"
-                value={draft.logoUrl}
-                onChange={(e) => update({ logoUrl: e.target.value })}
-                placeholder="https://..."
-                className={inputClass}
-              />
-              {draft.logoUrl ? (
-                <img
-                  src={draft.logoUrl}
-                  alt="Pré-visualização da logo"
-                  className="mt-2 h-20 w-20 rounded-xl border border-border bg-muted object-contain p-2"
-                />
-              ) : null}
+              <input disabled={!canEdit} type="url" value={draft.logoUrl} onChange={(e) => update({ logoUrl: e.target.value })} placeholder="https://..." className={inputClass} />
+              {draft.logoUrl ? <img src={draft.logoUrl} alt="Pré-visualização da logo" className="mt-2 h-20 w-20 rounded-xl border border-border bg-muted object-contain p-2" /> : null}
             </Field>
           </div>
         ) : null}
@@ -248,34 +187,31 @@ function ProfilePage() {
             Slug público: <span className="font-medium text-foreground">{establishment.slug || "—"}</span>
           </div>
           {canEdit ? (
-            <button
-              type="button"
-              disabled={save.isPending || !draft}
-              onClick={() => save.mutate()}
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
-            >
+            <button type="button" disabled={save.isPending || !draft} onClick={() => save.mutate()} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60">
               {save.isPending ? "Salvando…" : saved ? "Salvo" : "Salvar alterações"}
             </button>
           ) : null}
         </div>
 
         {error ? <p className="mt-3 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p> : null}
-        {!canEdit ? (
-          <p className="mt-3 text-xs text-muted-foreground">Somente administradores podem editar a identidade do estabelecimento.</p>
-        ) : null}
+        {!canEdit ? <p className="mt-3 text-xs text-muted-foreground">Somente administradores podem editar a identidade do estabelecimento.</p> : null}
+      </section>
+
+      <section className="rounded-xl border border-border bg-card p-4">
+        <div className="flex items-start gap-3">
+          <input id="allow-custom-duration" type="checkbox" disabled={!canEdit || save.isPending} checked={Boolean(draft?.allowCustomDuration)} onChange={(event) => update({ allowCustomDuration: event.target.checked })} className="mt-1 h-4 w-4" />
+          <div>
+            <label htmlFor="allow-custom-duration" className="text-sm font-semibold text-foreground">Permitir agendamento personalizado</label>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">Permite que o cliente altere a duração do serviço e também solicite um atendimento sem serviço pré-cadastrado. O motor continua respeitando expediente, intervalos, folgas, bloqueios, conflitos e limites do plano.</p>
+            <p className="mt-2 text-xs font-medium text-foreground">Durações disponíveis: 15 minutos a 4 horas, em intervalos de 15 minutos.</p>
+          </div>
+        </div>
       </section>
 
       <section className="rounded-xl border border-border bg-card p-4">
         <h2 className="text-base font-semibold text-foreground">Agenda pública</h2>
         <p className="mt-1 text-sm text-muted-foreground">Veja exatamente o endereço que seus clientes podem acessar.</p>
-        <a
-          href={publicPath}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-4 inline-flex rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
-        >
-          Abrir agenda pública
-        </a>
+        <a href={publicPath} target="_blank" rel="noreferrer" className="mt-4 inline-flex rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Abrir agenda pública</a>
       </section>
     </div>
   );
@@ -283,22 +219,10 @@ function ProfilePage() {
 
 const inputClass = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-60";
 
-function Field({
-  label,
-  required,
-  className = "",
-  children,
-}: {
-  label: string;
-  required?: boolean;
-  className?: string;
-  children: React.ReactNode;
-}) {
+function Field({ label, required, className = "", children }: { label: string; required?: boolean; className?: string; children: React.ReactNode }) {
   return (
     <label className={`space-y-1 ${className}`}>
-      <span className="text-sm font-medium text-foreground">
-        {label}{required ? <span className="text-destructive"> *</span> : null}
-      </span>
+      <span className="text-sm font-medium text-foreground">{label}{required ? <span className="text-destructive"> *</span> : null}</span>
       {children}
     </label>
   );
