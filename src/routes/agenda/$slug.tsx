@@ -6,8 +6,8 @@ import { CustomDurationBookingPage } from "@/components/scheduling/CustomDuratio
 import { StandaloneCustomBookingPage } from "@/components/scheduling/StandaloneCustomBookingPage";
 import { getEstablishmentScheduling } from "@/lib/scheduling/scheduling.functions";
 import { getPublicSchedulingSettings } from "@/lib/scheduling/public-settings.functions";
-import { businessThemeStyle, getBusinessTheme } from "@/lib/theming/business-theme";
-import { getEstablishmentBusinessType } from "@/lib/theming/establishment-theme.functions";
+import { businessThemeStyle, getBusinessThemeWithPreset, getBusinessTypeLabel } from "@/lib/theming/business-theme";
+import { getEstablishmentThemeConfig } from "@/lib/theming/establishment-theme.functions";
 
 const agendaSearchSchema = z.object({
   custom: z
@@ -21,13 +21,22 @@ const agendaSearchSchema = z.object({
 export const Route = createFileRoute("/agenda/$slug")({
   validateSearch: agendaSearchSchema,
   loader: async ({ params }) => {
-    const [data, businessType, publicSettings] = await Promise.all([
+    const [data, themeConfig, publicSettings] = await Promise.all([
       getEstablishmentScheduling({ data: { slug: params.slug } }),
-      getEstablishmentBusinessType({ data: { slug: params.slug } }),
+      getEstablishmentThemeConfig({ data: { slug: params.slug } }),
       getPublicSchedulingSettings({ data: { slug: params.slug } }),
     ]);
     if (!data) return data;
-    return { ...data, businessType: businessType ?? "outro", publicSettings };
+    return {
+      ...data,
+      businessType: themeConfig.businessType ?? "outro",
+      themePreset: themeConfig.themePreset ?? "auto",
+      publicBranding: {
+        logoUrl: themeConfig.logoUrl,
+        whatsapp: themeConfig.whatsapp ?? themeConfig.phone,
+      },
+      publicSettings,
+    };
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -67,10 +76,9 @@ function AgendaPage() {
     return <div className="p-8 text-center text-sm text-muted-foreground">Nenhum estabelecimento ativo encontrado.</div>;
   }
 
-  const theme = getBusinessTheme(data.businessType);
+  const theme = getBusinessThemeWithPreset(data.businessType, data.themePreset);
   const customDurationEnabled = data.publicSettings.allowCustomDuration;
-  const requestedUnavailableFeature =
-    (custom || standalone) && !customDurationEnabled;
+  const requestedUnavailableFeature = (custom || standalone) && !customDurationEnabled;
 
   if (requestedUnavailableFeature) {
     return (
@@ -94,6 +102,7 @@ function AgendaPage() {
 
   return (
     <div style={businessThemeStyle(theme)}>
+      <PublicHeader data={data} />
       {standalone ? (
         <StandaloneCustomBookingPage data={data} slug={slug} />
       ) : custom ? (
@@ -126,5 +135,37 @@ function AgendaPage() {
         </>
       )}
     </div>
+  );
+}
+
+function PublicHeader({ data }: { data: NonNullable<ReturnType<typeof Route.useLoaderData>> }) {
+  const { establishment, businessType, publicBranding } = data;
+  const businessLabel = getBusinessTypeLabel(businessType);
+  const whatsapp = publicBranding.whatsapp?.replace(/\D/g, "") ?? "";
+  const whatsappHref = whatsapp.length >= 10 ? `https://wa.me/${whatsapp}` : null;
+
+  return (
+    <header className="mx-auto max-w-3xl px-4 pt-6 sm:pt-8">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card/90 px-4 py-3 shadow-sm backdrop-blur sm:px-5">
+        <div className="flex min-w-0 items-center gap-3">
+          {publicBranding.logoUrl ? (
+            <img src={publicBranding.logoUrl} alt="" className="h-11 w-11 rounded-xl border border-border bg-background object-contain p-1" />
+          ) : (
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-sm font-black text-primary-foreground" aria-hidden="true">
+              {establishment.name.slice(0, 1).toUpperCase()}
+            </span>
+          )}
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold text-foreground">{establishment.name}</p>
+            <p className="text-xs text-muted-foreground">{businessLabel}</p>
+          </div>
+        </div>
+        {whatsappHref ? (
+          <a href={whatsappHref} target="_blank" rel="noreferrer" className="inline-flex shrink-0 rounded-full border border-input px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-accent">
+            WhatsApp
+          </a>
+        ) : null}
+      </div>
+    </header>
   );
 }

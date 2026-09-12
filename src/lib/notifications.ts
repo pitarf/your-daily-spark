@@ -1,11 +1,21 @@
-// This file will contain utilities and types for handling notifications.
-// Future integrations: WhatsApp, e-mail, SMS.
+export type NotificationType = "confirmation" | "cancellation" | "reminder";
+export type NotificationStatus = "scheduled" | "sent" | "failed" | "cancelled";
 
-export function sendNotification(type: string, message: string, recipient?: string) {
-  console.log(`[Notification] Type: ${type}, Message: ${message}, Recipient: ${recipient || 'N/A'}`);
-  // Placeholder for actual notification logic
+export function notificationTypeLabel(type: string): string {
+  const labels: Record<string, string> = {
+    confirmation: "Novo agendamento",
+    cancellation: "Agendamento cancelado",
+    reminder: "Lembrete de atendimento",
+  };
+  return labels[type] ?? "Notificação";
 }
 
-export type NotificationType = 'new_appointment' | 'confirmation' | 'cancellation' | 'reschedule' | 'reminder';
-
-// More types and functions will be added here as the notification system evolves.
+export function notificationStatusLabel(status: string): string {
+  const labels: Record<string, string> = {
+    scheduled: "Agendada",
+    sent: "Enviada",
+    failed: "Falhou",
+    cancelled: "Cancelada",
+  };
+  return labels[status] ?? status;
+}

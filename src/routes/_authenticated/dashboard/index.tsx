@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useEstablishment } from "@/lib/auth/establishment-context";
+import { notificationStatusLabel, notificationTypeLabel } from "@/lib/notifications";
 import { getAvailability } from "@/lib/scheduling/scheduling.functions";
 import { dayRangeUtc, formatDate, formatDateTime, formatTime, todayInTimezone } from "@/lib/scheduling/format";
 
@@ -20,6 +21,14 @@ type AppointmentRow = {
   customers: { name: string } | null;
   services: { name: string; duration_minutes: number } | null;
   professionals: { name: string } | null;
+};
+
+type NotificationRow = {
+  id: string;
+  type: string;
+  status: string;
+  scheduled_at: string;
+  created_at: string;
 };
 
 const SELECT =
@@ -71,6 +80,20 @@ function DashboardHome() {
     },
   });
 
+  const notificationsQuery = useQuery({
+    queryKey: ["dash-notifications", membership.establishmentId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("id, type, status, scheduled_at, created_at")
+        .eq("establishment_id", membership.establishmentId)
+        .order("created_at", { ascending: false })
+        .limit(6);
+      if (error) throw error;
+      return (data ?? []) as unknown as NotificationRow[];
+    },
+  });
+
   const slotsQuery = useQuery({
     queryKey: ["dash-slots", membership.establishmentId, today],
     queryFn: async () => {
@@ -97,6 +120,7 @@ function DashboardHome() {
   const activeToday = todayAppointments.filter((item) => item.status !== "cancelled");
   const confirmedToday = todayAppointments.filter((item) => item.status === "confirmed");
   const pendingToday = todayAppointments.filter((item) => item.status === "pending");
+  const recentNotifications = notificationsQuery.data ?? [];
 
   return (
     <div className="space-y-6">
@@ -192,6 +216,44 @@ function DashboardHome() {
                 <div className="mt-0.5 text-xs text-muted-foreground">
                   {appointment.custom_title?.trim() || appointment.services?.name || "Atendimento avulso"} · {appointment.professionals?.name ?? "Profissional"}
                 </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="rounded-xl border border-border bg-card p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-base font-semibold text-foreground">Atividade recente</h2>
+            <p className="text-xs text-muted-foreground">Eventos gerados pelo sistema de agendamento.</p>
+          </div>
+          <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
+            {recentNotifications.length} evento{recentNotifications.length === 1 ? "" : "s"}
+          </span>
+        </div>
+        {notificationsQuery.isPending ? (
+          <p className="mt-4 text-sm text-muted-foreground">Carregando…</p>
+        ) : notificationsQuery.isError ? (
+          <p className="mt-4 text-sm text-destructive">Não foi possível carregar a atividade recente.</p>
+        ) : recentNotifications.length === 0 ? (
+          <div className="mt-4 rounded-lg border border-dashed border-border p-5 text-sm text-muted-foreground">
+            Nenhum evento registrado ainda.
+          </div>
+        ) : (
+          <ul className="mt-3 divide-y divide-border">
+            {recentNotifications.map((notification) => (
+              <li key={notification.id} className="flex flex-wrap items-center gap-3 py-3 text-sm">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary" aria-hidden="true">
+                  {notification.type === "cancellation" ? "×" : notification.type === "reminder" ? "⏱" : "✓"}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-foreground">{notificationTypeLabel(notification.type)}</p>
+                  <p className="text-xs text-muted-foreground">{formatDateTime(notification.created_at, tz)}</p>
+                </div>
+                <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
+                  {notificationStatusLabel(notification.status)}
+                </span>
               </li>
             ))}
           </ul>

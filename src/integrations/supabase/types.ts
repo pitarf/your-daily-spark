@@ -351,6 +351,7 @@ export type Database = {
           name: string
           phone: string | null
           slug: string
+          theme_preset: string
           timezone: string
           updated_at: string
           whatsapp: string | null
@@ -368,6 +369,7 @@ export type Database = {
           name: string
           phone?: string | null
           slug: string
+          theme_preset?: string
           timezone?: string
           updated_at?: string
           whatsapp?: string | null
@@ -385,6 +387,7 @@ export type Database = {
           name?: string
           phone?: string | null
           slug?: string
+          theme_preset?: string
           timezone?: string
           updated_at?: string
           whatsapp?: string | null
@@ -705,7 +708,6 @@ export type Database = {
         }
         Update: {
           active?: boolean
-          created_at?: string
           end_time?: string
           establishment_id?: string
           id?: string

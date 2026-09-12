@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useEstablishment } from "@/lib/auth/establishment-context";
+import { getBusinessTheme, getBusinessThemeWithPreset, getBusinessTypeLabel, type ThemePreset } from "@/lib/theming/business-theme";
 
 export const Route = createFileRoute("/_authenticated/dashboard/profile")({
   component: ProfilePage,
@@ -31,6 +32,15 @@ const TIMEZONES = [
   "UTC",
 ];
 
+const THEME_PRESETS: Array<{ value: ThemePreset; label: string; description: string }> = [
+  { value: "auto", label: "Automático", description: "Usa o tema sugerido para o seu tipo de negócio." },
+  { value: "minimal", label: "Minimalista", description: "Visual limpo, neutro e discreto." },
+  { value: "soft", label: "Suave", description: "Visual leve, acolhedor e delicado." },
+  { value: "bold", label: "Marcante", description: "Contraste maior e presença visual forte." },
+  { value: "dark", label: "Escuro", description: "Base elegante com aparência mais sofisticada." },
+  { value: "warm", label: "Quente", description: "Tons acolhedores para negócios de atendimento." },
+];
+
 type Draft = {
   name: string;
   description: string;
@@ -42,6 +52,22 @@ type Draft = {
   address: string;
   logoUrl: string;
   allowCustomDuration: boolean;
+  themePreset: ThemePreset;
+};
+
+type EstablishmentProfile = {
+  name: string;
+  slug: string;
+  description: string | null;
+  business_type: string;
+  timezone: string;
+  phone: string | null;
+  whatsapp: string | null;
+  email: string | null;
+  address: string | null;
+  logo_url: string | null;
+  allow_custom_duration: boolean;
+  theme_preset: ThemePreset;
 };
 
 function ProfilePage() {
@@ -58,11 +84,11 @@ function ProfilePage() {
     queryFn: async () => {
       const { data, error: queryError } = await supabase
         .from("establishments")
-        .select("name, slug, description, business_type, timezone, phone, whatsapp, email, address, logo_url, allow_custom_duration")
+        .select("name, slug, description, business_type, timezone, phone, whatsapp, email, address, logo_url, allow_custom_duration, theme_preset")
         .eq("id", membership.establishmentId)
         .maybeSingle();
       if (queryError) throw queryError;
-      return data;
+      return data as unknown as EstablishmentProfile | null;
     },
   });
 
@@ -79,6 +105,7 @@ function ProfilePage() {
       address: query.data.address ?? "",
       logoUrl: query.data.logo_url ?? "",
       allowCustomDuration: Boolean(query.data.allow_custom_duration),
+      themePreset: query.data.theme_preset ?? "auto",
     });
     setHydrated(membership.establishmentId);
   }, [query.data, membership.establishmentId, membership.timezone, hydrated]);
@@ -102,7 +129,8 @@ function ProfilePage() {
           address: draft.address.trim() || null,
           logo_url: draft.logoUrl.trim() || null,
           allow_custom_duration: draft.allowCustomDuration,
-        })
+          theme_preset: draft.themePreset,
+        } as never)
         .eq("id", membership.establishmentId);
       if (updateError) throw updateError;
     },
@@ -127,6 +155,8 @@ function ProfilePage() {
   const publicPath = establishment.slug
     ? `/agenda/${encodeURIComponent(establishment.slug)}`
     : "/schedule";
+  const previewTheme = getBusinessThemeWithPreset(draft?.businessType ?? establishment.business_type, draft?.themePreset ?? establishment.theme_preset);
+  const autoTheme = getBusinessTheme(establishment.business_type);
 
   function update(patch: Partial<Draft>) {
     setDraft((current) => (current ? { ...current, ...patch } : current));
@@ -151,7 +181,7 @@ function ProfilePage() {
             </Field>
             <Field label="Tipo de negócio">
               <select disabled={!canEdit} value={draft.businessType} onChange={(e) => update({ businessType: e.target.value })} className={inputClass}>
-                {BUSINESS_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}
+                {BUSINESS_TYPES.map((type) => <option key={type} value={type}>{getBusinessTypeLabel(type)}</option>)}
               </select>
             </Field>
             <Field label="Descrição" className="sm:col-span-2">
@@ -195,6 +225,50 @@ function ProfilePage() {
 
         {error ? <p className="mt-3 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p> : null}
         {!canEdit ? <p className="mt-3 text-xs text-muted-foreground">Somente administradores podem editar a identidade do estabelecimento.</p> : null}
+      </section>
+
+      <section className="rounded-xl border border-border bg-card p-4">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-base font-semibold text-foreground">Tema da agenda pública</h2>
+          <p className="text-sm text-muted-foreground">Escolha a aparência que seus clientes verão. O modo Automático usa a identidade sugerida para {getBusinessTypeLabel(draft?.businessType ?? establishment.business_type)}.</p>
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {THEME_PRESETS.map((preset) => {
+            const selected = draft?.themePreset === preset.value;
+            const theme = preset.value === "auto" ? autoTheme : getBusinessThemeWithPreset(draft?.businessType ?? establishment.business_type, preset.value);
+            return (
+              <button
+                key={preset.value}
+                type="button"
+                disabled={!canEdit}
+                onClick={() => update({ themePreset: preset.value })}
+                aria-pressed={selected}
+                className={`rounded-xl border p-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-70 ${selected ? "border-primary ring-2 ring-primary/15" : "border-border hover:bg-accent"}`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="h-6 w-6 rounded-full border border-border" style={{ backgroundColor: theme.primary }} aria-hidden="true" />
+                  <span className="text-sm font-semibold text-foreground">{preset.label}</span>
+                </div>
+                <p className="mt-2 text-xs leading-5 text-muted-foreground">{preset.description}</p>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-4 overflow-hidden rounded-2xl border border-border" style={{ background: `linear-gradient(135deg, ${previewTheme.accent}, transparent)` }}>
+          <div className="p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: previewTheme.primary }}>Pré-visualização</p>
+            <div className="mt-2 flex items-center gap-3">
+              {draft?.logoUrl ? <img src={draft.logoUrl} alt="" className="h-10 w-10 rounded-xl border border-border bg-background object-contain p-1" /> : <span className="h-10 w-10 rounded-xl" style={{ backgroundColor: previewTheme.primary }} aria-hidden="true" />}
+              <div>
+                <p className="font-semibold text-foreground">{draft?.name || establishment.name}</p>
+                <p className="text-xs text-muted-foreground">{getBusinessTypeLabel(draft?.businessType ?? establishment.business_type)}</p>
+              </div>
+            </div>
+            <button type="button" className="mt-4 rounded-md px-4 py-2 text-xs font-semibold" style={{ backgroundColor: previewTheme.primary, color: previewTheme.primaryForeground }}>Escolher horário</button>
+          </div>
+        </div>
       </section>
 
       <section className="rounded-xl border border-border bg-card p-4">
