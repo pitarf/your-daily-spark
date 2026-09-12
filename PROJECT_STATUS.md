@@ -69,24 +69,26 @@
 - O acesso direto ao gerenciamento reutiliza o token HMAC já existente e não expõe a chave de assinatura ao navegador.
 - O atalho de gerenciamento está disponível nos fluxos de agendamento normal, duração personalizada e atendimento avulso.
 - Worker de entrega de notificações por e-mail implementado de forma independente do aplicativo web, usando a fila persistente existente.
-- Entrega de e-mail via Resend com templates para confirmação, cancelamento e lembrete.
+- Entrega transacional de e-mail preparada com a API da Brevo para confirmação, cancelamento e lembrete.
 - Comando `bun run notifications:dispatch` criado para processar a fila em lotes e permitir execução por cron/scheduler.
 - Worker usa atualização atômica de status para reduzir risco de processamento concorrente da mesma notificação.
 - Assistente de agenda com IA criado para interpretar linguagem natural em português e gerar uma prévia estruturada de expediente geral.
 - Assistente de agenda limitado a administradores e integrado à navegação `/dashboard/assistant`.
 - Prévia da IA mostra sete dias, janelas, intervalos e avisos antes de qualquer alteração.
 - Aplicação da configuração de IA exige confirmação explícita e altera somente o expediente geral, preservando agendas individuais dos profissionais.
-- Chamada ao provedor de IA ocorre exclusivamente no servidor e usa `OPENAI_API_KEY` por variável de ambiente.
+- O assistente foi preparado para uso com a API Gemini, com `GEMINI_API_KEY` somente no servidor e saída JSON estruturada validada por Zod.
 
 ## Em Desenvolvimento 🟡
 - Refinamentos finais de UX e identidade visual por tipo de negócio.
 - Melhorias de experiência no fluxo de agendamento e administração.
 - Evolução do assistente para consultar agenda, serviços, profissionais, bloqueios e disponibilidade em linguagem natural.
+- Validação final e configuração de produção das integrações de e-mail e IA.
 
 ## Pendente 🔴
-- Configurar `RESEND_API_KEY` e o remetente de e-mail no ambiente de produção para ativar a entrega real.
+- Configurar `BREVO_API_KEY` no ambiente de produção.
+- Confirmar o remetente `rfpita.work@gmail.com` como remetente autorizado na Brevo e manter `NOTIFICATION_FROM_NAME=Marca Minha Vez`.
 - Configurar um cron/scheduler de produção para executar `bun run notifications:dispatch` periodicamente.
-- Configurar `OPENAI_API_KEY` no ambiente de produção para ativar o assistente de agenda com IA.
+- Configurar `GEMINI_API_KEY` no ambiente de produção para ativar o assistente de agenda.
 - Habilitar o provedor Google no ambiente de autenticação.
 - Worker/provedor para WhatsApp e SMS.
 - Pagamentos e planos de assinatura da plataforma SaaS.
