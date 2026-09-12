@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, useEffect, type ReactNode } from "react";
 
 import { AppointmentManagementButton } from "@/components/scheduling/AppointmentManagementButton";
 import { calendarDataUrl } from "@/lib/calendar/ics";
@@ -39,17 +39,33 @@ type Success = Extract<CreateAppointmentResult, { ok: true }>["appointment"];
 export function BookingPage({
   data,
   slug,
+  initialServiceId,
+  initialProfessionalId,
+  initialDate,
+  initialSlotLabel,
 }: {
   data: EstablishmentSchedulingData;
   slug: string;
+  initialServiceId?: string;
+  initialProfessionalId?: string;
+  initialDate?: string;
+  initialSlotLabel?: string;
 }) {
   const fetchAvailability = useServerFn(getAvailability);
   const submitAppointment = useServerFn(createAppointment);
   const timezone = data.establishment.timezone || "America/Sao_Paulo";
+  const firstServiceId = data.services[0]?.id ?? "";
+  const initialService = data.services.find((item) => item.id === initialServiceId);
 
-  const [serviceId, setServiceId] = useState(data.services[0]?.id ?? "");
-  const [professionalId, setProfessionalId] = useState("");
-  const [date, setDate] = useState(() => todayInTimezone(timezone));
+  const [serviceId, setServiceId] = useState(
+    initialService ? initialService.id : firstServiceId,
+  );
+  const [professionalId, setProfessionalId] = useState(() => {
+    if (!initialProfessionalId) return "";
+    if (initialService?.professionalIds.includes(initialProfessionalId)) return initialProfessionalId;
+    return "";
+  });
+  const [date, setDate] = useState(() => initialDate ?? todayInTimezone(timezone));
   const [slot, setSlot] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -79,6 +95,12 @@ export function BookingPage({
         },
       }),
   });
+
+  useEffect(() => {
+    if (!initialSlotLabel || slot || !slotsQuery.data) return;
+    const matched = slotsQuery.data.find((item) => item.available && item.label === initialSlotLabel);
+    if (matched) setSlot(matched.startsAt);
+  }, [initialSlotLabel, slot, slotsQuery.data]);
 
   const booking = useMutation({
     mutationFn: async () =>

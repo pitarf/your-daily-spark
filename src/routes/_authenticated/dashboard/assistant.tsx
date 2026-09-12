@@ -9,6 +9,11 @@ import { analyzeScheduleWithAI, applySchedulePlan, type schedulePlanSchema } fro
 import { askAgendaAssistant } from "@/lib/ai/agenda-query.functions";
 
 type SchedulePlan = ReturnType<typeof schedulePlanSchema.parse>;
+type AssistantAnswer = {
+  answer: string;
+  highlights: string[];
+  availability?: Array<{ label: string; url: string; professionalName?: string }>;
+};
 
 const DAY_NAMES = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"] as const;
 
@@ -24,7 +29,7 @@ function AssistantPage() {
   const [applyError, setApplyError] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState<{ answer: string; highlights: string[] } | null>(null);
+  const [answer, setAnswer] = useState<AssistantAnswer | null>(null);
   const [queryError, setQueryError] = useState<string | null>(null);
 
   const analyze = useServerFn(analyzeScheduleWithAI);
@@ -151,7 +156,7 @@ function AssistantPage() {
             }}
             maxLength={1500}
             className="min-w-0 flex-1 rounded-xl border border-input bg-background px-3 py-2.5 text-sm text-foreground"
-            placeholder="Ex.: quantos agendamentos tenho amanhã?"
+            placeholder="Ex.: tem horário livre amanhã à tarde para corte?"
           />
           <button
             type="button"
@@ -170,6 +175,24 @@ function AssistantPage() {
               <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
                 {answer.highlights.map((highlight) => <li key={highlight}>• {highlight}</li>)}
               </ul>
+            ) : null}
+            {answer.availability?.length ? (
+              <div className="mt-4">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Horários encontrados</p>
+                <div className="flex flex-wrap gap-2">
+                  {answer.availability.map((slot) => (
+                    <a
+                      key={`${slot.label}-${slot.professionalName ?? "any"}`}
+                      href={slot.url}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-background px-3 py-2 text-sm font-semibold text-foreground hover:bg-accent"
+                    >
+                      {slot.label}
+                      {slot.professionalName ? <span className="text-xs font-normal text-muted-foreground">· {slot.professionalName}</span> : null}
+                    </a>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">Clique em um horário para abrir a agenda já com a data, serviço e horário sugeridos.</p>
+              </div>
             ) : null}
           </div>
         ) : null}

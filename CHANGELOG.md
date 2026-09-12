@@ -234,7 +234,7 @@
 - **Arquivos alterados**: `src/components/dashboard/ProfessionalWorkspace.tsx`, `PROJECT_STATUS.md`, `CHANGELOG.md`.
 - **Testes realizados**: revisão estrutural da consulta autenticada e da renderização dos campos de atendimento avulso.
 - **Problemas encontrados**: nenhum novo bloqueador conhecido.
-- **Pendências relacionadas**: refinamentos gerais de UX, IA, Google, notificações reais, pagamentos e WhatsApp.
+- **Pendências relacionadas**: refinamentos gerais de UX, IA, notificações reais, pagamentos e WhatsApp.
 
 ## 2026-09-12 (22)
 - **Objetivo da alteração**: Expor no perfil administrativo a configuração que controla agendamentos personalizados e corrigir o link público amigável.
@@ -249,7 +249,7 @@
 
 ## 2026-09-12 (23)
 - **Objetivo da alteração**: Atualizar a documentação principal para refletir o produto real Marca Minha Vez.
-- **Funcionalidades implementadas**: README reescrito com proposta do produto, arquitetura, rotas, desenvolvimento local, CI, documentação e roadmap.
+- **Funcionalidades implementadas**: README reescrito com proposta do produto, arquitetura, rotas, desenvolvimento local, CI, documentação e próximas integrações.
 - **Arquivos alterados**: `README.md`, `CHANGELOG.md`.
 - **Testes realizados**: revisão manual da documentação contra a estrutura atual do repositório.
 - **Problemas encontrados**: README anterior ainda descrevia o projeto como "Your Daily Spark".
@@ -419,3 +419,16 @@
 - **Testes realizados**: TypeScript, ESLint e build executados pelo GitHub Actions na branch da correção.
 - **Problemas encontrados**: a implementação anterior protegia a aplicação pela rota, mas não validava a autorização dentro da server function de análise; a lacuna foi corrigida.
 - **Pendências relacionadas**: habilitação do provedor Google, scheduler de produção da fila Brevo, WhatsApp/SMS, pagamentos e refinamentos de UX.
+
+## 2026-09-12 (37)
+- **Objetivo da alteração**: Permitir que o assistente transforme horários disponíveis em atalhos diretos para a agenda pública.
+- **Funcionalidades implementadas**:
+  - Respostas de disponibilidade agora podem retornar até 12 horários reais com links de agendamento.
+  - Os links carregam automaticamente serviço, data, horário e, quando aplicável, profissional.
+  - A agenda pública aceita esses parâmetros e abre o fluxo já posicionado no horário sugerido.
+  - O assistente não cria links para atendimentos sem serviço cadastrado, evitando direcionar o cliente ao fluxo padrão com duração incorreta.
+  - A validação dos links usa caminhos relativos seguros e a origem dos horários continua sendo exclusivamente o motor real de disponibilidade.
+- **Arquivos alterados**: `src/lib/ai/agenda-query.functions.ts`, `src/components/scheduling/BookingPage.tsx`, `src/routes/agenda/$slug.tsx`, `src/routes/_authenticated/dashboard/assistant.tsx`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
+- **Testes realizados**: revisão estrutural da integração entre a resposta da IA, parâmetros da rota pública e seleção automática de horário; validação de esquema JSON da resposta.
+- **Problemas encontrados**: o primeiro formato de validação de URL rejeitava links relativos; corrigido para aceitar caminhos internos do próprio estabelecimento.
+- **Pendências relacionadas**: validação end-to-end com secrets de produção, scheduler Brevo, Google, WhatsApp/SMS, pagamentos e refinamentos gerais de UX.
