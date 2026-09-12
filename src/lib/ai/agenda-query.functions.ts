@@ -19,6 +19,11 @@ const queryInput = z.object({
 const answerSchema = z.object({
   answer: z.string().trim().min(1).max(2500),
   highlights: z.array(z.string().trim().min(1).max(240)).max(8),
+  availability: z.array(z.object({
+    label: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+    url: z.string().url(),
+    professionalName: z.string().trim().max(160).optional(),
+  })).max(12).optional(),
 });
 
 const availabilityIntentSchema = z
@@ -215,9 +220,6 @@ async function computeAssistantAvailability(params: {
 }) {
   const { establishmentId, timezone, date, durationMinutes, professionalId, serviceId } = params;
 
-  const weekday = new Intl.DateTimeFormat("en-US", { timeZone: timezone, weekday: "short" })
-    .format(zonedWallTimeToUtc(date, 12 * 60, timezone));
-
   const [schedulesResult, exceptionsResult, professionalsResult, linksResult] = await Promise.all([
     supabaseAdmin
       .from("weekly_schedules")
@@ -325,7 +327,7 @@ function formatLocalDate(date: string, timezone: string) {
 
 async function answerAvailability(params: {
   intent: z.infer<typeof availabilityIntentSchema>;
-  establishment: { id: string; name: string; timezone: string };
+  establishment: { id: string; name: string; timezone: string; slug: string };
   services: Array<{ id: string; name: string; duration_minutes: number; price: number }>;
   professionals: Array<{ id: string; name: string }>;
 }) {
@@ -392,6 +394,21 @@ async function answerAvailability(params: {
   const serviceLabel = service?.name ?? `atendimento de ${durationMinutes} minutos`;
   const professionalLabel = resolvedProfessional.match?.name;
   const shown = filteredSlots.slice(0, 12).map((slot) => slot.label);
+  const baseUrl = `/agenda/${encodeURIComponent(establishment.slug)}`;
+  const availability = filteredSlots.slice(0, 12).map((slot) => {
+    const params = new URLSearchParams({
+      serviceId: service?.id ?? "",
+      date: intent.date,
+      time: slot.label,
+    });
+    if (resolvedProfessional.match?.id) params.set("professionalId", resolvedProfessional.match.id);
+
+    return {
+      label: slot.label,
+      url: `${baseUrl}?${params.toString()}`,
+      professionalName: resolvedProfessional.match?.name,
+    };
+  });
 
   if (shown.length === 0) {
     return {
@@ -410,6 +427,7 @@ async function answerAvailability(params: {
       `Duração: ${durationMinutes} minutos.`,
       professionalLabel ? `Profissional: ${professionalLabel}.` : "O horário pode ser atendido por um dos profissionais que realizam o serviço.",
     ],
+    availability,
   };
 }
 
@@ -479,7 +497,7 @@ export const askAgendaAssistant = createServerFn({ method: "POST" })
 
     const { data: establishment, error: establishmentError } = await supabaseAdmin
       .from("establishments")
-      .select("id,name,business_type,timezone")
+      .select("id,name,business_type,timezone,slug")
       .eq("id", data.establishmentId)
       .single();
     if (establishmentError) throw establishmentError;
