@@ -30,7 +30,7 @@ export type DispatchResult = {
 };
 
 function isEmailDeliveryConfigured() {
-  return Boolean(process.env["RESEND_API_KEY"] && process.env["NOTIFICATION_FROM_EMAIL"]);
+  return Boolean(process.env["BREVO_API_KEY"]);
 }
 
 function escapeHtml(value: string) {
