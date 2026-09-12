@@ -40,10 +40,10 @@ function TeamPage() {
       if (!accessToken) throw new Error("Sua sessão expirou. Entre novamente.");
       return inviteProfessional({ data: { establishmentId: membership.establishmentId, professionalId, email, accessToken } });
     },
-    onSuccess: async (result) => {
+    onSuccess: async (result, professionalId) => {
       setError(null);
       setSuccess(result.message);
-      setEmails((current) => ({ ...current, [result.message]: "" }));
+      setEmails((current) => ({ ...current, [professionalId]: "" }));
       await queryClient.invalidateQueries({ queryKey: ["team", membership.establishmentId] });
       window.setTimeout(() => setSuccess(null), 3000);
     },
