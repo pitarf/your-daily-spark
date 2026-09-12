@@ -40,9 +40,9 @@ export default tseslint.config(
       "src/integrations/supabase/previewAuthStorage.ts",
       "src/routes/_authenticated/dashboard/settings.tsx",
       "src/lib/scheduling/custom-duration.functions.ts",
+      "src/lib/scheduling/standalone-custom-booking.functions.ts",
     ],
     rules: {
-      // These files contain legacy/generated typing patterns retained for compatibility.
       "prefer-const": "off",
       "@typescript-eslint/no-explicit-any": "off",
     },
