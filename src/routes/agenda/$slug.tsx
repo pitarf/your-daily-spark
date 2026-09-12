@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { BookingPage } from "@/components/scheduling/BookingPage";
 import { getEstablishmentScheduling } from "@/lib/scheduling/scheduling.functions";
@@ -42,5 +42,26 @@ function AgendaPage() {
     return <div className="p-8 text-center text-sm text-muted-foreground">Nenhum estabelecimento ativo encontrado.</div>;
   }
 
-  return <BookingPage data={data} slug={slug} />;
+  return (
+    <div className="space-y-3 bg-muted/20 py-3">
+      {data.services.length > 0 ? (
+        <section className="mx-auto flex max-w-3xl flex-col gap-3 rounded-2xl border border-border bg-card px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-foreground">Precisa de mais tempo?</p>
+            <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
+              Escolha uma duração personalizada, em intervalos de 15 minutos, sujeita à disponibilidade da agenda.
+            </p>
+          </div>
+          <Link
+            to="/agenda/$slug/personalizado"
+            params={{ slug }}
+            className="inline-flex items-center justify-center rounded-md border border-primary px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10"
+          >
+            Agendamento personalizado
+          </Link>
+        </section>
+      ) : null}
+      <BookingPage data={data} slug={slug} />
+    </div>
+  );
 }
