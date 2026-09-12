@@ -39,6 +39,7 @@ export default tseslint.config(
     files: [
       "src/integrations/supabase/previewAuthStorage.ts",
       "src/routes/_authenticated/dashboard/settings.tsx",
+      "src/lib/scheduling/custom-duration.functions.ts",
     ],
     rules: {
       // These files contain legacy/generated typing patterns retained for compatibility.
