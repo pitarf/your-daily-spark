@@ -65,6 +65,9 @@
 - Reagendamento público seguro mantendo o mesmo profissional e duração, com data e horário recalculados pela agenda real.
 - Revalidação server-side do novo horário antes de atualizar o agendamento, excluindo o próprio atendimento da lista de conflitos.
 - Lembrete existente é invalidado e recriado automaticamente pelo trigger quando o agendamento é reagendado.
+- Após a confirmação pública, o cliente recebe um botão seguro para abrir diretamente o gerenciamento do próprio agendamento.
+- O acesso direto ao gerenciamento reutiliza o token HMAC já existente e não expõe a chave de assinatura ao navegador.
+- O atalho de gerenciamento está disponível nos fluxos de agendamento normal, duração personalizada e atendimento avulso.
 
 ## Em Desenvolvimento 🟡
 - Refinamentos finais de UX e identidade visual por tipo de negócio.
