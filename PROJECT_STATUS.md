@@ -62,6 +62,9 @@
 - Busca pública de agendamentos por telefone e data, com link de gerenciamento assinado e expiração.
 - Página segura de gerenciamento de agendamento por token.
 - Cancelamento público de agendamentos pendentes ou confirmados antes do início, respeitando o trigger de notificações.
+- Reagendamento público seguro mantendo o mesmo profissional e duração, com data e horário recalculados pela agenda real.
+- Revalidação server-side do novo horário antes de atualizar o agendamento, excluindo o próprio atendimento da lista de conflitos.
+- Lembrete existente é invalidado e recriado automaticamente pelo trigger quando o agendamento é reagendado.
 
 ## Em Desenvolvimento 🟡
 - Refinamentos finais de UX e identidade visual por tipo de negócio.
@@ -73,7 +76,6 @@
 - IA para configurar e consultar a agenda.
 - Pagamentos e planos de assinatura da plataforma SaaS.
 - Integração oficial com WhatsApp.
-- Reagendamento pelo cliente por link seguro.
 
 ## Bloqueado ⚠️
 - Nenhum no momento.
