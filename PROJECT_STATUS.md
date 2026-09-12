@@ -85,6 +85,9 @@
 - Assistente consulta o motor real de disponibilidade no servidor e respeita fuso, expediente, intervalos, exceções, bloqueios, agendamentos, conflitos e múltiplos profissionais.
 - Assistente de disponibilidade retorna somente horários confirmados como livres pelo motor de agenda, sem inventar horários.
 - Assistente de configuração de agenda com IA agora exige autorização server-side dentro da própria server function antes de consultar o Gemini.
+- Assistente de disponibilidade retorna atalhos internos de agendamento para horários reais encontrados, permitindo abrir a agenda pública já com serviço, data, horário e profissional selecionado quando aplicável.
+- Agenda pública aceita os parâmetros de sugestão do assistente e posiciona automaticamente o fluxo no horário disponível informado.
+- A resposta da IA não gera atalhos incorretos para atendimentos personalizados sem serviço base.
 
 ## Em Desenvolvimento 🟡
 - Refinamentos finais de UX e identidade visual por tipo de negócio.
