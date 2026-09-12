@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
@@ -23,6 +23,14 @@ type AppointmentRow = {
 
 const SELECT =
   "id, starts_at, ends_at, status, customers(name), services(name, duration_minutes), professionals(name)";
+
+const STATUS_LABEL: Record<string, string> = {
+  pending: "Pendente",
+  confirmed: "Confirmado",
+  completed: "Concluído",
+  cancelled: "Cancelado",
+  no_show: "Não compareceu",
+};
 
 function DashboardHome() {
   const { membership } = useEstablishment();
@@ -85,47 +93,73 @@ function DashboardHome() {
   });
 
   const todayAppointments = todayQuery.data ?? [];
+  const activeToday = todayAppointments.filter((item) => item.status !== "cancelled");
+  const confirmedToday = todayAppointments.filter((item) => item.status === "confirmed");
+  const pendingToday = todayAppointments.filter((item) => item.status === "pending");
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Visão geral</h1>
-        <p className="text-sm text-muted-foreground">
-          {membership.name} · hoje, {new Date().toLocaleDateString("pt-BR", { timeZone: tz })}
-        </p>
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Painel</p>
+          <h1 className="mt-1 text-2xl font-bold text-foreground">Visão geral</h1>
+          <p className="text-sm text-muted-foreground">
+            {membership.name} · {formatDateTime(`${today}T12:00:00Z`, tz).split(" às ")[0]}
+          </p>
+        </div>
+        <Link
+          to="/dashboard/appointments"
+          className="inline-flex rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+        >
+          Abrir agenda
+        </Link>
+      </header>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Stat label="Atendimentos hoje" value={todayQuery.isPending ? "…" : String(activeToday.length)} detail={`${confirmedToday.length} confirmados`} />
+        <Stat label="Pendentes" value={todayQuery.isPending ? "…" : String(pendingToday.length)} detail="Precisam de atenção" />
+        <Stat label="Horários livres" value={slotsQuery.isPending ? "…" : String(slotsQuery.data?.free ?? 0)} detail="Para o serviço mais curto" />
+        <Stat label="Horários ocupados" value={slotsQuery.isPending ? "…" : String(slotsQuery.data?.busy ?? 0)} detail="Inclui indisponibilidades" />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Stat label="Agendamentos de hoje" value={todayQuery.isPending ? "…" : String(todayAppointments.length)} />
-        <Stat
-          label="Horários livres hoje"
-          value={slotsQuery.isPending ? "…" : String(slotsQuery.data?.free ?? 0)}
-        />
-        <Stat
-          label="Horários ocupados hoje"
-          value={slotsQuery.isPending ? "…" : String(slotsQuery.data?.busy ?? 0)}
-        />
-      </div>
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <QuickLink to="/dashboard/appointments" title="Gerenciar agenda" description="Dia, semana, mês e bloqueios" />
+        <QuickLink to="/dashboard/services" title="Serviços" description="Duração, preço e disponibilidade" />
+        <QuickLink to="/dashboard/professionals" title="Profissionais" description="Equipe e horários individuais" />
+        <QuickLink to="/dashboard/customers" title="Clientes" description="Cadastros e histórico" />
+      </section>
 
       <section className="rounded-xl border border-border bg-card p-4">
-        <h2 className="text-base font-semibold text-foreground">Agenda de hoje</h2>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-base font-semibold text-foreground">Agenda de hoje</h2>
+            <p className="text-xs text-muted-foreground">Atendimentos organizados por horário.</p>
+          </div>
+          <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-foreground">
+            {activeToday.length} ativo{activeToday.length === 1 ? "" : "s"}
+          </span>
+        </div>
         {todayQuery.isPending ? (
-          <p className="mt-2 text-sm text-muted-foreground">Carregando…</p>
-        ) : todayAppointments.length === 0 ? (
-          <p className="mt-2 text-sm text-muted-foreground">Nenhum agendamento para hoje.</p>
+          <p className="mt-4 text-sm text-muted-foreground">Carregando…</p>
+        ) : todayQuery.isError ? (
+          <p className="mt-4 text-sm text-destructive">Não foi possível carregar a agenda de hoje.</p>
+        ) : activeToday.length === 0 ? (
+          <div className="mt-4 rounded-lg border border-dashed border-border p-5 text-sm text-muted-foreground">
+            Nenhum atendimento ativo para hoje.
+          </div>
         ) : (
           <ul className="mt-3 divide-y divide-border">
-            {todayAppointments.map((a) => (
-              <li key={a.id} className="flex flex-wrap items-center gap-2 py-2 text-sm">
-                <span className="w-24 font-medium text-foreground">
-                  {formatTime(a.starts_at, tz)}–{formatTime(a.ends_at, tz)}
+            {activeToday.map((appointment) => (
+              <li key={appointment.id} className="flex flex-wrap items-center gap-3 py-3 text-sm">
+                <span className="min-w-[92px] font-semibold text-foreground">
+                  {formatTime(appointment.starts_at, tz)}–{formatTime(appointment.ends_at, tz)}
                 </span>
-                <span className="text-foreground">{a.customers?.name ?? "Cliente"}</span>
+                <span className="font-medium text-foreground">{appointment.customers?.name ?? "Cliente"}</span>
                 <span className="text-muted-foreground">
-                  {a.services?.name} · {a.professionals?.name}
+                  {appointment.services?.name ?? "Serviço"} · {appointment.professionals?.name ?? "Profissional"}
                 </span>
-                <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                  {a.status}
+                <span className="ml-auto rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
+                  {STATUS_LABEL[appointment.status] ?? appointment.status}
                 </span>
               </li>
             ))}
@@ -134,20 +168,28 @@ function DashboardHome() {
       </section>
 
       <section className="rounded-xl border border-border bg-card p-4">
-        <h2 className="text-base font-semibold text-foreground">Próximos agendamentos</h2>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-base font-semibold text-foreground">Próximos agendamentos</h2>
+            <p className="text-xs text-muted-foreground">Os próximos atendimentos confirmados ou pendentes.</p>
+          </div>
+          <Link to="/dashboard/appointments" className="text-xs font-medium underline">Ver agenda</Link>
+        </div>
         {upcomingQuery.isPending ? (
-          <p className="mt-2 text-sm text-muted-foreground">Carregando…</p>
+          <p className="mt-4 text-sm text-muted-foreground">Carregando…</p>
+        ) : upcomingQuery.isError ? (
+          <p className="mt-4 text-sm text-destructive">Não foi possível carregar os próximos atendimentos.</p>
         ) : (upcomingQuery.data ?? []).length === 0 ? (
-          <p className="mt-2 text-sm text-muted-foreground">Nada agendado para os próximos dias.</p>
+          <p className="mt-4 text-sm text-muted-foreground">Nada agendado para os próximos dias.</p>
         ) : (
-          <ul className="mt-3 divide-y divide-border">
-            {(upcomingQuery.data ?? []).map((a) => (
-              <li key={a.id} className="flex flex-wrap items-center gap-2 py-2 text-sm">
-                <span className="font-medium text-foreground">{formatDateTime(a.starts_at, tz)}</span>
-                <span className="text-foreground">{a.customers?.name ?? "Cliente"}</span>
-                <span className="text-muted-foreground">
-                  {a.services?.name} · {a.professionals?.name}
-                </span>
+          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+            {(upcomingQuery.data ?? []).map((appointment) => (
+              <li key={appointment.id} className="rounded-lg border border-border p-3 text-sm">
+                <div className="font-semibold text-foreground">{formatDateTime(appointment.starts_at, tz)}</div>
+                <div className="mt-1 text-foreground">{appointment.customers?.name ?? "Cliente"}</div>
+                <div className="mt-0.5 text-xs text-muted-foreground">
+                  {appointment.services?.name ?? "Serviço"} · {appointment.professionals?.name ?? "Profissional"}
+                </div>
               </li>
             ))}
           </ul>
@@ -157,11 +199,21 @@ function DashboardHome() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, detail }: { label: string; value: string; detail: string }) {
   return (
     <div className="rounded-xl border border-border bg-card p-4">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
       <p className="mt-1 text-3xl font-bold text-foreground">{value}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
     </div>
+  );
+}
+
+function QuickLink({ to, title, description }: { to: "/dashboard/appointments" | "/dashboard/services" | "/dashboard/professionals" | "/dashboard/customers"; title: string; description: string }) {
+  return (
+    <Link to={to} className="rounded-xl border border-border bg-card p-4 transition-colors hover:bg-accent">
+      <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+      <p className="mt-1 text-xs leading-5 text-muted-foreground">{description}</p>
+    </Link>
   );
 }
