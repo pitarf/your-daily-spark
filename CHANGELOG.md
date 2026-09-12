@@ -170,3 +170,16 @@
 - **Testes realizados**: GitHub Actions run #35 validou TypeScript, ESLint e build de produção com sucesso.
 - **Problemas encontrados**: nenhum bloqueador de qualidade nesta etapa.
 - **Pendências relacionadas**: duração personalizada, IA, Google, notificações reais, pagamentos e WhatsApp.
+
+## 2026-09-12 (17)
+- **Objetivo da alteração**: Conectar a base de duração personalizada ao fluxo público e torná-la utilizável sem consumir créditos do Lovable.
+- **Funcionalidades implementadas**:
+  - Novo fluxo público `/agenda-personalizada/{slug}`.
+  - Seleção de serviço, profissional/qualquer profissional, data, duração entre 15 minutos e 4 horas e horário disponível.
+  - Revisão e confirmação do atendimento personalizado com validação server-side já existente.
+  - Atalho para o fluxo personalizado na agenda pública principal.
+  - Confirmação do ambiente Lovable/Supabase: `allow_custom_duration` está habilitado para a Barbearia Marca Minha Vez.
+- **Arquivos alterados**: `src/components/scheduling/CustomDurationBookingPage.tsx`, `src/routes/agenda-personalizada/$slug.tsx`, `src/routes/agenda/$slug.tsx`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
+- **Testes realizados**: conferência do schema e do banco live no ambiente Lovable; verificação estrutural das funções `getCustomDurationAvailability` e `createCustomDurationAppointment`.
+- **Problemas encontrados**: a rota principal teve um import incorreto durante a alteração e foi corrigida antes da consolidação da branch.
+- **Pendências relacionadas**: agendamento avulso sem serviço base, IA, Google, notificações reais, pagamentos e WhatsApp.
