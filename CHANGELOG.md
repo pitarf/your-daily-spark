@@ -135,7 +135,7 @@
 - **Arquivos alterados**: `src/routes/_authenticated/dashboard/appointments.tsx`, `src/lib/scheduling/calendar.ts`, `src/lib/auth/role-access.ts`, `src/lib/auth/team.functions.ts`, `src/lib/auth/auth-client.ts`, `src/routes/auth.tsx`, `src/components/dashboard/ProfessionalWorkspace.tsx`, `src/routeTree.gen.ts`, `tsconfig.json`, `eslint.config.js`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
 - **Testes realizados**: GitHub Actions validou TypeScript, ESLint e build de produção no pipeline mais recente.
 - **Problemas encontrados**: login com Google ainda depende da habilitação do provedor; duração totalmente personalizada sem serviço cadastrado ainda não faz parte do fluxo.
-- **Pendências relacionadas**: habilitar Google, IA, notificações reais, pagamentos, WhatsApp e duração personalizada independente de serviço.
+- **Pendências relacionadas**: habilitar Google, IA, notificações, pagamentos, WhatsApp e duração personalizada independente de serviço.
 
 ## 2026-09-12 (14)
 - **Objetivo da alteração**: Finalizar a primeira camada de gestão comercial e de agenda do painel.
@@ -313,3 +313,15 @@
 - **Testes realizados**: trigger atualizado diretamente no PostgreSQL do ambiente Lovable e conferência da existência do trigger `appointments_create_notifications` para INSERT e UPDATE.
 - **Problemas encontrados**: a entrega física do lembrete ainda depende de um worker/provedor externo.
 - **Pendências relacionadas**: worker de notificações, IA, Google, pagamentos e WhatsApp oficial.
+
+## 2026-09-12 (29)
+- **Objetivo da alteração**: Melhorar a experiência imediatamente após um agendamento público.
+- **Funcionalidades implementadas**:
+  - Botão "Adicionar ao calendário" disponível após agendamento normal.
+  - O mesmo recurso foi adicionado aos fluxos de duração personalizada e agendamento avulso.
+  - Arquivo `.ics` é gerado no navegador com data, horário, duração, profissional, título e descrição do atendimento.
+  - A exportação usa UTC internamente para manter o mesmo instante do agendamento independentemente do aplicativo de calendário utilizado.
+- **Arquivos alterados**: novo `src/lib/calendar/ics.ts`, `src/components/scheduling/BookingPage.tsx`, `src/components/scheduling/CustomDurationBookingPage.tsx`, `src/components/scheduling/StandaloneCustomBookingPage.tsx`, `CHANGELOG.md`.
+- **Testes realizados**: revisão estrutural da geração do calendário e integração nos três fluxos públicos de confirmação.
+- **Problemas encontrados**: nenhum novo bloqueador conhecido.
+- **Pendências relacionadas**: gestão posterior do agendamento pelo cliente, worker de notificações, IA, Google, pagamentos e WhatsApp oficial.

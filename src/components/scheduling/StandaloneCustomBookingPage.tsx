@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState, type FormEvent } from "react";
 
+import { calendarDataUrl } from "@/lib/calendar/ics";
 import { addDaysInTimezone, formatDate, formatTime, todayInTimezone } from "@/lib/scheduling/format";
 import type { EstablishmentSchedulingData } from "@/lib/scheduling/scheduling.functions";
 import {
@@ -86,6 +87,13 @@ export function StandaloneCustomBookingPage({ data, slug }: Props) {
   }
 
   if (success) {
+    const calendarUrl = calendarDataUrl({
+      title: `${success.title} · ${data.establishment.name}`,
+      start: success.startsAt,
+      end: success.endsAt,
+      description: `Atendimento avulso com ${success.professionalName}. Duração: ${success.durationMinutes} minutos.`,
+    });
+
     return (
       <main className="mx-auto max-w-xl px-4 py-10">
         <section className="rounded-2xl border border-border bg-card p-6 text-center shadow-sm">
@@ -99,18 +107,10 @@ export function StandaloneCustomBookingPage({ data, slug }: Props) {
             <Summary label="Horário" value={`${formatTime(success.startsAt, timezone)} às ${formatTime(success.endsAt, timezone)}`} />
             <Summary label="Duração" value={formatDuration(success.durationMinutes)} />
           </dl>
-          <button
-            type="button"
-            onClick={() => {
-              setSuccess(null);
-              setSlot(null);
-              setTitle("");
-              setNotes("");
-            }}
-            className="mt-6 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
-          >
-            Novo agendamento
-          </button>
+          <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
+            <a href={calendarUrl} download="agendamento-avulso.ics" className="rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground">Adicionar ao calendário</a>
+            <button type="button" onClick={() => { setSuccess(null); setSlot(null); setTitle(""); setNotes(""); }} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Novo agendamento</button>
+          </div>
         </section>
       </main>
     );
@@ -152,10 +152,7 @@ export function StandaloneCustomBookingPage({ data, slug }: Props) {
               </button>
             ))}
           </div>
-          <label className="mt-3 block text-xs text-muted-foreground">
-            Outra data
-            <input type="date" value={date} min={todayInTimezone(timezone)} onChange={(event) => { setDate(event.target.value); setSlot(null); }} className="ml-2 rounded-md border border-input bg-background px-2 py-1.5 text-sm text-foreground" />
-          </label>
+          <label className="mt-3 block text-xs text-muted-foreground">Outra data<input type="date" value={date} min={todayInTimezone(timezone)} onChange={(event) => { setDate(event.target.value); setSlot(null); }} className="ml-2 rounded-md border border-input bg-background px-2 py-1.5 text-sm text-foreground" /></label>
         </section>
 
         <section>

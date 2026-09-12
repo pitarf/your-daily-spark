@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState, type ReactNode } from "react";
 
+import { calendarDataUrl } from "@/lib/calendar/ics";
 import {
   createAppointment,
   getAvailability,
@@ -106,6 +107,13 @@ export function BookingPage({
   });
 
   if (success) {
+    const calendarUrl = calendarDataUrl({
+      title: `${success.serviceName} · ${data.establishment.name}`,
+      start: success.startsAt,
+      end: success.endsAt,
+      description: `Agendamento com ${success.professionalName}. Duração: ${success.durationMinutes} minutos.`,
+    });
+
     return (
       <main className="mx-auto max-w-lg px-4 py-12">
         <div className="rounded-2xl border border-border bg-card p-6 text-center">
@@ -121,6 +129,13 @@ export function BookingPage({
             <SummaryRow label="Valor" value={formatPrice(success.price)} />
           </dl>
           <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
+            <a
+              href={calendarUrl}
+              download="agendamento-marca-minha-vez.ics"
+              className="rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground"
+            >
+              Adicionar ao calendário
+            </a>
             <button
               type="button"
               className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
