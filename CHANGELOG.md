@@ -150,3 +150,23 @@
 - **Testes realizados**: GitHub Actions já validou TypeScript, ESLint e build na etapa imediatamente anterior; nova execução foi acionada após os ajustes de planos.
 - **Problemas encontrados**: nenhum novo bloqueador conhecido.
 - **Pendências relacionadas**: duração personalizada independente de serviço, IA, Google, notificações reais, pagamentos e WhatsApp.
+
+## 2026-09-12 (15)
+- **Objetivo da alteração**: Preparar a base do banco para permitir duração personalizada em futuros fluxos de agendamento.
+- **Funcionalidades implementadas**:
+  - `establishments.allow_custom_duration` com padrão seguro `false`.
+  - `appointments.duration_minutes_override` opcional.
+  - Constraint para impedir duração personalizada menor ou igual a zero.
+  - Migration versionada em `supabase/migrations/20260912051500_custom_duration.sql`.
+- **Arquivos alterados**: nova migration `supabase/migrations/20260912051500_custom_duration.sql` e banco do projeto.
+- **Testes realizados**: alteração aplicada no PostgreSQL do projeto; pipeline de TypeScript/ESLint/build segue sendo executado nas alterações subsequentes.
+- **Problemas encontrados**: a UI e o motor de disponibilidade ainda não usam a duração personalizada.
+- **Pendências relacionadas**: implementar o fluxo de duração personalizada e respeitar o limite do plano do cliente.
+
+## 2026-09-12 (16)
+- **Objetivo da alteração**: Consolidar a etapa de planos no painel e manter o gateway de qualidade verde.
+- **Funcionalidades implementadas**: gestão autenticada de planos, atalho no dashboard, proteção por papel, rota legada encaminhada e route tree atualizado.
+- **Arquivos alterados**: `src/routes/_authenticated/dashboard/plans.tsx`, `src/routes/_authenticated/dashboard/index.tsx`, `src/routes/_authenticated/dashboard/route.tsx`, `src/routes/establishment/plans.tsx`, `src/lib/auth/role-access.ts`, `src/routeTree.gen.ts`, documentação.
+- **Testes realizados**: GitHub Actions run #35 validou TypeScript, ESLint e build de produção com sucesso.
+- **Problemas encontrados**: nenhum bloqueador de qualidade nesta etapa.
+- **Pendências relacionadas**: duração personalizada, IA, Google, notificações reais, pagamentos e WhatsApp.
