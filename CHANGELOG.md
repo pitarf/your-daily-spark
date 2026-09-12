@@ -211,3 +211,27 @@
 - **Testes realizados**: alteração do schema aplicada no PostgreSQL do ambiente Lovable e verificação estrutural do fluxo server-side.
 - **Problemas encontrados**: a apresentação administrativa de atendimentos sem serviço ainda precisa de um refinamento para exibir o título personalizado no calendário.
 - **Pendências relacionadas**: UI administrativa de atendimentos avulsos, IA, Google, notificações reais, pagamentos e WhatsApp.
+
+## 2026-09-12 (20)
+- **Objetivo da alteração**: Refinar a apresentação administrativa dos atendimentos avulsos sem serviço.
+- **Funcionalidades implementadas**:
+  - Calendário administrativo agora exibe o `custom_title` de atendimentos avulsos em vez de apresentar serviço vazio.
+  - Preço personalizado, quando existir, passa a ser exibido corretamente.
+  - Duração personalizada passa a aparecer no detalhe do atendimento.
+  - As visões Dia, Semana e Mês utilizam o mesmo rótulo de atendimento para manter consistência.
+- **Arquivos alterados**: `src/routes/_authenticated/dashboard/appointments.tsx`, `PROJECT_STATUS.md`, `CHANGELOG.md`.
+- **Testes realizados**: revisão estrutural do fluxo de leitura dos campos `custom_title`, `custom_price` e `duration_minutes_override`.
+- **Problemas encontrados**: nenhum novo bloqueador conhecido.
+- **Pendências relacionadas**: refinamentos gerais de UX, IA, Google, notificações reais, pagamentos e WhatsApp.
+
+## 2026-09-12 (21)
+- **Objetivo da alteração**: Corrigir a apresentação de atendimentos avulsos no espaço do profissional.
+- **Funcionalidades implementadas**:
+  - O painel do profissional passou a aceitar `service_id` nulo para atendimentos avulsos.
+  - O `custom_title` agora aparece como título do atendimento quando não há serviço cadastrado.
+  - A duração personalizada (`duration_minutes_override`) passa a ser exibida.
+  - A consulta continua limitada ao profissional autenticado e aos atendimentos futuros do próprio estabelecimento.
+- **Arquivos alterados**: `src/components/dashboard/ProfessionalWorkspace.tsx`, `PROJECT_STATUS.md`, `CHANGELOG.md`.
+- **Testes realizados**: revisão estrutural da consulta autenticada e da renderização dos campos de atendimento avulso.
+- **Problemas encontrados**: nenhum novo bloqueador conhecido.
+- **Pendências relacionadas**: refinamentos gerais de UX, IA, Google, notificações reais, pagamentos e WhatsApp.
