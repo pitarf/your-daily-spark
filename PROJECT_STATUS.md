@@ -50,11 +50,15 @@
 - Dashboard inicial exibe atendimentos avulsos com título personalizado em vez de apresentar um serviço genérico ausente.
 - Painel do profissional classifica “Hoje” usando a data local do estabelecimento, evitando erros de dia causados por timestamps UTC.
 - Fila de notificações no banco para eventos de confirmação e cancelamento de agendamentos, com histórico visível no dashboard.
+- Lembretes de 24 horas entram automaticamente na fila para agendamentos futuros.
+- Lembretes pendentes são invalidados quando um agendamento é cancelado ou reagendado.
 - Tema persistente por estabelecimento com presets Automático, Minimalista, Suave, Marcante, Escuro e Quente.
 - Administrador pode escolher o preset visual no perfil do estabelecimento com pré-visualização antes de salvar.
 - Agenda pública aplica o preset selecionado sem perder o tema automático específico do tipo de negócio.
 - Cabeçalho público apresenta logo, tipo de negócio e atalho para WhatsApp quando há telefone cadastrado.
 - Tipos TypeScript do Supabase sincronizados com `theme_preset`.
+- Confirmação pública oferece exportação do agendamento para calendário no formato `.ics`.
+- Exportação de calendário disponível nos fluxos normal, duração personalizada e agendamento avulso.
 
 ## Em Desenvolvimento 🟡
 - Refinamentos finais de UX e identidade visual por tipo de negócio.
@@ -62,10 +66,11 @@
 
 ## Pendente 🔴
 - Habilitar o provedor Google no ambiente de autenticação.
+- Worker/provedor para entregar notificações reais por e-mail, WhatsApp e SMS.
 - IA para configurar e consultar a agenda.
-- Entrega real de notificações por e-mail, WhatsApp e SMS, usando a fila já persistida.
 - Pagamentos e planos de assinatura da plataforma SaaS.
 - Integração oficial com WhatsApp.
+- Gestão posterior do agendamento pelo cliente, incluindo cancelamento e reagendamento por link seguro.
 
 ## Bloqueado ⚠️
 - Nenhum no momento.
