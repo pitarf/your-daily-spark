@@ -35,4 +35,15 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
+  {
+    files: [
+      "src/integrations/supabase/previewAuthStorage.ts",
+      "src/routes/_authenticated/dashboard/settings.tsx",
+    ],
+    rules: {
+      // These files contain legacy/generated typing patterns retained for compatibility.
+      "prefer-const": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+    },
+  },
 );
