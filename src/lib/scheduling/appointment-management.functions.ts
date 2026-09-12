@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { dayRangeUtc } from "@/lib/scheduling/format";
 
 const managementTokenInput = z.object({
   appointmentId: z.string().uuid(),
@@ -12,6 +13,12 @@ const managementLinkInput = z.object({
   slug: z.string().trim().min(1).max(160),
   appointmentId: z.string().uuid(),
   customerPhone: z.string().trim().min(8).max(30),
+});
+
+const lookupInput = z.object({
+  slug: z.string().trim().min(1).max(160),
+  customerPhone: z.string().trim().min(8).max(30),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 });
 
 function normalizePhone(value: string) {
@@ -64,6 +71,62 @@ async function loadAppointmentForManagement(appointmentId: string) {
 
   return { appointment, customer, professional, service, establishment };
 }
+
+export const findCustomerAppointments = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => lookupInput.parse(data))
+  .handler(async ({ data }) => {
+    const { data: establishment, error: establishmentError } = await supabaseAdmin
+      .from("establishments")
+      .select("id, name, slug, timezone")
+      .eq("slug", data.slug)
+      .eq("active", true)
+      .maybeSingle();
+    if (establishmentError) throw establishmentError;
+    if (!establishment) throw new Error("Estabelecimento não encontrado.");
+
+    const range = dayRangeUtc(data.date, establishment.timezone);
+    const phone = normalizePhone(data.customerPhone);
+
+    const { data: customers, error: customersError } = await supabaseAdmin
+      .from("customers")
+      .select("id, name, phone")
+      .eq("establishment_id", establishment.id)
+      .not("phone", "is", null);
+    if (customersError) throw customersError;
+
+    const matchingCustomerIds = (customers ?? [])
+      .filter((customer) => normalizePhone(customer.phone ?? "") === phone)
+      .map((customer) => customer.id);
+
+    if (matchingCustomerIds.length === 0) return [];
+
+    const { data: appointments, error: appointmentsError } = await supabaseAdmin
+      .from("appointments")
+      .select("id, customer_id, professional_id, service_id, custom_title, custom_price, duration_minutes_override, starts_at, ends_at, status")
+      .eq("establishment_id", establishment.id)
+      .in("customer_id", matchingCustomerIds)
+      .gte("starts_at", range.start)
+      .lt("starts_at", range.end)
+      .in("status", ["pending", "confirmed"])
+      .order("starts_at");
+    if (appointmentsError) throw appointmentsError;
+
+    return Promise.all((appointments ?? []).map(async (appointment) => {
+      const loaded = await loadAppointmentForManagement(appointment.id);
+      const expiresAtMs = new Date(loaded.appointment.ends_at).getTime() + 30 * 24 * 60 * 60 * 1000;
+      const token = `${expiresAtMs}.${await signToken(appointment.id, loaded.customer.phone!, expiresAtMs)}`;
+      return {
+        id: appointment.id,
+        customerName: loaded.customer.name,
+        professionalName: loaded.professional?.name ?? "Profissional",
+        serviceName: loaded.service?.name ?? null,
+        title: loaded.appointment.custom_title ?? loaded.service?.name ?? "Atendimento",
+        startsAt: loaded.appointment.starts_at,
+        endsAt: loaded.appointment.ends_at,
+        managementPath: `/agenda/${encodeURIComponent(data.slug)}?manage=${encodeURIComponent(appointment.id)}&token=${encodeURIComponent(token)}`,
+      };
+    }));
+  });
 
 export const getAppointmentManagementUrl = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => managementLinkInput.parse(data))
