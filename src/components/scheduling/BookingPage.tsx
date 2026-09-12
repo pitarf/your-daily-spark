@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState, type ReactNode } from "react";
 
+import { AppointmentManagementButton } from "@/components/scheduling/AppointmentManagementButton";
 import { calendarDataUrl } from "@/lib/calendar/ics";
 import {
   createAppointment,
@@ -128,7 +129,7 @@ export function BookingPage({
             <SummaryRow label="Duração" value={`${success.durationMinutes} minutos`} />
             <SummaryRow label="Valor" value={formatPrice(success.price)} />
           </dl>
-          <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
+          <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-center">
             <a
               href={calendarUrl}
               download="agendamento-marca-minha-vez.ics"
@@ -136,6 +137,7 @@ export function BookingPage({
             >
               Adicionar ao calendário
             </a>
+            <AppointmentManagementButton slug={slug} appointmentId={success.id} customerPhone={phone} />
             <button
               type="button"
               className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"

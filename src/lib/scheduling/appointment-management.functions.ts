@@ -73,7 +73,7 @@ async function loadAppointmentForManagement(appointmentId: string) {
     appointment.service_id
       ? supabaseAdmin.from("services").select("name, duration_minutes, price").eq("id", appointment.service_id).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
-    supabaseAdmin.from("establishments").select("name, slug, timezone").eq("id", appointment.establishment_id).maybeSingle(),
+    supabaseAdmin.from("establishments").select("id, name, slug, timezone").eq("id", appointment.establishment_id).maybeSingle(),
   ]);
   if (customerError) throw customerError;
   if (professionalError) throw professionalError;
@@ -231,10 +231,12 @@ export const getAppointmentManagementUrl = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => managementLinkInput.parse(data))
   .handler(async ({ data }) => {
     const loaded = await loadAppointmentForManagement(data.appointmentId);
+    const customerPhone = loaded.customer.phone;
+    if (!customerPhone) throw new Error("Não foi possível validar o telefone do cliente.");
     if (loaded.establishment.slug !== data.slug) throw new Error("Agendamento inválido para este estabelecimento.");
-    if (normalizePhone(loaded.customer.phone) !== normalizePhone(data.customerPhone)) throw new Error("Telefone não confere com o agendamento.");
+    if (normalizePhone(customerPhone) !== normalizePhone(data.customerPhone)) throw new Error("Telefone não confere com o agendamento.");
     const expiresAtMs = new Date(loaded.appointment.ends_at).getTime() + 30 * 24 * 60 * 60 * 1000;
-    const token = `${expiresAtMs}.${await signToken(data.appointmentId, loaded.customer.phone, expiresAtMs)}`;
+    const token = `${expiresAtMs}.${await signToken(data.appointmentId, customerPhone, expiresAtMs)}`;
     return {
       path: `/agenda/${encodeURIComponent(data.slug)}?manage=${encodeURIComponent(data.appointmentId)}&token=${encodeURIComponent(token)}`,
       expiresAt: new Date(expiresAtMs).toISOString(),
@@ -245,7 +247,9 @@ export const getManagedAppointment = createServerFn({ method: "GET" })
   .inputValidator((data: unknown) => managementTokenInput.parse(data))
   .handler(async ({ data }) => {
     const loaded = await loadAppointmentForManagement(data.appointmentId);
-    const valid = await verifyToken(data.appointmentId, loaded.customer.phone!, data.token);
+    const customerPhone = loaded.customer.phone;
+    if (!customerPhone) throw new Error("Não foi possível validar o telefone do cliente.");
+    const valid = await verifyToken(data.appointmentId, customerPhone, data.token);
     if (!valid) throw new Error("Link de gerenciamento inválido ou expirado.");
     const durationMinutes = durationForAppointment(loaded.appointment, loaded.service);
     return {
@@ -272,7 +276,9 @@ export const getManagedRescheduleAvailability = createServerFn({ method: "POST" 
   .inputValidator((data: unknown) => rescheduleAvailabilityInput.parse(data))
   .handler(async ({ data }) => {
     const loaded = await loadAppointmentForManagement(data.appointmentId);
-    const valid = await verifyToken(data.appointmentId, loaded.customer.phone!, data.token);
+    const customerPhone = loaded.customer.phone;
+    if (!customerPhone) throw new Error("Não foi possível validar o telefone do cliente.");
+    const valid = await verifyToken(data.appointmentId, customerPhone, data.token);
     if (!valid) throw new Error("Link de gerenciamento inválido ou expirado.");
     const result = await getRescheduleAvailability(data.appointmentId, data.date);
     return result.slots;
@@ -282,7 +288,9 @@ export const rescheduleManagedAppointment = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => rescheduleInput.parse(data))
   .handler(async ({ data }) => {
     const loaded = await loadAppointmentForManagement(data.appointmentId);
-    const valid = await verifyToken(data.appointmentId, loaded.customer.phone!, data.token);
+    const customerPhone = loaded.customer.phone;
+    if (!customerPhone) throw new Error("Não foi possível validar o telefone do cliente.");
+    const valid = await verifyToken(data.appointmentId, customerPhone, data.token);
     if (!valid) throw new Error("Link de gerenciamento inválido ou expirado.");
     if (!canCustomerChangeAppointment(loaded.appointment)) throw new Error("Este agendamento não pode mais ser reagendado.");
 
@@ -314,7 +322,9 @@ export const cancelManagedAppointment = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => managementTokenInput.parse(data))
   .handler(async ({ data }) => {
     const loaded = await loadAppointmentForManagement(data.appointmentId);
-    const valid = await verifyToken(data.appointmentId, loaded.customer.phone!, data.token);
+    const customerPhone = loaded.customer.phone;
+    if (!customerPhone) throw new Error("Não foi possível validar o telefone do cliente.");
+    const valid = await verifyToken(data.appointmentId, customerPhone, data.token);
     if (!valid) throw new Error("Link de gerenciamento inválido ou expirado.");
     if (!["pending", "confirmed"].includes(loaded.appointment.status)) throw new Error("Este agendamento não pode mais ser cancelado.");
     if (new Date(loaded.appointment.starts_at).getTime() <= Date.now()) throw new Error("Não é possível cancelar um atendimento que já começou.");
