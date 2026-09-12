@@ -16,6 +16,10 @@ const agendaSearchSchema = z.object({
   standalone: z.preprocess((value) => value === true || value === "true", z.boolean()).optional(),
   manage: z.string().min(1).max(160).optional(),
   token: z.string().min(20).optional(),
+  serviceId: z.string().uuid().optional(),
+  professionalId: z.string().uuid().optional(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional(),
 });
 
 export const Route = createFileRoute("/agenda/$slug")({
@@ -56,7 +60,7 @@ export const Route = createFileRoute("/agenda/$slug")({
 function AgendaPage() {
   const data = Route.useLoaderData();
   const { slug } = Route.useParams();
-  const { custom, standalone, manage, token } = Route.useSearch();
+  const { custom, standalone, manage, token, serviceId, professionalId, date, time } = Route.useSearch();
 
   if (!data) return <div className="p-8 text-center text-sm text-muted-foreground">Nenhum estabelecimento ativo encontrado.</div>;
 
@@ -110,7 +114,14 @@ function AgendaPage() {
               </>
             ) : null}
           </div>
-          <BookingPage data={data} slug={slug} />
+          <BookingPage
+            data={data}
+            slug={slug}
+            initialServiceId={serviceId}
+            initialProfessionalId={professionalId}
+            initialDate={date}
+            initialSlotLabel={time}
+          />
         </>
       )}
     </div>
