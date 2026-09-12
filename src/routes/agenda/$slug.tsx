@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 
 import { BookingPage } from "@/components/scheduling/BookingPage";
 import { getEstablishmentScheduling } from "@/lib/scheduling/scheduling.functions";
