@@ -46,7 +46,8 @@
 - Link público principal do painel utiliza a rota amigável `/agenda/{slug}`.
 - README atualizado para refletir o produto Marca Minha Vez, sua arquitetura, rotas, desenvolvimento e roadmap.
 - Agenda pública oculta as opções de duração personalizada e atendimento avulso quando o estabelecimento desativa o recurso.
-- Tentativas diretas de acessar `?custom=true` ou `?standalone=true` com o recurso desativado recebem uma mensagem de indisponibilidade e retorno para a agenda.
+- Tentativas diretas de acessar `?custom=true` ou `?standalone=true` quando o recurso está desativado recebem mensagem de indisponibilidade e retorno para a agenda.
+- Dashboard inicial exibe atendimentos avulsos com título personalizado em vez de apresentar um serviço genérico ausente.
 
 ## Em Desenvolvimento 🟡
 - Refinamentos finais de UX e identidade visual por tipo de negócio.
