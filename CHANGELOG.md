@@ -137,3 +137,17 @@
 - **Testes realizados**: revisão estrutural da matriz de precedência do motor de disponibilidade.
 - **Problemas encontrados**: a correção anterior ainda permitia que um fechamento geral encerrasse a disponibilidade antes de avaliar um horário especial específico do profissional.
 - **Pendências relacionadas**: rota amigável `/agenda/{slug}`; equipe; edição completa do perfil/identidade do estabelecimento; login social; IA; notificações reais; pagamentos e WhatsApp.
+
+## 2026-09-12 (9)
+- **Objetivo da alteração**: Criar uma área dedicada para administrar a identidade e os dados públicos do estabelecimento.
+- **Funcionalidades implementadas**:
+  - Nova rota autenticada `/dashboard/profile`.
+  - Edição do nome, descrição, tipo de negócio, fuso horário, telefone, WhatsApp, e-mail, endereço e URL da logo.
+  - Pré-visualização da logo e acesso direto à agenda pública.
+  - Somente administradores podem salvar alterações; outros perfis recebem a tela em modo de visualização.
+  - Novo item "Perfil" na navegação do painel.
+  - Rota registrada no `src/routeTree.gen.ts` para manter a navegação tipada.
+- **Arquivos alterados**: `src/routes/_authenticated/dashboard/profile.tsx`, `src/routes/_authenticated/dashboard/route.tsx`, `src/routeTree.gen.ts`, `CHANGELOG.md`.
+- **Testes realizados**: revisão estrutural de leitura/atualização dos campos existentes e proteção por papel no frontend; build/typecheck automático não está configurado no repositório.
+- **Problemas encontrados**: nenhum conhecido nesta etapa.
+- **Pendências relacionadas**: rota pública amigável `/agenda/{slug}`; convite/vínculo de equipe; login social; IA; notificações; pagamentos e WhatsApp.

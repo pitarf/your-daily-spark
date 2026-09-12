@@ -19,16 +19,18 @@
 - Regras de plano aplicadas no agendamento.
 - Gestão de bloqueios e status dos agendamentos.
 - Homepage comercial e fluxo público acessível.
+- Acessibilidade básica na agenda pública.
+- **Perfil do estabelecimento**: rota `/dashboard/profile` com edição, para administradores, de nome, descrição, tipo de negócio, fuso horário, telefone, WhatsApp, e-mail, endereço e URL da logo.
+- Pré-visualização da logo e atalho para a agenda pública.
 
 ## Em Desenvolvimento 🟡
 - Equipe: convite e vínculo de profissionais a contas de usuário.
 - URL amigável dedicada: `/agenda/{slug}`.
-- Refinamento completo da identidade e perfil do estabelecimento.
 
 ## Pendente 🔴
 - Login social.
-- IA para configurar/consultar a agenda.
-- Notificações reais por e-mail/WhatsApp/SMS.
+- IA para configurar e consultar a agenda.
+- Notificações reais por e-mail, WhatsApp e SMS.
 - Pagamentos e planos de assinatura da plataforma SaaS.
 - Integração oficial com WhatsApp.
 
