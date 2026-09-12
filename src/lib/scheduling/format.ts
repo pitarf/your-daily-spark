@@ -25,13 +25,24 @@ export function formatPrice(value: number) {
 
 /** Data de hoje (YYYY-MM-DD) no fuso informado. */
 export function todayInTimezone(timeZone: string) {
-  const parts = new Intl.DateTimeFormat("en-CA", {
+  return new Intl.DateTimeFormat("en-CA", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
     timeZone,
   }).format(new Date());
-  return parts;
+}
+
+/** Soma dias a uma data de calendário, preservando o fuso do estabelecimento. */
+export function addDaysInTimezone(date: string, days: number, timeZone: string) {
+  const baseNoon = new Date(`${date}T12:00:00Z`);
+  const shifted = new Date(baseNoon.getTime() + days * 24 * 3600 * 1000);
+  return new Intl.DateTimeFormat("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone,
+  }).format(shifted);
 }
 
 export function dayRangeUtc(date: string, timeZone: string) {

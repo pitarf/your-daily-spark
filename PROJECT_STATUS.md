@@ -20,6 +20,8 @@
 - **Regras de plano no agendamento público**: serviço e duração são validados no servidor conforme o plano ativo do cliente identificado pelo telefone.
 - **Gestão de bloqueios**: painel permite bloquear período para todos os profissionais ou para um profissional específico e remover bloqueios.
 - **Gestão de status dos agendamentos**: painel permite alterar entre pendente, confirmado, concluído, cancelado e não compareceu.
+- **Calendário público sensível ao fuso**: datas de hoje, próximos dias e data mínima são calculadas no timezone do estabelecimento, evitando deslocamentos causados por UTC.
+- **Homepage comercial**: apresentação do produto, benefícios, fluxo de uso e CTAs para agenda e criação de estabelecimento.
 
 ## Em Desenvolvimento 🟡
 - **Equipe**: convite/vínculo de profissionais a contas de usuário para que cada profissional tenha acesso próprio ao painel.
@@ -37,4 +39,4 @@
 - Nenhum no momento.
 
 ---
-*Última atualização: 2026-09-11*
+*Última atualização: 2026-09-12*
