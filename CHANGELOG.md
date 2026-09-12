@@ -275,3 +275,29 @@
 - **Testes realizados**: revisão estrutural da consulta e da renderização dos campos personalizados.
 - **Problemas encontrados**: nenhum novo bloqueador conhecido.
 - **Pendências relacionadas**: refinamentos gerais de UX, IA, Google, notificações reais, pagamentos e WhatsApp.
+
+## 2026-09-12 (26)
+- **Objetivo da alteração**: Registrar eventos de agendamento na fila interna de notificações e expor a atividade no dashboard.
+- **Funcionalidades implementadas**:
+  - Trigger de banco para criar notificação de confirmação ao inserir um agendamento.
+  - Trigger de banco para criar notificação de cancelamento quando o status muda para cancelado.
+  - Histórico de eventos recentes exibido no dashboard do estabelecimento.
+  - Tipos e rótulos centralizados em `src/lib/notifications.ts`.
+- **Arquivos alterados**: `supabase/migrations/20260912071500_appointment_notifications.sql`, `src/lib/notifications.ts`, `src/routes/_authenticated/dashboard/index.tsx`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
+- **Testes realizados**: trigger aplicado no PostgreSQL do ambiente Lovable e conferência das políticas RLS da tabela `notifications`.
+- **Problemas encontrados**: entrega real por e-mail, WhatsApp ou SMS continua dependendo de provedor externo.
+- **Pendências relacionadas**: implementar worker/provedor de entrega das notificações reais.
+
+## 2026-09-12 (27)
+- **Objetivo da alteração**: Permitir que cada estabelecimento escolha um preset visual persistente para a agenda pública.
+- **Funcionalidades implementadas**:
+  - Novo campo `establishments.theme_preset` com opções `auto`, `minimal`, `soft`, `bold`, `dark` e `warm`.
+  - Perfil administrativo ganhou seleção de tema com cartões e pré-visualização.
+  - Tema selecionado é persistido no banco e aplicado na rota pública `/agenda/{slug}`.
+  - O modo `auto` continua utilizando a identidade visual associada ao tipo de negócio.
+  - Cabeçalho público passou a apresentar logo, tipo de negócio e atalho para WhatsApp quando houver contato cadastrado.
+  - Tipos TypeScript do schema foram sincronizados com `theme_preset`.
+- **Arquivos alterados**: `supabase/migrations/20260912073000_establishment_theme_preset.sql`, `src/lib/theming/business-theme.ts`, `src/lib/theming/establishment-theme.functions.ts`, `src/routes/_authenticated/dashboard/profile.tsx`, `src/routes/agenda/$slug.tsx`, `src/integrations/supabase/types.ts`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
+- **Testes realizados**: coluna e constraint conferidos no PostgreSQL do ambiente Lovable; revisão estrutural da leitura, persistência e aplicação do preset.
+- **Problemas encontrados**: nenhum bloqueador conhecido.
+- **Pendências relacionadas**: personalização avançada por cores/layout, IA, Google, entrega real de notificações, pagamentos e WhatsApp oficial.
