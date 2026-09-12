@@ -246,3 +246,22 @@
 - **Testes realizados**: revisão estrutural da leitura e atualização do campo `allow_custom_duration`.
 - **Problemas encontrados**: nenhum novo bloqueador conhecido.
 - **Pendências relacionadas**: refinamentos gerais de UX, IA, Google, notificações reais, pagamentos e WhatsApp.
+
+## 2026-09-12 (23)
+- **Objetivo da alteração**: Atualizar a documentação principal para refletir o produto real Marca Minha Vez.
+- **Funcionalidades implementadas**: README reescrito com proposta do produto, arquitetura, rotas, desenvolvimento local, CI, documentação e próximas integrações.
+- **Arquivos alterados**: `README.md`, `CHANGELOG.md`.
+- **Testes realizados**: revisão manual da documentação contra a estrutura atual do repositório.
+- **Problemas encontrados**: README anterior ainda descrevia o projeto como "Your Daily Spark".
+- **Pendências relacionadas**: refinamentos gerais de UX, IA, Google, notificações reais, pagamentos e WhatsApp.
+
+## 2026-09-12 (24)
+- **Objetivo da alteração**: Refinar a experiência da agenda pública conforme a configuração do estabelecimento.
+- **Funcionalidades implementadas**:
+  - As opções "Não encontrei meu serviço" e "Alterar duração do serviço" só aparecem quando o estabelecimento habilita agendamento personalizado.
+  - Acesso direto a `?custom=true` ou `?standalone=true` quando o recurso está desativado passa a mostrar uma mensagem clara de indisponibilidade e retorno para a agenda.
+  - Criada função server-side isolada para expor somente a configuração pública `allow_custom_duration`, sem alterar o motor central de disponibilidade.
+- **Arquivos alterados**: `src/routes/agenda/$slug.tsx`, novo `src/lib/scheduling/public-settings.functions.ts`, `PROJECT_STATUS.md`, `CHANGELOG.md`.
+- **Testes realizados**: revisão estrutural do fluxo público e validação da consulta somente com o campo necessário.
+- **Problemas encontrados**: a função central de scheduling ainda não expõe `allow_custom_duration`; a nova função isolada evita acoplamento desnecessário.
+- **Pendências relacionadas**: refinamentos gerais de UX, IA, Google, notificações reais, pagamentos e WhatsApp.

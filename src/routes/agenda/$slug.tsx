@@ -5,6 +5,7 @@ import { BookingPage } from "@/components/scheduling/BookingPage";
 import { CustomDurationBookingPage } from "@/components/scheduling/CustomDurationBookingPage";
 import { StandaloneCustomBookingPage } from "@/components/scheduling/StandaloneCustomBookingPage";
 import { getEstablishmentScheduling } from "@/lib/scheduling/scheduling.functions";
+import { getPublicSchedulingSettings } from "@/lib/scheduling/public-settings.functions";
 import { businessThemeStyle, getBusinessTheme } from "@/lib/theming/business-theme";
 import { getEstablishmentBusinessType } from "@/lib/theming/establishment-theme.functions";
 
@@ -20,12 +21,13 @@ const agendaSearchSchema = z.object({
 export const Route = createFileRoute("/agenda/$slug")({
   validateSearch: agendaSearchSchema,
   loader: async ({ params }) => {
-    const [data, businessType] = await Promise.all([
+    const [data, businessType, publicSettings] = await Promise.all([
       getEstablishmentScheduling({ data: { slug: params.slug } }),
       getEstablishmentBusinessType({ data: { slug: params.slug } }),
+      getPublicSchedulingSettings({ data: { slug: params.slug } }),
     ]);
     if (!data) return data;
-    return { ...data, businessType: businessType ?? "outro" };
+    return { ...data, businessType: businessType ?? "outro", publicSettings };
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -66,6 +68,29 @@ function AgendaPage() {
   }
 
   const theme = getBusinessTheme(data.businessType);
+  const customDurationEnabled = data.publicSettings.allowCustomDuration;
+  const requestedUnavailableFeature =
+    (custom || standalone) && !customDurationEnabled;
+
+  if (requestedUnavailableFeature) {
+    return (
+      <div style={businessThemeStyle(theme)}>
+        <div className="mx-auto max-w-xl px-4 py-16 text-center">
+          <h1 className="text-2xl font-bold text-foreground">Opção não disponível</h1>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            Este estabelecimento não permite agendamento personalizado no momento.
+          </p>
+          <Link
+            to="/agenda/$slug"
+            params={{ slug }}
+            className="mt-6 inline-flex rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+          >
+            Voltar para a agenda
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={businessThemeStyle(theme)}>
@@ -76,22 +101,26 @@ function AgendaPage() {
       ) : (
         <>
           <div className="mx-auto flex max-w-3xl flex-wrap justify-end gap-2 px-4 pt-5 sm:pt-7">
-            <Link
-              to="/agenda/$slug"
-              params={{ slug }}
-              search={{ standalone: true }}
-              className="inline-flex rounded-md border border-input px-3 py-2 text-xs font-medium text-foreground hover:bg-accent"
-            >
-              Não encontrei meu serviço
-            </Link>
-            <Link
-              to="/agenda/$slug"
-              params={{ slug }}
-              search={{ custom: true }}
-              className="inline-flex rounded-md border border-input px-3 py-2 text-xs font-medium text-foreground hover:bg-accent"
-            >
-              Alterar duração do serviço
-            </Link>
+            {customDurationEnabled ? (
+              <>
+                <Link
+                  to="/agenda/$slug"
+                  params={{ slug }}
+                  search={{ standalone: true }}
+                  className="inline-flex rounded-md border border-input px-3 py-2 text-xs font-medium text-foreground hover:bg-accent"
+                >
+                  Não encontrei meu serviço
+                </Link>
+                <Link
+                  to="/agenda/$slug"
+                  params={{ slug }}
+                  search={{ custom: true }}
+                  className="inline-flex rounded-md border border-input px-3 py-2 text-xs font-medium text-foreground hover:bg-accent"
+                >
+                  Alterar duração do serviço
+                </Link>
+              </>
+            ) : null}
           </div>
           <BookingPage data={data} slug={slug} />
         </>

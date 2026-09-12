@@ -44,6 +44,9 @@
 - Painel do profissional exibe corretamente atendimentos avulsos sem serviço, usando o título personalizado e a duração cadastrada.
 - Administrador pode ativar/desativar o agendamento personalizado no perfil do estabelecimento.
 - Link público principal do painel utiliza a rota amigável `/agenda/{slug}`.
+- README atualizado para refletir o produto Marca Minha Vez, sua arquitetura, rotas, desenvolvimento e roadmap.
+- Agenda pública oculta as opções de duração personalizada e atendimento avulso quando o estabelecimento desativa o recurso.
+- Tentativas diretas de acessar `?custom=true` ou `?standalone=true` com o recurso desativado recebem uma mensagem de indisponibilidade e retorno para a agenda.
 
 ## Em Desenvolvimento 🟡
 - Refinamentos finais de UX e identidade visual por tipo de negócio.
