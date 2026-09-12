@@ -7,13 +7,13 @@ export const ADMIN_ONLY_DASHBOARD_SEGMENTS = [
   "/dashboard/professionals",
   "/dashboard/customers",
   "/dashboard/team",
+  "/dashboard/profile",
   "/dashboard/settings",
 ] as const;
 
 export function canAccessDashboardPath(role: EstablishmentRole, pathname: string): boolean {
   if (role !== "professional") return true;
-  if (pathname === "/dashboard" || pathname === "/dashboard/profile") return true;
-  return !ADMIN_ONLY_DASHBOARD_SEGMENTS.some((segment) => pathname === segment || pathname.startsWith(`${segment}/`));
+  return pathname === "/dashboard";
 }
 
 export function isAdminRole(role: EstablishmentRole): boolean {
