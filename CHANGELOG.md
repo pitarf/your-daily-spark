@@ -245,7 +245,7 @@
 - **Arquivos alterados**: `src/routes/_authenticated/dashboard/profile.tsx`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
 - **Testes realizados**: revisão estrutural da leitura e atualização do campo `allow_custom_duration`.
 - **Problemas encontrados**: nenhum novo bloqueador conhecido.
-- **Pendências relacionadas**: refinamentos gerais de UX, IA, Google, notificações reais, pagamentos e WhatsApp.
+- **Pendências relacionadas**: refinamentos gerais de UX, IA, notificações reais, Google, pagamentos e WhatsApp.
 
 ## 2026-09-12 (23)
 - **Objetivo da alteração**: Atualizar a documentação principal para refletir o produto real Marca Minha Vez.
@@ -264,7 +264,7 @@
 - **Arquivos alterados**: `src/routes/agenda/$slug.tsx`, novo `src/lib/scheduling/public-settings.functions.ts`, `PROJECT_STATUS.md`, `CHANGELOG.md`.
 - **Testes realizados**: revisão estrutural do fluxo público e validação da consulta somente com o campo necessário.
 - **Problemas encontrados**: a função central de scheduling ainda não expõe `allow_custom_duration`; a nova função isolada evita acoplamento desnecessário.
-- **Pendências relacionadas**: refinamentos gerais de UX, IA, Google, notificações reais, pagamentos e WhatsApp.
+- **Pendências relacionadas**: refinamentos gerais de UX, IA, notificações reais, Google, pagamentos e WhatsApp.
 
 ## 2026-09-12 (25)
 - **Objetivo da alteração**: Corrigir a apresentação de atendimentos avulsos no dashboard inicial.
@@ -368,3 +368,42 @@
 - **Testes realizados**: GitHub Actions run #97 validou TypeScript, ESLint e build de produção com sucesso.
 - **Problemas encontrados**: a entrega real depende da configuração de `RESEND_API_KEY`, `NOTIFICATION_FROM_EMAIL` e de um scheduler de produção; nesta etapa o provedor implementado é somente e-mail.
 - **Pendências relacionadas**: configurar o ambiente de produção, WhatsApp/SMS, IA, Google, pagamentos e WhatsApp oficial.
+
+## 2026-09-12 (33)
+- **Objetivo da alteração**: Substituir o provedor de e-mail transacional Resend por Brevo.
+- **Funcionalidades implementadas**:
+  - Worker server-side passou a usar a API da Brevo.
+  - `BREVO_API_KEY` permanece somente no ambiente de execução.
+  - Remetente padrão configurado para `rfpita.work@gmail.com`, com possibilidade de sobrescrever por `NOTIFICATION_FROM_EMAIL`.
+  - Templates e fila persistente de confirmação, cancelamento e lembrete foram mantidos.
+  - Documentação do worker e scheduler atualizada para Brevo.
+- **Arquivos alterados**: módulo de envio transacional, `docs/notifications.md`, `PROJECT_STATUS.md`, `CHANGELOG.md`.
+- **Testes realizados**: GitHub Actions validou TypeScript, ESLint e build de produção no PR de troca do provedor.
+- **Problemas encontrados**: nenhum bloqueador de código; envio em produção depende do secret e do scheduler.
+- **Pendências relacionadas**: configurar/validar ambiente de produção e scheduler da fila.
+
+## 2026-09-12 (34)
+- **Objetivo da alteração**: Ampliar o assistente operacional com consultas somente leitura usando Gemini.
+- **Funcionalidades implementadas**:
+  - Consultas sobre profissionais, serviços, agendamentos e bloqueios dos próximos 30 dias.
+  - Autorização server-side restrita a administradores.
+  - Dados pessoais de clientes não são enviados ao modelo.
+  - Respostas estruturadas em JSON e validadas com Zod.
+- **Arquivos alterados**: `src/lib/ai/agenda-query.functions.ts`, tela do assistente e documentação.
+- **Testes realizados**: TypeScript, ESLint e build validados no CI antes do merge.
+- **Problemas encontrados**: nenhum bloqueador conhecido.
+- **Pendências relacionadas**: consulta de disponibilidade real pelo assistente.
+
+## 2026-09-12 (35)
+- **Objetivo da alteração**: Fazer o assistente consultar disponibilidade real em linguagem natural.
+- **Funcionalidades implementadas**:
+  - Gemini interpreta perguntas como "Tem horário livre amanhã à tarde para corte?" em uma intenção estruturada.
+  - Data e período são interpretados no fuso horário do estabelecimento.
+  - Serviço e profissional são resolvidos contra os cadastros reais, sem permitir nomes inventados pelo modelo.
+  - A disponibilidade é calculada pelo motor real de agenda, considerando expediente, intervalos, exceções, bloqueios, agendamentos, conflitos, duração e "qualquer profissional".
+  - O Gemini não recebe agendamentos nem dados pessoais de clientes para responder disponibilidade.
+  - A resposta mostra somente horários que o motor confirmou como livres.
+- **Arquivos alterados**: `src/lib/ai/agenda-query.functions.ts`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
+- **Testes realizados**: GitHub Actions run #118 validou TypeScript, ESLint e build de produção com sucesso após correção de tipagem.
+- **Problemas encontrados**: a primeira execução do CI encontrou TS4111 em acesso a índice tipado; corrigido antes da validação final.
+- **Pendências relacionadas**: validação end-to-end com as chaves de produção, notificações Brevo via scheduler, Google, WhatsApp/SMS e pagamentos.
