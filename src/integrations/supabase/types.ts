@@ -23,7 +23,10 @@ export type Database = {
           id: string
           notes: string | null
           professional_id: string
-          service_id: string
+          service_id: string | null
+          custom_title: string | null
+          custom_price: number | null
+          duration_minutes_override: number | null
           starts_at: string
           status: Database["public"]["Enums"]["appointment_status"]
           updated_at: string
@@ -36,7 +39,10 @@ export type Database = {
           id?: string
           notes?: string | null
           professional_id: string
-          service_id: string
+          service_id?: string | null
+          custom_title?: string | null
+          custom_price?: number | null
+          duration_minutes_override?: number | null
           starts_at: string
           status?: Database["public"]["Enums"]["appointment_status"]
           updated_at?: string
@@ -49,7 +55,10 @@ export type Database = {
           id?: string
           notes?: string | null
           professional_id?: string
-          service_id?: string
+          service_id?: string | null
+          custom_title?: string | null
+          custom_price?: number | null
+          duration_minutes_override?: number | null
           starts_at?: string
           status?: Database["public"]["Enums"]["appointment_status"]
           updated_at?: string
@@ -412,7 +421,7 @@ export type Database = {
           id?: string
           scheduled_at?: string
           sent_at?: string | null
-          status?: Database["public"]["Enums"]["notification_status"]
+          status?: Database["public"]["Enums"]["appointment_status"]
           type?: Database["public"]["Enums"]["notification_type"]
           updated_at?: string
         }
@@ -698,9 +707,10 @@ export type Database = {
           establishment_id?: string
           id?: string
           professional_id?: string | null
-          start_time?: string
-          updated_at?: string
+          starts_at?: string
           weekday?: number
+          weekly_schedule_id?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -785,7 +795,7 @@ export type Tables<
       }
       ? R
       : never
-    : never
+      : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
@@ -810,7 +820,7 @@ export type TablesInsert<
       }
       ? I
       : never
-    : never
+      : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
@@ -835,7 +845,7 @@ export type TablesUpdate<
       }
       ? U
       : never
-    : never
+      : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
