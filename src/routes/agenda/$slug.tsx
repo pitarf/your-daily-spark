@@ -66,6 +66,29 @@ function AgendaPage() {
   }
 
   const theme = getBusinessTheme(data.businessType);
+  const customDurationEnabled = Boolean(data.establishment.allow_custom_duration);
+  const requestedUnavailableFeature =
+    (custom || standalone) && !customDurationEnabled;
+
+  if (requestedUnavailableFeature) {
+    return (
+      <div style={businessThemeStyle(theme)}>
+        <div className="mx-auto max-w-xl px-4 py-16 text-center">
+          <h1 className="text-2xl font-bold text-foreground">Opção não disponível</h1>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            Este estabelecimento não permite agendamento personalizado no momento.
+          </p>
+          <Link
+            to="/agenda/$slug"
+            params={{ slug }}
+            className="mt-6 inline-flex rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+          >
+            Voltar para a agenda
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={businessThemeStyle(theme)}>
@@ -76,22 +99,26 @@ function AgendaPage() {
       ) : (
         <>
           <div className="mx-auto flex max-w-3xl flex-wrap justify-end gap-2 px-4 pt-5 sm:pt-7">
-            <Link
-              to="/agenda/$slug"
-              params={{ slug }}
-              search={{ standalone: true }}
-              className="inline-flex rounded-md border border-input px-3 py-2 text-xs font-medium text-foreground hover:bg-accent"
-            >
-              Não encontrei meu serviço
-            </Link>
-            <Link
-              to="/agenda/$slug"
-              params={{ slug }}
-              search={{ custom: true }}
-              className="inline-flex rounded-md border border-input px-3 py-2 text-xs font-medium text-foreground hover:bg-accent"
-            >
-              Alterar duração do serviço
-            </Link>
+            {customDurationEnabled ? (
+              <>
+                <Link
+                  to="/agenda/$slug"
+                  params={{ slug }}
+                  search={{ standalone: true }}
+                  className="inline-flex rounded-md border border-input px-3 py-2 text-xs font-medium text-foreground hover:bg-accent"
+                >
+                  Não encontrei meu serviço
+                </Link>
+                <Link
+                  to="/agenda/$slug"
+                  params={{ slug }}
+                  search={{ custom: true }}
+                  className="inline-flex rounded-md border border-input px-3 py-2 text-xs font-medium text-foreground hover:bg-accent"
+                >
+                  Alterar duração do serviço
+                </Link>
+              </>
+            ) : null}
           </div>
           <BookingPage data={data} slug={slug} />
         </>
