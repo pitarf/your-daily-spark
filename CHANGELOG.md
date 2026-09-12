@@ -265,3 +265,13 @@
 - **Testes realizados**: revisão estrutural do fluxo público e validação da consulta somente com o campo necessário.
 - **Problemas encontrados**: a função central de scheduling ainda não expõe `allow_custom_duration`; a nova função isolada evita acoplamento desnecessário.
 - **Pendências relacionadas**: refinamentos gerais de UX, IA, Google, notificações reais, pagamentos e WhatsApp.
+
+## 2026-09-12 (25)
+- **Objetivo da alteração**: Corrigir a apresentação de atendimentos avulsos no dashboard inicial.
+- **Funcionalidades implementadas**:
+  - O resumo "Agenda de hoje" agora usa o `custom_title` quando o agendamento não possui serviço cadastrado.
+  - A lista de próximos agendamentos também identifica corretamente atendimentos avulsos.
+- **Arquivos alterados**: `src/routes/_authenticated/dashboard/index.tsx`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
+- **Testes realizados**: revisão estrutural da consulta e da renderização dos campos personalizados.
+- **Problemas encontrados**: nenhum novo bloqueador conhecido.
+- **Pendências relacionadas**: refinamentos gerais de UX, IA, Google, notificações reais, pagamentos e WhatsApp.
