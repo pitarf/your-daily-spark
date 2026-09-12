@@ -7,6 +7,7 @@ export const ADMIN_ONLY_DASHBOARD_SEGMENTS = [
   "/dashboard/professionals",
   "/dashboard/customers",
   "/dashboard/team",
+  "/dashboard/plans",
   "/dashboard/profile",
   "/dashboard/settings",
 ] as const;
