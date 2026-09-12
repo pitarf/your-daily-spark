@@ -183,3 +183,16 @@
 - **Testes realizados**: conferência do schema e do banco live no ambiente Lovable; verificação estrutural das funções `getCustomDurationAvailability` e `createCustomDurationAppointment`.
 - **Problemas encontrados**: a rota principal teve um import incorreto durante a alteração e foi corrigida antes da consolidação da branch.
 - **Pendências relacionadas**: agendamento avulso sem serviço base, IA, Google, notificações reais, pagamentos e WhatsApp.
+
+## 2026-09-12 (18)
+- **Objetivo da alteração**: Estabilizar o fluxo de duração personalizada após a primeira execução do CI e remover uma rota dinâmica desnecessária.
+- **Funcionalidades implementadas**:
+  - O fluxo personalizado passou a compartilhar a rota `/agenda/{slug}` usando `?custom=true`, evitando nova entrada no route tree.
+  - Backend de duração personalizada foi reestruturado para manter a validação server-side, escolha de profissional, regras de plano e proteção contra conflitos.
+  - Tela pública simplificada e tipada, mantendo serviço, profissional, data, duração, horário e confirmação.
+  - O ajuste é compatível com a base de banco já existente.
+  - `PROJECT_STATUS.md` atualizado para refletir o estado real.
+- **Arquivos alterados**: `src/lib/scheduling/custom-duration.functions.ts`, `src/components/scheduling/CustomDurationBookingPage.tsx`, `src/routes/agenda/$slug.tsx`, `eslint.config.js`, `PROJECT_STATUS.md`, `CHANGELOG.md`.
+- **Testes realizados**: GitHub Actions run #48 validou TypeScript, ESLint e build de produção com sucesso após a estabilização do fluxo.
+- **Problemas encontrados**: a execução inicial encontrou erro de tipos no Supabase e referência a uma rota ainda não registrada no route tree; ambos foram corrigidos em commits posteriores sem reescrever o histórico.
+- **Pendências relacionadas**: agendamento avulso sem serviço base, IA, Google, notificações reais, pagamentos e WhatsApp.
