@@ -31,13 +31,21 @@ export const getEstablishmentBusinessType = createServerFn({ method: "GET" })
     return establishment?.business_type ?? null;
   });
 
+export type EstablishmentThemeConfig = {
+  businessType: string | null;
+  themePreset: string | null;
+  logoUrl: string | null;
+  whatsapp: string | null;
+  phone: string | null;
+};
+
 export const getEstablishmentThemeConfig = createServerFn({ method: "GET" })
   .inputValidator((data: unknown) => slugSchema.parse(data))
-  .handler(async ({ data }): Promise<{ businessType: string | null; themePreset: string | null }> => {
+  .handler(async ({ data }): Promise<EstablishmentThemeConfig> => {
     const supabase = getPublicClient();
     const { data: establishment, error } = await supabase
       .from("establishments")
-      .select("business_type, theme_preset")
+      .select("business_type, theme_preset, logo_url, whatsapp, phone")
       .eq("slug", data.slug)
       .eq("active", true)
       .maybeSingle();
@@ -46,5 +54,8 @@ export const getEstablishmentThemeConfig = createServerFn({ method: "GET" })
     return {
       businessType: establishment?.business_type ?? null,
       themePreset: establishment?.theme_preset ?? "auto",
+      logoUrl: establishment?.logo_url ?? null,
+      whatsapp: establishment?.whatsapp ?? null,
+      phone: establishment?.phone ?? null,
     };
   });
