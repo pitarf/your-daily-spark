@@ -77,7 +77,7 @@ export function normalizeBusinessType(value: string | null | undefined) {
 }
 
 export function getBusinessTheme(value: string | null | undefined): BusinessTheme {
-  return THEMES[normalizeBusinessType(value)] ?? THEMES.outro;
+  return THEMES[normalizeBusinessType(value)] ?? THEMES["outro"];
 }
 
 export function getBusinessTypeLabel(value: string | null | undefined) {
@@ -93,7 +93,7 @@ export function getBusinessTypeLabel(value: string | null | undefined) {
     tatuagem: "Estúdio de tatuagem",
     outro: "Serviços",
   };
-  return labels[normalized] ?? value?.trim() ?? labels.outro;
+  return labels[normalized] ?? value?.trim() ?? labels["outro"];
 }
 
 export function businessThemeStyle(theme: BusinessTheme): Record<string, string> {
