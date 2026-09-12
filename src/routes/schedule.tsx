@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { z } from "zod";
 
-import { BookingPage } from "@/components/scheduling/BookingPage";
 import { getEstablishmentScheduling } from "@/lib/scheduling/scheduling.functions";
 
 const DEMO_SLUG = "barbearia-marca-minha-vez";
@@ -17,19 +17,12 @@ export const Route = createFileRoute("/schedule")({
         name: "description",
         content: "Escolha o serviço, o profissional e o horário livre para marcar seu atendimento em poucos toques.",
       },
-      { property: "og:title", content: "Agendar horário | Marca Minha Vez" },
-      {
-        property: "og:description",
-        content: "Veja os horários disponíveis e reserve seu atendimento online.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: SchedulePage,
+  component: LegacyScheduleRoute,
   errorComponent: () => (
     <div className="p-8 text-center text-sm text-muted-foreground">
-      Não foi possível carregar a agenda agora. Tente novamente em instantes.
+      Não foi possível encontrar este estabelecimento.
     </div>
   ),
   notFoundComponent: () => (
@@ -37,17 +30,23 @@ export const Route = createFileRoute("/schedule")({
   ),
 });
 
-function SchedulePage() {
-  const data = Route.useLoaderData();
+function LegacyScheduleRoute() {
+  const navigate = useNavigate();
   const { slug = DEMO_SLUG } = Route.useSearch();
+  const data = Route.useLoaderData();
 
-  if (!data) {
-    return (
-      <div className="p-8 text-center text-sm text-muted-foreground">
-        Nenhum estabelecimento ativo encontrado.
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!data) return;
+    navigate({
+      to: "/agenda/$slug",
+      params: { slug },
+      replace: true,
+    });
+  }, [data, navigate, slug]);
 
-  return <BookingPage data={data} slug={slug} />;
+  return (
+    <main className="mx-auto flex min-h-[50vh] max-w-lg items-center justify-center px-4 py-12 text-center">
+      <p className="text-sm text-muted-foreground">Abrindo a agenda…</p>
+    </main>
+  );
 }
