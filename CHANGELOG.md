@@ -170,3 +170,19 @@
 - **Testes realizados**: GitHub Actions run #35 validou TypeScript, ESLint e build de produção com sucesso.
 - **Problemas encontrados**: nenhum bloqueador de qualidade nesta etapa.
 - **Pendências relacionadas**: duração personalizada, IA, Google, notificações reais, pagamentos e WhatsApp.
+
+## 2026-09-12 (17)
+- **Objetivo da alteração**: Implementar o fluxo público de agendamento com duração personalizada sem remover a opção de duração padrão.
+- **Funcionalidades implementadas**:
+  - Nova página `/agenda/{slug}/personalizado`.
+  - Seleção de serviço, profissional/qualquer profissional, data e duração de 15 a 240 minutos em passos de 15.
+  - Cálculo real de disponibilidade por profissional, considerando expediente, intervalos, exceções, bloqueios e agendamentos existentes.
+  - Reserva server-side com validação novamente no momento da confirmação.
+  - Aplicação das regras de plano do cliente ao agendamento personalizado.
+  - Nova configuração administrativa para ativar/desativar duração personalizada.
+  - O fluxo público principal agora apresenta o acesso ao agendamento personalizado.
+  - Migration versionada da coluna de configuração e do override de duração.
+- **Arquivos alterados**: `src/components/scheduling/CustomDurationBookingPage.tsx`, `src/routes/agenda/$slug/personalizado.tsx`, `src/routes/agenda/$slug.tsx`, `src/routes/_authenticated/dashboard/booking-rules.tsx`, `src/lib/scheduling/custom-duration.functions.ts`, `supabase/migrations/20260912051500_custom_duration.sql`, `CHANGELOG.md`.
+- **Testes realizados**: validação estrutural da disponibilidade individual por profissional e da checagem server-side no ato da reserva.
+- **Problemas encontrados**: o pipeline precisa validar a nova rota e a tipagem gerada do TanStack Router.
+- **Pendências relacionadas**: habilitar/desabilitar Google, IA, notificações reais, pagamentos, WhatsApp e evolução visual por tipo de negócio.
