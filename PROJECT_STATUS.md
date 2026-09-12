@@ -80,18 +80,20 @@
 - Assistente operacional em modo somente leitura consulta, no servidor, estabelecimento, profissionais, serviços, agendamentos e bloqueios dos próximos 30 dias.
 - Consulta operacional da IA exige membership de administrador e não envia telefone, e-mail ou outros dados pessoais de clientes ao Gemini.
 - Respostas operacionais do Gemini usam JSON estruturado e validação Zod antes de serem exibidas.
+- Assistente de disponibilidade em linguagem natural interpreta data, período, serviço, profissional e duração usando Gemini.
+- Assistente de disponibilidade resolve serviços e profissionais contra os cadastros reais do estabelecimento.
+- Assistente consulta o motor real de disponibilidade no servidor e respeita fuso, expediente, intervalos, exceções, bloqueios, agendamentos, conflitos e múltiplos profissionais.
+- Assistente de disponibilidade retorna somente horários confirmados como livres pelo motor de agenda, sem inventar horários.
 
 ## Em Desenvolvimento 🟡
 - Refinamentos finais de UX e identidade visual por tipo de negócio.
 - Melhorias de experiência no fluxo de agendamento e administração.
-- Evolução do assistente para interpretar disponibilidade em linguagem natural com maior precisão e, futuramente, executar ações administrativas com confirmação explícita.
-- Validação final e configuração de produção das integrações de e-mail e IA.
+- Validação end-to-end das integrações de Gemini e Brevo no ambiente de produção.
+- Automação de envio da fila de notificações por scheduler de produção.
 
 ## Pendente 🔴
-- Configurar `BREVO_API_KEY` no ambiente de produção.
 - Confirmar o remetente `rfpita.work@gmail.com` como remetente autorizado na Brevo e manter `NOTIFICATION_FROM_NAME=Marca Minha Vez`.
 - Configurar um cron/scheduler de produção para executar `bun run notifications:dispatch` periodicamente.
-- Configurar `GEMINI_API_KEY` no ambiente de produção para ativar o assistente de agenda.
 - Habilitar o provedor Google no ambiente de autenticação.
 - Worker/provedor para WhatsApp e SMS.
 - Pagamentos e planos de assinatura da plataforma SaaS.
