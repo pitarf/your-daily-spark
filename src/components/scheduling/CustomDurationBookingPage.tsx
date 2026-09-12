@@ -2,7 +2,11 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 
-import { getCustomDurationAvailability, createCustomDurationAppointment } from "@/lib/scheduling/custom-duration.functions";
+import {
+  createCustomDurationAppointment,
+  getCustomDurationAvailability,
+  type CreateCustomDurationResult,
+} from "@/lib/scheduling/custom-duration.functions";
 import { formatDate, formatPrice, formatTime } from "@/lib/scheduling/format";
 import type { EstablishmentSchedulingData } from "@/lib/scheduling/scheduling.functions";
 
@@ -23,7 +27,7 @@ export function CustomDurationBookingPage({ data, slug }: Props) {
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<Awaited<ReturnType<typeof createCustomDurationAppointment>> extends infer R ? R : never>(null as never);
+  const [success, setSuccess] = useState<CreateCustomDurationResult | null>(null);
 
   const service = data.services.find((item) => item.id === serviceId);
   const professionals = service
@@ -45,7 +49,9 @@ export function CustomDurationBookingPage({ data, slug }: Props) {
       }),
   });
 
-  const availableSlots = (availabilityQuery.data ?? []).filter((slot) => slot.available && isFuture(slot.startsAt));
+  const availableSlots = (availabilityQuery.data ?? []).filter(
+    (slot) => slot.available && isFuture(slot.startsAt),
+  );
 
   const mutation = useMutation({
     mutationFn: () => {
