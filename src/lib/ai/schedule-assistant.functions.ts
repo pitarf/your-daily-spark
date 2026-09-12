@@ -36,48 +36,101 @@ const applyInput = z.object({
 
 const DAY_NAMES = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"] as const;
 
-function getOpenAiConfig() {
-  const apiKey = process.env["OPENAI_API_KEY"];
-  const model = process.env["OPENAI_SCHEDULE_MODEL"] ?? "gpt-5.6-luna";
-  if (!apiKey) throw new Error("OPENAI_API_KEY ainda não foi configurada no ambiente.");
+function getGeminiConfig() {
+  const apiKey = process.env["GEMINI_API_KEY"];
+  const model = process.env["GEMINI_SCHEDULE_MODEL"] ?? "gemini-2.5-flash-lite";
+
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY ainda não foi configurada no ambiente.");
+  }
+
   return { apiKey, model };
 }
 
-async function callOpenAI(prompt: string, currentSchedule?: string) {
-  const { apiKey, model } = getOpenAiConfig();
-  const system = [
+const scheduleResponseSchema = {
+  type: "object",
+  properties: {
+    days: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          weekday: { type: "integer" },
+          enabled: { type: "boolean" },
+          windows: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                start: { type: "string" },
+                end: { type: "string" },
+              },
+              required: ["start", "end"],
+            },
+          },
+          breaks: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                start: { type: "string" },
+                end: { type: "string" },
+              },
+              required: ["start", "end"],
+            },
+          },
+        },
+        required: ["weekday", "enabled", "windows", "breaks"],
+      },
+    },
+    summary: { type: "string" },
+    warnings: {
+      type: "array",
+      items: { type: "string" },
+    },
+  },
+  required: ["days", "summary", "warnings"],
+};
+
+async function callGemini(prompt: string, currentSchedule?: string) {
+  const { apiKey, model } = getGeminiConfig();
+  const instructions = [
     "Você é o assistente de agenda do Marca Minha Vez.",
-    "Sua tarefa é converter a descrição em português do administrador em uma configuração de expediente geral.",
+    "Converta a descrição em português do administrador em uma configuração de expediente geral.",
     "Use weekday 0 para domingo, 1 segunda, 2 terça, 3 quarta, 4 quinta, 5 sexta e 6 sábado.",
-    "Sempre retorne exatamente um JSON válido, sem markdown, no formato:",
-    JSON.stringify({
-      days: [{ weekday: 1, enabled: true, windows: [{ start: "09:00", end: "18:00" }], breaks: [{ start: "12:00", end: "13:00" }] }],
-      summary: "Resumo curto",
-      warnings: ["Apenas avisos importantes"],
-    }),
-    "Inclua os sete dias, mesmo os fechados.",
-    "Se houver um intervalo como 12 às 13, registre em breaks e mantenha a janela de atendimento maior.",
-    "Se houver dois períodos, como 09 às 12 e 13 às 18, use duas windows e não invente break.",
-    "Não invente dias ou horários que não possam ser inferidos. Em caso de ambiguidade, mantenha o melhor entendimento e registre um warning.",
-    "Os horários são locais do estabelecimento e devem estar no formato HH:MM.",
+    "Inclua exatamente os sete dias.",
+    "Para um intervalo como 12 às 13 dentro de 09 às 18, registre em breaks e mantenha a janela maior.",
+    "Para dois períodos, como 09 às 12 e 13 às 18, use duas windows e nenhum break entre eles.",
+    "Não invente dias ou horários. Em caso de ambiguidade, escolha a interpretação mais conservadora e registre um warning.",
+    "Todos os horários devem estar no formato HH:MM e representar o horário local do estabelecimento.",
+    "Retorne somente o objeto JSON solicitado, sem markdown ou texto adicional.",
     currentSchedule ? `Agenda atual para referência:\n${currentSchedule}` : "Nenhuma agenda atual foi informada.",
   ].join("\n\n");
 
-  const response = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+    {
+      method: "POST",
+      headers: {
+        "x-goog-api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: `${instructions}\n\nPedido do administrador:\n${prompt}` }],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: 1800,
+          responseMimeType: "application/json",
+          responseSchema: scheduleResponseSchema,
+        },
+      }),
     },
-    body: JSON.stringify({
-      model,
-      input: [
-        { role: "developer", content: [{ type: "input_text", text: system }] },
-        { role: "user", content: [{ type: "input_text", text: prompt }] },
-      ],
-      max_output_tokens: 1800,
-    }),
-  });
+  );
 
   if (!response.ok) {
     const body = await response.text();
@@ -85,29 +138,43 @@ async function callOpenAI(prompt: string, currentSchedule?: string) {
   }
 
   const payload = (await response.json()) as {
-    output_text?: string;
-    output?: Array<{ type?: string; content?: Array<{ type?: string; text?: string }> }>;
+    candidates?: Array<{
+      content?: {
+        parts?: Array<{ text?: string }>;
+      };
+    }>;
   };
 
-  const outputText = payload.output_text?.trim() || payload.output
-    ?.flatMap((item) => item.content ?? [])
-    .find((item) => item.type === "output_text")?.text?.trim();
+  const outputText = payload.candidates?.[0]?.content?.parts
+    ?.map((part) => part.text ?? "")
+    .join("")
+    .trim();
 
-  if (!outputText) throw new Error("O assistente não retornou uma configuração válida.");
-  return outputText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  if (!outputText) {
+    throw new Error("O assistente não retornou uma configuração válida.");
+  }
+
+  return outputText;
 }
 
 function validatePlan(plan: z.infer<typeof schedulePlanSchema>) {
   const weekdays = plan.days.map((day) => day.weekday);
-  if (new Set(weekdays).size !== 7) throw new Error("A configuração precisa conter exatamente os sete dias da semana.");
+  if (new Set(weekdays).size !== 7) {
+    throw new Error("A configuração precisa conter exatamente os sete dias da semana.");
+  }
 
   for (const day of plan.days) {
     if (!day.enabled && (day.windows.length > 0 || day.breaks.length > 0)) {
       throw new Error(`O dia ${DAY_NAMES[day.weekday]} está fechado, mas possui horários configurados.`);
     }
+
     for (const breakRange of day.breaks) {
-      const fits = day.windows.some((window) => breakRange.start >= window.start && breakRange.end <= window.end);
-      if (!fits) throw new Error(`O intervalo de ${DAY_NAMES[day.weekday]} precisa ficar dentro de uma janela de atendimento.`);
+      const fits = day.windows.some(
+        (window) => breakRange.start >= window.start && breakRange.end <= window.end,
+      );
+      if (!fits) {
+        throw new Error(`O intervalo de ${DAY_NAMES[day.weekday]} precisa ficar dentro de uma janela de atendimento.`);
+      }
     }
   }
 }
@@ -122,15 +189,20 @@ async function requireAdmin(establishmentId: string, accessToken: string) {
     .eq("establishment_id", establishmentId)
     .eq("user_id", userData.user.id)
     .maybeSingle();
+
   if (membershipError) throw membershipError;
-  if (membership?.role !== "admin") throw new Error("Somente administradores podem usar o assistente de agenda.");
+  if (membership?.role !== "admin") {
+    throw new Error("Somente administradores podem usar o assistente de agenda.");
+  }
+
   return userData.user;
 }
 
 export const analyzeScheduleWithAI = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => assistantInput.parse(data))
   .handler(async ({ data }) => {
-    const raw = await callOpenAI(data.prompt, data.currentSchedule);
+    const raw = await callGemini(data.prompt, data.currentSchedule);
+
     let parsed: unknown;
     try {
       parsed = JSON.parse(raw);
@@ -154,6 +226,7 @@ export const applySchedulePlan = createServerFn({ method: "POST" })
       .select("id")
       .eq("establishment_id", data.establishmentId)
       .is("professional_id", null);
+
     if (existingError) throw existingError;
 
     if ((existingSchedules ?? []).length > 0) {
@@ -179,20 +252,30 @@ export const applySchedulePlan = createServerFn({ method: "POST" })
     );
 
     if (rows.length === 0) {
-      return { ok: true as const, createdSchedules: 0, createdBreaks: 0, message: "Todos os dias foram configurados como fechados." };
+      return {
+        ok: true as const,
+        createdSchedules: 0,
+        createdBreaks: 0,
+        message: "Todos os dias foram configurados como fechados.",
+      };
     }
 
     const { data: createdSchedules, error: insertError } = await supabaseAdmin
       .from("weekly_schedules")
       .insert(rows)
       .select("id, weekday, start_time, end_time");
+
     if (insertError) throw insertError;
 
     const breaks = data.plan.days.flatMap((day) =>
       day.breaks.flatMap((breakRange) => {
         const matchingSchedules = (createdSchedules ?? []).filter(
-          (schedule) => schedule.weekday === day.weekday && breakRange.start >= schedule.start_time && breakRange.end <= schedule.end_time,
+          (schedule) =>
+            schedule.weekday === day.weekday &&
+            breakRange.start >= schedule.start_time &&
+            breakRange.end <= schedule.end_time,
         );
+
         return matchingSchedules.map((schedule) => ({
           weekly_schedule_id: schedule.id,
           start_time: breakRange.start,
