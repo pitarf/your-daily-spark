@@ -20,6 +20,9 @@ type Row = {
   ends_at: string;
   status: string;
   notes: string | null;
+  custom_title: string | null;
+  custom_price: number | null;
+  duration_minutes_override: number | null;
   customers: { name: string; phone: string | null } | null;
   services: { name: string; price: number } | null;
   professionals: { name: string } | null;
@@ -75,7 +78,7 @@ function AppointmentsPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("appointments")
-        .select("id, starts_at, ends_at, status, notes, customers(name, phone), services(name, price), professionals(name)")
+        .select("id, starts_at, ends_at, status, notes, custom_title, custom_price, duration_minutes_override, customers(name, phone), services(name, price), professionals(name)")
         .eq("establishment_id", membership.establishmentId)
         .gte("starts_at", period.start)
         .lt("starts_at", period.end)
@@ -324,7 +327,7 @@ function getPeriodTitle(view: CalendarView, date: string, tz: string) {
 }
 
 function DayView({ rows, tz, updateStatus }: { rows: Row[]; tz: string; updateStatus: (input: { id: string; status: string }) => void }) {
-  return <div className="overflow-x-auto rounded-xl border border-border bg-card"><div className="min-w-[760px]"><div className="grid grid-cols-[110px_1fr_180px_180px_170px] border-b border-border bg-muted/40 px-3 py-2 text-xs font-medium uppercase text-muted-foreground"><span>Horário</span><span>Cliente</span><span>Serviço</span><span>Profissional</span><span>Status</span></div>{rows.length === 0 ? <p className="p-5 text-sm text-muted-foreground">Nenhum agendamento nesta data.</p> : rows.map((row) => <div key={row.id} className="grid grid-cols-[110px_1fr_180px_180px_170px] items-center border-b border-border px-3 py-3 text-sm last:border-0"><div className="font-medium text-foreground">{formatTime(row.starts_at, tz)}–{formatTime(row.ends_at, tz)}</div><div><span className="font-medium text-foreground">{row.customers?.name ?? "Cliente"}</span>{row.customers?.phone ? <span className="block text-xs text-muted-foreground">{row.customers.phone}</span> : null}</div><div className="text-muted-foreground">{row.services?.name ?? "—"}<span className="block text-xs">{row.services ? formatPrice(Number(row.services.price)) : ""}</span></div><div className="text-muted-foreground">{row.professionals?.name ?? "—"}</div><div><select value={row.status} onChange={(e) => updateStatus({ id: row.id, status: e.target.value })} className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs">{STATUSES.map((status) => <option key={status} value={status}>{STATUS_LABEL[status]}</option>)}</select></div></div>)}</div></div>;
+  return <div className="overflow-x-auto rounded-xl border border-border bg-card"><div className="min-w-[780px]"><div className="grid grid-cols-[110px_1fr_200px_160px_170px] border-b border-border bg-muted/40 px-3 py-2 text-xs font-medium uppercase text-muted-foreground"><span>Horário</span><span>Cliente</span><span>Serviço</span><span>Profissional</span><span>Status</span></div>{rows.length === 0 ? <p className="p-5 text-sm text-muted-foreground">Nenhum agendamento nesta data.</p> : rows.map((row) => <div key={row.id} className="grid grid-cols-[110px_1fr_200px_160px_170px] items-center border-b border-border px-3 py-3 text-sm last:border-0"><div className="font-medium text-foreground">{formatTime(row.starts_at, tz)}–{formatTime(row.ends_at, tz)}</div><div><span className="font-medium text-foreground">{row.customers?.name ?? "Cliente"}</span>{row.customers?.phone ? <span className="block text-xs text-muted-foreground">{row.customers.phone}</span> : null}</div><div className="text-muted-foreground"><span className="font-medium text-foreground">{getAppointmentLabel(row)}</span><span className="block text-xs">{getAppointmentPriceLabel(row)}</span>{row.duration_minutes_override ? <span className="block text-[11px] text-muted-foreground">{row.duration_minutes_override} min</span> : null}</div><div className="text-muted-foreground">{row.professionals?.name ?? "—"}</div><div><select value={row.status} onChange={(e) => updateStatus({ id: row.id, status: e.target.value })} className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs">{STATUSES.map((status) => <option key={status} value={status}>{STATUS_LABEL[status]}</option>)}</select></div></div>)}</div></div>;
 }
 
 function WeekView({ dates, grouped, tz }: { dates: string[]; grouped: Map<string, Row[]>; tz: string }) {
@@ -334,11 +337,21 @@ function WeekView({ dates, grouped, tz }: { dates: string[]; grouped: Map<string
 function MonthView({ date, grouped, tz, onSelectDate }: { date: string; grouped: Map<string, Row[]>; tz: string; onSelectDate: (date: string) => void }) {
   const cells = monthGridDates(date);
   const currentMonth = date.slice(0, 7);
-  return <div className="overflow-hidden rounded-xl border border-border bg-card"><div className="grid grid-cols-7 border-b border-border bg-muted/40">{WEEKDAY_LABELS.map((label) => <div key={label} className="px-2 py-2 text-center text-xs font-semibold text-muted-foreground">{label}</div>)}</div><div className="grid grid-cols-7">{cells.map((day) => { const items = grouped.get(day) ?? []; const muted = !day.startsWith(currentMonth); return <button key={day} type="button" onClick={() => onSelectDate(day)} className={`min-h-[100px] border-b border-r border-border p-2 text-left align-top hover:bg-accent/50 ${muted ? "bg-muted/20 text-muted-foreground" : "bg-card"}`}><div className="flex items-center justify-between"><span className={`text-xs font-semibold ${muted ? "text-muted-foreground" : "text-foreground"}`}>{day.slice(8, 10)}</span>{items.length > 0 ? <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-foreground">{items.length}</span> : null}</div><div className="mt-2 space-y-1">{items.slice(0, 3).map((row) => <div key={row.id} className="truncate rounded bg-muted px-1.5 py-1 text-[10px] text-foreground">{formatTime(row.starts_at, tz)} · {row.customers?.name ?? "Cliente"}</div>)}{items.length > 3 ? <p className="text-[10px] text-muted-foreground">+{items.length - 3} mais</p> : null}</div></button>; })}</div></div>;
+  return <div className="overflow-hidden rounded-xl border border-border bg-card"><div className="grid grid-cols-7 border-b border-border bg-muted/40">{WEEKDAY_LABELS.map((label) => <div key={label} className="px-2 py-2 text-center text-xs font-semibold text-muted-foreground">{label}</div>)}</div><div className="grid grid-cols-7">{cells.map((day) => { const items = grouped.get(day) ?? []; const muted = !day.startsWith(currentMonth); return <button key={day} type="button" onClick={() => onSelectDate(day)} className={`min-h-[100px] border-b border-r border-border p-2 text-left align-top hover:bg-accent/50 ${muted ? "bg-muted/20 text-muted-foreground" : "bg-card"}`}><div className="flex items-center justify-between"><span className={`text-xs font-semibold ${muted ? "text-muted-foreground" : "text-foreground"}`}>{day.slice(8, 10)}</span>{items.length > 0 ? <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-foreground">{items.length}</span> : null}</div><div className="mt-2 space-y-1">{items.slice(0, 3).map((row) => <div key={row.id} className="truncate rounded bg-muted px-1.5 py-1 text-[10px] text-foreground">{formatTime(row.starts_at, tz)} · {row.customers?.name ?? "Cliente"} · {getAppointmentLabel(row)}</div>)}{items.length > 3 ? <p className="text-[10px] text-muted-foreground">+{items.length - 3} mais</p> : null}</div></button>; })}</div></div>;
 }
 
 function CompactAppointment({ row, tz }: { row: Row; tz: string }) {
-  return <article className="rounded-lg bg-muted/50 p-2"><div className="text-xs font-semibold text-foreground">{formatTime(row.starts_at, tz)}–{formatTime(row.ends_at, tz)}</div><div className="mt-0.5 truncate text-xs text-foreground">{row.customers?.name ?? "Cliente"}</div><div className="truncate text-[11px] text-muted-foreground">{row.services?.name ?? "Serviço"}</div></article>;
+  return <article className="rounded-lg bg-muted/50 p-2"><div className="text-xs font-semibold text-foreground">{formatTime(row.starts_at, tz)}–{formatTime(row.ends_at, tz)}</div><div className="mt-0.5 truncate text-xs text-foreground">{row.customers?.name ?? "Cliente"}</div><div className="truncate text-[11px] text-muted-foreground">{getAppointmentLabel(row)}</div></article>;
+}
+
+function getAppointmentLabel(row: Row) {
+  return row.custom_title?.trim() || row.services?.name || "Atendimento avulso";
+}
+
+function getAppointmentPriceLabel(row: Row) {
+  if (row.custom_price !== null) return formatPrice(Number(row.custom_price));
+  if (row.services) return formatPrice(Number(row.services.price));
+  return "Sem preço definido";
 }
 
 type ManualProps = {
