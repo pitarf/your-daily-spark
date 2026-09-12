@@ -14,20 +14,20 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ScheduleRouteImport } from './routes/schedule'
-import { Route as AgendaSlugRouteImport } from './routes/agenda/$slug'
 import { Route as AuthenticatedDashboardRouteRouteImport } from './routes/_authenticated/dashboard/route'
+import { Route as AgendaSlugRouteImport } from './routes/agenda/$slug'
 import { Route as EstablishmentPlansRouteImport } from './routes/establishment/plans'
 import { Route as EstablishmentSettingsRouteImport } from './routes/establishment/settings'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard/index'
 import { Route as AuthenticatedDashboardAppointmentsRouteImport } from './routes/_authenticated/dashboard/appointments'
+import { Route as AuthenticatedDashboardAssistantRouteImport } from './routes/_authenticated/dashboard/assistant'
 import { Route as AuthenticatedDashboardCustomersRouteImport } from './routes/_authenticated/dashboard/customers'
+import { Route as AuthenticatedDashboardPlansRouteImport } from './routes/_authenticated/dashboard/plans'
 import { Route as AuthenticatedDashboardProfessionalsRouteImport } from './routes/_authenticated/dashboard/professionals'
-import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard/services'
 import { Route as AuthenticatedDashboardProfileRouteImport } from './routes/_authenticated/dashboard/profile'
+import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard/services'
 import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard/settings'
 import { Route as AuthenticatedDashboardTeamRouteImport } from './routes/_authenticated/dashboard/team'
-import { Route as AuthenticatedDashboardPlansRouteImport } from './routes/_authenticated/dashboard/plans'
-import { Route as AuthenticatedDashboardAssistantRouteImport } from './routes/_authenticated/dashboard/assistant'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -53,17 +53,17 @@ const ScheduleRoute = ScheduleRouteImport.update({
   path: '/schedule',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AgendaSlugRoute = AgendaSlugRouteImport.update({
-  id: '/agenda/$slug',
-  path: '/agenda/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedDashboardRouteRoute =
   AuthenticatedDashboardRouteRouteImport.update({
     id: '/dashboard',
     path: '/dashboard',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AgendaSlugRoute = AgendaSlugRouteImport.update({
+  id: '/agenda/$slug',
+  path: '/agenda/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EstablishmentPlansRoute = EstablishmentPlansRouteImport.update({
   id: '/establishment/plans',
   path: '/establishment/plans',
@@ -86,10 +86,22 @@ const AuthenticatedDashboardAppointmentsRoute =
     path: '/appointments',
     getParentRoute: () => AuthenticatedDashboardRouteRoute,
   } as any)
+const AuthenticatedDashboardAssistantRoute =
+  AuthenticatedDashboardAssistantRouteImport.update({
+    id: '/assistant',
+    path: '/assistant',
+    getParentRoute: () => AuthenticatedDashboardRouteRoute,
+  } as any)
 const AuthenticatedDashboardCustomersRoute =
   AuthenticatedDashboardCustomersRouteImport.update({
     id: '/customers',
     path: '/customers',
+    getParentRoute: () => AuthenticatedDashboardRouteRoute,
+  } as any)
+const AuthenticatedDashboardPlansRoute =
+  AuthenticatedDashboardPlansRouteImport.update({
+    id: '/plans',
+    path: '/plans',
     getParentRoute: () => AuthenticatedDashboardRouteRoute,
   } as any)
 const AuthenticatedDashboardProfessionalsRoute =
@@ -98,16 +110,16 @@ const AuthenticatedDashboardProfessionalsRoute =
     path: '/professionals',
     getParentRoute: () => AuthenticatedDashboardRouteRoute,
   } as any)
-const AuthenticatedDashboardServicesRoute =
-  AuthenticatedDashboardServicesRouteImport.update({
-    id: '/services',
-    path: '/services',
-    getParentRoute: () => AuthenticatedDashboardRouteRoute,
-  } as any)
 const AuthenticatedDashboardProfileRoute =
   AuthenticatedDashboardProfileRouteImport.update({
     id: '/profile',
     path: '/profile',
+    getParentRoute: () => AuthenticatedDashboardRouteRoute,
+  } as any)
+const AuthenticatedDashboardServicesRoute =
+  AuthenticatedDashboardServicesRouteImport.update({
+    id: '/services',
+    path: '/services',
     getParentRoute: () => AuthenticatedDashboardRouteRoute,
   } as any)
 const AuthenticatedDashboardSettingsRoute =
@@ -122,37 +134,25 @@ const AuthenticatedDashboardTeamRoute =
     path: '/team',
     getParentRoute: () => AuthenticatedDashboardRouteRoute,
   } as any)
-const AuthenticatedDashboardPlansRoute =
-  AuthenticatedDashboardPlansRouteImport.update({
-    id: '/plans',
-    path: '/plans',
-    getParentRoute: () => AuthenticatedDashboardRouteRoute,
-  } as any)
-const AuthenticatedDashboardAssistantRoute =
-  AuthenticatedDashboardAssistantRouteImport.update({
-    id: '/assistant',
-    path: '/assistant',
-    getParentRoute: () => AuthenticatedDashboardRouteRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/schedule': typeof ScheduleRoute
-  '/agenda/$slug': typeof AgendaSlugRoute
   '/dashboard': typeof AuthenticatedDashboardRouteRouteWithChildren
+  '/agenda/$slug': typeof AgendaSlugRoute
   '/establishment/plans': typeof EstablishmentPlansRoute
   '/establishment/settings': typeof EstablishmentSettingsRoute
   '/dashboard/appointments': typeof AuthenticatedDashboardAppointmentsRoute
+  '/dashboard/assistant': typeof AuthenticatedDashboardAssistantRoute
   '/dashboard/customers': typeof AuthenticatedDashboardCustomersRoute
+  '/dashboard/plans': typeof AuthenticatedDashboardPlansRoute
   '/dashboard/professionals': typeof AuthenticatedDashboardProfessionalsRoute
-  '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/profile': typeof AuthenticatedDashboardProfileRoute
+  '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/team': typeof AuthenticatedDashboardTeamRoute
-  '/dashboard/plans': typeof AuthenticatedDashboardPlansRoute
-  '/dashboard/assistant': typeof AuthenticatedDashboardAssistantRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
 }
 export interface FileRoutesByTo {
@@ -164,14 +164,14 @@ export interface FileRoutesByTo {
   '/establishment/plans': typeof EstablishmentPlansRoute
   '/establishment/settings': typeof EstablishmentSettingsRoute
   '/dashboard/appointments': typeof AuthenticatedDashboardAppointmentsRoute
+  '/dashboard/assistant': typeof AuthenticatedDashboardAssistantRoute
   '/dashboard/customers': typeof AuthenticatedDashboardCustomersRoute
+  '/dashboard/plans': typeof AuthenticatedDashboardPlansRoute
   '/dashboard/professionals': typeof AuthenticatedDashboardProfessionalsRoute
-  '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/profile': typeof AuthenticatedDashboardProfileRoute
+  '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/team': typeof AuthenticatedDashboardTeamRoute
-  '/dashboard/plans': typeof AuthenticatedDashboardPlansRoute
-  '/dashboard/assistant': typeof AuthenticatedDashboardAssistantRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
 }
 export interface FileRoutesById {
@@ -181,19 +181,19 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/schedule': typeof ScheduleRoute
-  '/agenda/$slug': typeof AgendaSlugRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteRouteWithChildren
+  '/agenda/$slug': typeof AgendaSlugRoute
   '/establishment/plans': typeof EstablishmentPlansRoute
   '/establishment/settings': typeof EstablishmentSettingsRoute
   '/_authenticated/dashboard/appointments': typeof AuthenticatedDashboardAppointmentsRoute
+  '/_authenticated/dashboard/assistant': typeof AuthenticatedDashboardAssistantRoute
   '/_authenticated/dashboard/customers': typeof AuthenticatedDashboardCustomersRoute
+  '/_authenticated/dashboard/plans': typeof AuthenticatedDashboardPlansRoute
   '/_authenticated/dashboard/professionals': typeof AuthenticatedDashboardProfessionalsRoute
-  '/_authenticated/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/_authenticated/dashboard/profile': typeof AuthenticatedDashboardProfileRoute
+  '/_authenticated/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/_authenticated/dashboard/team': typeof AuthenticatedDashboardTeamRoute
-  '/_authenticated/dashboard/plans': typeof AuthenticatedDashboardPlansRoute
-  '/_authenticated/dashboard/assistant': typeof AuthenticatedDashboardAssistantRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
 }
 export interface FileRouteTypes {
@@ -203,21 +203,20 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/schedule'
-    | '/agenda/$slug'
     | '/dashboard'
+    | '/agenda/$slug'
     | '/establishment/plans'
     | '/establishment/settings'
     | '/dashboard/appointments'
+    | '/dashboard/assistant'
     | '/dashboard/customers'
+    | '/dashboard/plans'
     | '/dashboard/professionals'
-    | '/dashboard/services'
     | '/dashboard/profile'
+    | '/dashboard/services'
     | '/dashboard/settings'
     | '/dashboard/team'
-    | '/dashboard/plans'
-    | '/dashboard/assistant'
     | '/dashboard/'
-  fileRoutesById: FileRoutesById
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -228,14 +227,14 @@ export interface FileRouteTypes {
     | '/establishment/plans'
     | '/establishment/settings'
     | '/dashboard/appointments'
+    | '/dashboard/assistant'
     | '/dashboard/customers'
+    | '/dashboard/plans'
     | '/dashboard/professionals'
-    | '/dashboard/services'
     | '/dashboard/profile'
+    | '/dashboard/services'
     | '/dashboard/settings'
     | '/dashboard/team'
-    | '/dashboard/plans'
-    | '/dashboard/assistant'
     | '/dashboard'
   id:
     | '__root__'
@@ -244,20 +243,21 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/schedule'
-    | '/agenda/$slug'
     | '/_authenticated/dashboard'
+    | '/agenda/$slug'
     | '/establishment/plans'
     | '/establishment/settings'
     | '/_authenticated/dashboard/appointments'
+    | '/_authenticated/dashboard/assistant'
     | '/_authenticated/dashboard/customers'
+    | '/_authenticated/dashboard/plans'
     | '/_authenticated/dashboard/professionals'
-    | '/_authenticated/dashboard/services'
     | '/_authenticated/dashboard/profile'
+    | '/_authenticated/dashboard/services'
     | '/_authenticated/dashboard/settings'
     | '/_authenticated/dashboard/team'
-    | '/_authenticated/dashboard/plans'
-    | '/_authenticated/dashboard/assistant'
     | '/_authenticated/dashboard/'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
@@ -307,19 +307,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ScheduleRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/agenda/$slug': {
-      id: '/agenda/$slug'
-      path: '/agenda/$slug'
-      fullPath: '/agenda/$slug'
-      preLoaderRoute: typeof AgendaSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/agenda/$slug': {
+      id: '/agenda/$slug'
+      path: '/agenda/$slug'
+      fullPath: '/agenda/$slug'
+      preLoaderRoute: typeof AgendaSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/establishment/plans': {
       id: '/establishment/plans'
@@ -349,11 +349,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAppointmentsRouteImport
       parentRoute: typeof AuthenticatedDashboardRouteRoute
     }
+    '/_authenticated/dashboard/assistant': {
+      id: '/_authenticated/dashboard/assistant'
+      path: '/assistant'
+      fullPath: '/dashboard/assistant'
+      preLoaderRoute: typeof AuthenticatedDashboardAssistantRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
     '/_authenticated/dashboard/customers': {
       id: '/_authenticated/dashboard/customers'
       path: '/customers'
       fullPath: '/dashboard/customers'
       preLoaderRoute: typeof AuthenticatedDashboardCustomersRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
+    '/_authenticated/dashboard/plans': {
+      id: '/_authenticated/dashboard/plans'
+      path: '/plans'
+      fullPath: '/dashboard/plans'
+      preLoaderRoute: typeof AuthenticatedDashboardPlansRouteImport
       parentRoute: typeof AuthenticatedDashboardRouteRoute
     }
     '/_authenticated/dashboard/professionals': {
@@ -363,18 +377,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardProfessionalsRouteImport
       parentRoute: typeof AuthenticatedDashboardRouteRoute
     }
-    '/_authenticated/dashboard/services': {
-      id: '/_authenticated/dashboard/services'
-      path: '/services'
-      fullPath: '/dashboard/services'
-      preLoaderRoute: typeof AuthenticatedDashboardServicesRouteImport
-      parentRoute: typeof AuthenticatedDashboardRouteRoute
-    }
     '/_authenticated/dashboard/profile': {
       id: '/_authenticated/dashboard/profile'
       path: '/profile'
       fullPath: '/dashboard/profile'
       preLoaderRoute: typeof AuthenticatedDashboardProfileRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
+    '/_authenticated/dashboard/services': {
+      id: '/_authenticated/dashboard/services'
+      path: '/services'
+      fullPath: '/dashboard/services'
+      preLoaderRoute: typeof AuthenticatedDashboardServicesRouteImport
       parentRoute: typeof AuthenticatedDashboardRouteRoute
     }
     '/_authenticated/dashboard/settings': {
@@ -391,33 +405,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardTeamRouteImport
       parentRoute: typeof AuthenticatedDashboardRouteRoute
     }
-    '/_authenticated/dashboard/plans': {
-      id: '/_authenticated/dashboard/plans'
-      path: '/plans'
-      fullPath: '/dashboard/plans'
-      preLoaderRoute: typeof AuthenticatedDashboardPlansRouteImport
-      parentRoute: typeof AuthenticatedDashboardRouteRoute
-    }
-    '/_authenticated/dashboard/assistant': {
-      id: '/_authenticated/dashboard/assistant'
-      path: '/assistant'
-      fullPath: '/dashboard/assistant'
-      preLoaderRoute: typeof AuthenticatedDashboardAssistantRouteImport
-      parentRoute: typeof AuthenticatedDashboardRouteRoute
-    }
   }
 }
 
 interface AuthenticatedDashboardRouteRouteChildren {
   AuthenticatedDashboardAppointmentsRoute: typeof AuthenticatedDashboardAppointmentsRoute
+  AuthenticatedDashboardAssistantRoute: typeof AuthenticatedDashboardAssistantRoute
   AuthenticatedDashboardCustomersRoute: typeof AuthenticatedDashboardCustomersRoute
+  AuthenticatedDashboardPlansRoute: typeof AuthenticatedDashboardPlansRoute
   AuthenticatedDashboardProfessionalsRoute: typeof AuthenticatedDashboardProfessionalsRoute
-  AuthenticatedDashboardServicesRoute: typeof AuthenticatedDashboardServicesRoute
   AuthenticatedDashboardProfileRoute: typeof AuthenticatedDashboardProfileRoute
+  AuthenticatedDashboardServicesRoute: typeof AuthenticatedDashboardServicesRoute
   AuthenticatedDashboardSettingsRoute: typeof AuthenticatedDashboardSettingsRoute
   AuthenticatedDashboardTeamRoute: typeof AuthenticatedDashboardTeamRoute
-  AuthenticatedDashboardPlansRoute: typeof AuthenticatedDashboardPlansRoute
-  AuthenticatedDashboardAssistantRoute: typeof AuthenticatedDashboardAssistantRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
 }
 
@@ -425,15 +425,15 @@ const AuthenticatedDashboardRouteRouteChildren: AuthenticatedDashboardRouteRoute
   {
     AuthenticatedDashboardAppointmentsRoute:
       AuthenticatedDashboardAppointmentsRoute,
+    AuthenticatedDashboardAssistantRoute: AuthenticatedDashboardAssistantRoute,
     AuthenticatedDashboardCustomersRoute: AuthenticatedDashboardCustomersRoute,
+    AuthenticatedDashboardPlansRoute: AuthenticatedDashboardPlansRoute,
     AuthenticatedDashboardProfessionalsRoute:
       AuthenticatedDashboardProfessionalsRoute,
-    AuthenticatedDashboardServicesRoute: AuthenticatedDashboardServicesRoute,
     AuthenticatedDashboardProfileRoute: AuthenticatedDashboardProfileRoute,
+    AuthenticatedDashboardServicesRoute: AuthenticatedDashboardServicesRoute,
     AuthenticatedDashboardSettingsRoute: AuthenticatedDashboardSettingsRoute,
     AuthenticatedDashboardTeamRoute: AuthenticatedDashboardTeamRoute,
-    AuthenticatedDashboardPlansRoute: AuthenticatedDashboardPlansRoute,
-    AuthenticatedDashboardAssistantRoute: AuthenticatedDashboardAssistantRoute,
     AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
   }
 
@@ -467,3 +467,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
