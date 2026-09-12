@@ -125,3 +125,15 @@
 - **Testes realizados**: revisão estrutural do motor de disponibilidade e conferência da regra de precedência.
 - **Problemas encontrados**: a seleção anterior podia escolher uma exceção personalizada incorreta quando havia mais de uma aplicável.
 - **Pendências relacionadas**: rota amigável `/agenda/{slug}`; equipe; edição completa do perfil/identidade do estabelecimento; login social; IA; notificações reais; pagamentos e WhatsApp.
+
+## 2026-09-12 (8)
+- **Objetivo da alteração**: Completar a precedência das exceções de agenda para tratar corretamente combinações entre fechamento geral, horário especial geral, fechamento individual e horário especial individual.
+- **Funcionalidades implementadas**:
+  - Fechamento específico do profissional passa a ter prioridade máxima.
+  - Horário especial específico do profissional pode substituir explicitamente um fechamento geral.
+  - Fechamento geral continua vencendo o horário especial geral quando não existe override específico.
+  - A regra agora é expressa diretamente no motor de disponibilidade, sem depender da ordenação incidental das exceções.
+- **Arquivos alterados**: `src/lib/scheduling/availability.ts`, `CHANGELOG.md`.
+- **Testes realizados**: revisão estrutural da matriz de precedência do motor de disponibilidade.
+- **Problemas encontrados**: a correção anterior ainda permitia que um fechamento geral encerrasse a disponibilidade antes de avaliar um horário especial específico do profissional.
+- **Pendências relacionadas**: rota amigável `/agenda/{slug}`; equipe; edição completa do perfil/identidade do estabelecimento; login social; IA; notificações reais; pagamentos e WhatsApp.
