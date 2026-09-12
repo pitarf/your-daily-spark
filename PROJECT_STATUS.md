@@ -72,18 +72,25 @@
 - Entrega transacional de e-mail preparada com a API da Brevo para confirmação, cancelamento e lembrete.
 - Comando `bun run notifications:dispatch` criado para processar a fila em lotes e permitir execução por cron/scheduler.
 - Worker usa atualização atômica de status para reduzir risco de processamento concorrente da mesma notificação.
+- Assistente de agenda com IA criado para interpretar linguagem natural em português e gerar uma prévia estruturada de expediente geral.
+- Assistente de agenda limitado a administradores e integrado à navegação `/dashboard/assistant`.
+- Prévia da IA mostra sete dias, janelas, intervalos e avisos antes de qualquer alteração.
+- Aplicação da configuração de IA exige confirmação explícita e altera somente o expediente geral, preservando agendas individuais dos profissionais.
+- O assistente foi preparado para uso com a API Gemini, com `GEMINI_API_KEY` somente no servidor e saída JSON estruturada validada por Zod.
 
 ## Em Desenvolvimento 🟡
 - Refinamentos finais de UX e identidade visual por tipo de negócio.
 - Melhorias de experiência no fluxo de agendamento e administração.
+- Evolução do assistente para consultar agenda, serviços, profissionais, bloqueios e disponibilidade em linguagem natural.
+- Validação final e configuração de produção das integrações de e-mail e IA.
 
 ## Pendente 🔴
 - Configurar `BREVO_API_KEY` no ambiente de produção.
 - Confirmar o remetente `rfpita.work@gmail.com` como remetente autorizado na Brevo e manter `NOTIFICATION_FROM_NAME=Marca Minha Vez`.
 - Configurar um cron/scheduler de produção para executar `bun run notifications:dispatch` periodicamente.
+- Configurar `GEMINI_API_KEY` no ambiente de produção para ativar o assistente de agenda.
 - Habilitar o provedor Google no ambiente de autenticação.
 - Worker/provedor para WhatsApp e SMS.
-- IA para configurar e consultar a agenda.
 - Pagamentos e planos de assinatura da plataforma SaaS.
 - Integração oficial com WhatsApp.
 
