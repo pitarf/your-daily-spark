@@ -37,10 +37,13 @@
 - Fluxo personalizado consolidado na rota pública `/agenda/{slug}?custom=true`, evitando uma segunda rota dinâmica e mantendo o route tree estável.
 - Verificação do banco do ambiente Lovable: a Barbearia Marca Minha Vez está com `allow_custom_duration = true`.
 - Pipeline final da etapa de duração personalizada validou TypeScript, ESLint e build de produção com sucesso.
+- Agendamento avulso personalizado sem serviço cadastrado, com título do atendimento, duração de 15 minutos a 4 horas, profissional opcional, observações e validação server-side.
+- Restrição no banco para impedir atendimento sem serviço e sem título personalizado.
 
 ## Em Desenvolvimento 🟡
 - Refinamentos finais de UX e identidade visual por tipo de negócio.
 - Melhorias de experiência no fluxo de agendamento e administração.
+- Apresentação administrativa específica para atendimentos avulsos sem serviço.
 
 ## Pendente 🔴
 - Habilitar o provedor Google no ambiente de autenticação.
@@ -48,7 +51,6 @@
 - Notificações reais por e-mail, WhatsApp e SMS.
 - Pagamentos e planos de assinatura da plataforma SaaS.
 - Integração oficial com WhatsApp.
-- Agendamento avulso totalmente personalizado, sem depender de um serviço pré-cadastrado.
 
 ## Bloqueado ⚠️
 - Nenhum no momento.

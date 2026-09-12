@@ -196,3 +196,18 @@
 - **Testes realizados**: GitHub Actions run #48 validou TypeScript, ESLint e build de produção com sucesso após a estabilização do fluxo.
 - **Problemas encontrados**: a execução inicial encontrou erro de tipos no Supabase e referência a uma rota ainda não registrada no route tree; ambos foram corrigidos em commits posteriores sem reescrever o histórico.
 - **Pendências relacionadas**: agendamento avulso sem serviço base, IA, Google, notificações reais, pagamentos e WhatsApp.
+
+## 2026-09-12 (19)
+- **Objetivo da alteração**: Implementar o agendamento avulso totalmente personalizado, sem exigir serviço pré-cadastrado.
+- **Funcionalidades implementadas**:
+  - `appointments.service_id` passou a aceitar `NULL` para atendimentos avulsos.
+  - Novos campos `custom_title` e `custom_price` no agendamento.
+  - Constraint garante que um atendimento tenha serviço ou título personalizado.
+  - Novo fluxo público para o cliente informar o que precisa, escolher profissional, data, duração, horário e dados de contato.
+  - Disponibilidade e conflitos continuam sendo validados no servidor.
+  - Planos do cliente continuam respeitando o limite de duração mesmo em atendimentos avulsos.
+  - Migration versionada em `supabase/migrations/20260912060000_standalone_custom_appointments.sql`.
+- **Arquivos alterados**: `src/lib/scheduling/standalone-custom-booking.functions.ts`, `src/components/scheduling/StandaloneCustomBookingPage.tsx`, `src/routes/agenda/$slug.tsx`, nova migration, `PROJECT_STATUS.md`, `CHANGELOG.md`.
+- **Testes realizados**: alteração do schema aplicada no PostgreSQL do ambiente Lovable e verificação estrutural do fluxo server-side.
+- **Problemas encontrados**: a apresentação administrativa de atendimentos sem serviço ainda precisa de um refinamento para exibir o título personalizado no calendário.
+- **Pendências relacionadas**: UI administrativa de atendimentos avulsos, IA, Google, notificações reais, pagamentos e WhatsApp.
