@@ -235,3 +235,14 @@
 - **Testes realizados**: revisão estrutural da consulta autenticada e da renderização dos campos de atendimento avulso.
 - **Problemas encontrados**: nenhum novo bloqueador conhecido.
 - **Pendências relacionadas**: refinamentos gerais de UX, IA, Google, notificações reais, pagamentos e WhatsApp.
+
+## 2026-09-12 (22)
+- **Objetivo da alteração**: Expor no perfil administrativo a configuração que controla agendamentos personalizados e corrigir o link público amigável.
+- **Funcionalidades implementadas**:
+  - Administrador pode ativar/desativar `allow_custom_duration` diretamente no perfil do estabelecimento.
+  - A configuração deixa claro que o cliente poderá alterar a duração e utilizar atendimento sem serviço quando habilitada.
+  - O link exibido no painel passa a usar `/agenda/{slug}` em vez da URL legada.
+- **Arquivos alterados**: `src/routes/_authenticated/dashboard/profile.tsx`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
+- **Testes realizados**: revisão estrutural da leitura e atualização do campo `allow_custom_duration`.
+- **Problemas encontrados**: nenhum novo bloqueador conhecido.
+- **Pendências relacionadas**: refinamentos gerais de UX, IA, Google, notificações reais, pagamentos e WhatsApp.
