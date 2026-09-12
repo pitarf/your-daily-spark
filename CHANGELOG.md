@@ -136,3 +136,17 @@
 - **Testes realizados**: GitHub Actions validou TypeScript, ESLint e build de produção no pipeline mais recente.
 - **Problemas encontrados**: login com Google ainda depende da habilitação do provedor; duração totalmente personalizada sem serviço cadastrado ainda não faz parte do fluxo.
 - **Pendências relacionadas**: habilitar Google, IA, notificações reais, pagamentos, WhatsApp e duração personalizada independente de serviço.
+
+## 2026-09-12 (14)
+- **Objetivo da alteração**: Finalizar a primeira camada de gestão comercial e de agenda do painel.
+- **Funcionalidades implementadas**:
+  - Nova área autenticada `/dashboard/plans` para criar, editar, ativar/desativar planos e definir serviços permitidos e duração máxima.
+  - Atalho de Planos no dashboard e menu administrativo.
+  - Regras de acesso por papel atualizadas para manter Planos restrito a administradores.
+  - Rota legada `/establishment/plans` deixou de ser placeholder e passou a encaminhar o usuário para a gestão autenticada.
+  - Agenda administrativa permanece com Dia, Semana e Mês, agendamento manual e bloqueios.
+  - Migração versionada das políticas RLS restritivas para escopo profissional.
+- **Arquivos alterados**: `src/routes/_authenticated/dashboard/plans.tsx`, `src/routes/_authenticated/dashboard/route.tsx`, `src/routes/_authenticated/dashboard/index.tsx`, `src/routes/establishment/plans.tsx`, `src/lib/auth/role-access.ts`, `src/routeTree.gen.ts`, `supabase/migrations/20260912050500_professional_rls_scope.sql`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
+- **Testes realizados**: GitHub Actions já validou TypeScript, ESLint e build na etapa imediatamente anterior; nova execução foi acionada após os ajustes de planos.
+- **Problemas encontrados**: nenhum novo bloqueador conhecido.
+- **Pendências relacionadas**: duração personalizada independente de serviço, IA, Google, notificações reais, pagamentos e WhatsApp.
