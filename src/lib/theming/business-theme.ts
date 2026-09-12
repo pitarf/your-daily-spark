@@ -1,3 +1,5 @@
+export type ThemePreset = "auto" | "minimal" | "soft" | "bold" | "dark" | "warm";
+
 export type BusinessTheme = {
   primary: string;
   primaryForeground: string;
@@ -72,12 +74,65 @@ const THEMES: Record<string, BusinessTheme> = {
   },
 };
 
+const PRESETS: Record<Exclude<ThemePreset, "auto">, BusinessTheme> = {
+  minimal: {
+    primary: "oklch(0.36 0.01 260)",
+    primaryForeground: "oklch(0.99 0 0)",
+    accent: "oklch(0.95 0.005 260)",
+    accentForeground: "oklch(0.25 0.01 260)",
+    ring: "oklch(0.58 0.01 260)",
+  },
+  soft: {
+    primary: "oklch(0.64 0.09 330)",
+    primaryForeground: "oklch(0.99 0.01 330)",
+    accent: "oklch(0.95 0.025 330)",
+    accentForeground: "oklch(0.35 0.07 330)",
+    ring: "oklch(0.72 0.07 330)",
+  },
+  bold: {
+    primary: "oklch(0.54 0.2 25)",
+    primaryForeground: "oklch(0.99 0 0)",
+    accent: "oklch(0.94 0.05 25)",
+    accentForeground: "oklch(0.3 0.12 25)",
+    ring: "oklch(0.66 0.14 25)",
+  },
+  dark: {
+    primary: "oklch(0.72 0.06 90)",
+    primaryForeground: "oklch(0.2 0.02 260)",
+    accent: "oklch(0.3 0.02 260)",
+    accentForeground: "oklch(0.96 0.01 260)",
+    ring: "oklch(0.62 0.04 90)",
+  },
+  warm: {
+    primary: "oklch(0.56 0.13 50)",
+    primaryForeground: "oklch(0.99 0.01 50)",
+    accent: "oklch(0.95 0.035 50)",
+    accentForeground: "oklch(0.32 0.08 50)",
+    ring: "oklch(0.67 0.08 50)",
+  },
+};
+
 export function normalizeBusinessType(value: string | null | undefined) {
   return (value ?? "outro").trim().toLocaleLowerCase("pt-BR");
 }
 
+export function normalizeThemePreset(value: string | null | undefined): ThemePreset {
+  const normalized = (value ?? "auto").trim().toLocaleLowerCase("pt-BR") as ThemePreset;
+  return normalized === "minimal" || normalized === "soft" || normalized === "bold" || normalized === "dark" || normalized === "warm" || normalized === "auto"
+    ? normalized
+    : "auto";
+}
+
 export function getBusinessTheme(value: string | null | undefined): BusinessTheme {
   return THEMES[normalizeBusinessType(value)] ?? THEMES["outro"];
+}
+
+export function getBusinessThemeWithPreset(
+  businessType: string | null | undefined,
+  themePreset: string | null | undefined,
+): BusinessTheme {
+  const preset = normalizeThemePreset(themePreset);
+  return preset === "auto" ? getBusinessTheme(businessType) : PRESETS[preset];
 }
 
 export function getBusinessTypeLabel(value: string | null | undefined) {
