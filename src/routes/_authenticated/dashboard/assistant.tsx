@@ -11,8 +11,6 @@ type SchedulePlan = ReturnType<typeof schedulePlanSchema.parse>;
 
 const DAY_NAMES = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"] as const;
 
-// routeTree.gen.ts é regenerado pelo TanStack Router no build; a entrada da nova rota ainda não existe no snapshot versionado durante o typecheck.
-// @ts-expect-error TanStack Router atualizará FileRoutesByPath quando o route tree for regenerado.
 export const Route = createFileRoute("/_authenticated/dashboard/assistant")({
   component: AssistantPage,
 });
