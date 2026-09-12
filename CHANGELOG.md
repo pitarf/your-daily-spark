@@ -119,3 +119,20 @@
 - **Testes realizados**: revisão estrutural do fluxo de autenticação, vínculo profissional-usuário e isolamento por estabelecimento; sem alteração de schema.
 - **Problemas encontrados**: o painel do profissional ainda precisa ser restringido para mostrar somente dados pertencentes ao próprio profissional.
 - **Pendências relacionadas**: escopo do painel do profissional; login social; IA; notificações reais; pagamentos e WhatsApp.
+
+## 2026-09-12 (13)
+- **Objetivo da alteração**: Consolidar o controle de acesso por papel e ampliar a agenda administrativa.
+- **Funcionalidades implementadas**:
+  - Profissionais passaram a ter navegação administrativa restrita e acesso ao próprio espaço de agenda.
+  - Escopos de RLS do ambiente foram conferidos para profissionais em agendamentos, clientes, serviços, profissionais, horários e bloqueios.
+  - Login com Google preparado na interface, aguardando apenas a habilitação do provedor no ambiente de autenticação.
+  - Correção da busca administrativa de usuários por e-mail para convites da equipe.
+  - Registro da rota de equipe no route tree.
+  - Agenda administrativa com visualização por dia, semana e mês.
+  - Agendamento manual pelo administrador reutilizando o motor de disponibilidade.
+  - Navegação civil do calendário com tratamento de mês, semana e fuso.
+  - Ajustes de qualidade no TypeScript/ESLint e pipeline validado com TypeScript, lint e build de produção.
+- **Arquivos alterados**: `src/routes/_authenticated/dashboard/appointments.tsx`, `src/lib/scheduling/calendar.ts`, `src/lib/auth/role-access.ts`, `src/lib/auth/team.functions.ts`, `src/lib/auth/auth-client.ts`, `src/routes/auth.tsx`, `src/components/dashboard/ProfessionalWorkspace.tsx`, `src/routeTree.gen.ts`, `tsconfig.json`, `eslint.config.js`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
+- **Testes realizados**: GitHub Actions validou TypeScript, ESLint e build de produção no pipeline mais recente.
+- **Problemas encontrados**: login com Google ainda depende da habilitação do provedor; duração totalmente personalizada sem serviço cadastrado ainda não faz parte do fluxo.
+- **Pendências relacionadas**: habilitar Google, IA, notificações reais, pagamentos, WhatsApp e duração personalizada independente de serviço.
