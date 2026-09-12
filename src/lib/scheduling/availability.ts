@@ -104,9 +104,12 @@ function overlaps(aStart: number, aEnd: number, bStart: number, bEnd: number): b
  * Gera os slots do dia. Um serviço só entra se couber inteiro dentro da janela
  * de trabalho, fora dos intervalos e sem colidir com ocupações.
  *
- * Quando existe uma agenda específica para o profissional em determinado dia,
- * ela assume o lugar da agenda geral, inclusive quando estiver inativa. Isso
- * permite representar dias de folga individuais sem alterar o expediente do negócio.
+ * Precedência das exceções, da mais específica para a mais geral:
+ * 1) fechamento específico do profissional;
+ * 2) horário especial específico do profissional;
+ * 3) fechamento geral do estabelecimento;
+ * 4) horário especial geral do estabelecimento;
+ * 5) agenda semanal.
  */
 export function computeAvailability(params: AvailabilityParams): AvailabilitySlot[] {
   const {
@@ -126,7 +129,38 @@ export function computeAvailability(params: AvailabilityParams): AvailabilitySlo
   const relevantExceptions = exceptions.filter(
     (e) => e.date === date && (e.professional_id === null || e.professional_id === professionalId),
   );
-  if (relevantExceptions.some((e) => e.type === "closed")) return [];
+
+  const specificClosed = professionalId
+    ? relevantExceptions.some(
+        (e) => e.type === "closed" && e.professional_id === professionalId,
+      )
+    : false;
+  if (specificClosed) return [];
+
+  const specificCustom = professionalId
+    ? relevantExceptions.find(
+        (e) =>
+          e.type === "custom_hours" &&
+          e.professional_id === professionalId &&
+          e.start_time &&
+          e.end_time,
+      )
+    : undefined;
+  const generalClosed = relevantExceptions.some(
+    (e) => e.type === "closed" && e.professional_id === null,
+  );
+  const generalCustom = relevantExceptions.find(
+    (e) =>
+      e.type === "custom_hours" &&
+      e.professional_id === null &&
+      e.start_time &&
+      e.end_time,
+  );
+
+  // Uma exceção específica de horário vence o fechamento geral.
+  // Já um fechamento específico do profissional sempre vence qualquer outra regra.
+  const custom = specificCustom ?? generalCustom;
+  if (generalClosed && !specificCustom) return [];
 
   const weekday = weekdayOf(date, timezone);
 
@@ -146,17 +180,6 @@ export function computeAvailability(params: AvailabilityParams): AvailabilitySlo
     end: toMinutes(s.end_time),
     breaks: s.breaks.map((b) => ({ start: toMinutes(b.start), end: toMinutes(b.end) })),
   }));
-
-  // Uma exceção específica do profissional deve prevalecer sobre a exceção geral.
-  const specificCustom = professionalId
-    ? relevantExceptions.find(
-        (e) => e.type === "custom_hours" && e.professional_id === professionalId && e.start_time && e.end_time,
-      )
-    : undefined;
-  const generalCustom = relevantExceptions.find(
-    (e) => e.type === "custom_hours" && e.professional_id === null && e.start_time && e.end_time,
-  );
-  const custom = specificCustom ?? generalCustom;
 
   if (custom) {
     windows = [
