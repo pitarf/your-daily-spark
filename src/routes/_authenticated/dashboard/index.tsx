@@ -16,13 +16,14 @@ type AppointmentRow = {
   starts_at: string;
   ends_at: string;
   status: string;
+  custom_title: string | null;
   customers: { name: string } | null;
   services: { name: string; duration_minutes: number } | null;
   professionals: { name: string } | null;
 };
 
 const SELECT =
-  "id, starts_at, ends_at, status, customers(name), services(name, duration_minutes), professionals(name)";
+  "id, starts_at, ends_at, status, custom_title, customers(name), services(name, duration_minutes), professionals(name)";
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "Pendente",
@@ -157,7 +158,7 @@ function DashboardHome() {
                 </span>
                 <span className="font-medium text-foreground">{appointment.customers?.name ?? "Cliente"}</span>
                 <span className="text-muted-foreground">
-                  {appointment.services?.name ?? "Serviço"} · {appointment.professionals?.name ?? "Profissional"}
+                  {appointment.custom_title?.trim() || appointment.services?.name || "Atendimento avulso"} · {appointment.professionals?.name ?? "Profissional"}
                 </span>
                 <span className="ml-auto rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
                   {STATUS_LABEL[appointment.status] ?? appointment.status}
@@ -189,7 +190,7 @@ function DashboardHome() {
                 <div className="font-semibold text-foreground">{formatDateTime(appointment.starts_at, tz)}</div>
                 <div className="mt-1 text-foreground">{appointment.customers?.name ?? "Cliente"}</div>
                 <div className="mt-0.5 text-xs text-muted-foreground">
-                  {appointment.services?.name ?? "Serviço"} · {appointment.professionals?.name ?? "Profissional"}
+                  {appointment.custom_title?.trim() || appointment.services?.name || "Atendimento avulso"} · {appointment.professionals?.name ?? "Profissional"}
                 </div>
               </li>
             ))}
