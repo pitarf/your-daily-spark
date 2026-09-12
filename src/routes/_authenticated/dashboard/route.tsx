@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { fetchMemberships, type Membership } from "@/lib/auth/auth-client";
+import { canAccessDashboardPath } from "@/lib/auth/role-access";
 import { EstablishmentProvider } from "@/lib/auth/establishment-context";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -44,12 +45,21 @@ function DashboardLayout() {
   const membership: Membership | undefined =
     memberships.find((m) => m.establishmentId === activeId) ?? memberships[0];
 
+  useEffect(() => {
+    if (!membership || membershipsQuery.isPending || membershipsQuery.isError) return;
+    if (membership.role === "professional" && !canAccessDashboardPath(membership.role, pathname)) {
+      void navigate({ to: "/dashboard", replace: true });
+    }
+  }, [membership, membershipsQuery.isPending, membershipsQuery.isError, navigate, pathname]);
+
   async function handleSignOut() {
     await queryClient.cancelQueries();
     queryClient.clear();
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
+
+  const visibleNav = membership?.role === "professional" ? NAV.filter((item) => item.exact) : NAV;
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -85,7 +95,7 @@ function DashboardLayout() {
         </div>
         {membership ? (
           <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-2 pb-2 text-sm">
-            {NAV.map((item) => {
+            {visibleNav.map((item) => {
               const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
               return (
                 <Link
