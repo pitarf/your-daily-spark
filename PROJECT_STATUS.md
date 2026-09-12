@@ -68,14 +68,20 @@
 - Após a confirmação pública, o cliente recebe um botão seguro para abrir diretamente o gerenciamento do próprio agendamento.
 - O acesso direto ao gerenciamento reutiliza o token HMAC já existente e não expõe a chave de assinatura ao navegador.
 - O atalho de gerenciamento está disponível nos fluxos de agendamento normal, duração personalizada e atendimento avulso.
+- Worker de entrega de notificações por e-mail implementado de forma independente do aplicativo web, usando a fila persistente existente.
+- Entrega de e-mail via Resend com templates para confirmação, cancelamento e lembrete.
+- Comando `bun run notifications:dispatch` criado para processar a fila em lotes e permitir execução por cron/scheduler.
+- Worker usa atualização atômica de status para reduzir risco de processamento concorrente da mesma notificação.
 
 ## Em Desenvolvimento 🟡
 - Refinamentos finais de UX e identidade visual por tipo de negócio.
 - Melhorias de experiência no fluxo de agendamento e administração.
 
 ## Pendente 🔴
+- Configurar `RESEND_API_KEY` e o remetente de e-mail no ambiente de produção para ativar a entrega real.
+- Configurar um cron/scheduler de produção para executar `bun run notifications:dispatch` periodicamente.
 - Habilitar o provedor Google no ambiente de autenticação.
-- Worker/provedor para entregar notificações reais por e-mail, WhatsApp e SMS.
+- Worker/provedor para WhatsApp e SMS.
 - IA para configurar e consultar a agenda.
 - Pagamentos e planos de assinatura da plataforma SaaS.
 - Integração oficial com WhatsApp.
