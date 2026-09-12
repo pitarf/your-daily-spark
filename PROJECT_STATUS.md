@@ -8,7 +8,8 @@
 - Motor de disponibilidade em `src/lib/scheduling/availability.ts`, com fuso, intervalos, exceções, bloqueios, duração e agenda individual.
 - Precedência determinística das exceções: fechamento individual > horário especial individual > fechamento geral > horário especial geral > agenda semanal.
 - Agendamento público com serviço, profissional/qualquer profissional, data, horário, cliente, revisão e confirmação, validado no servidor.
-- Agenda pública por slug via `/schedule?slug={slug}`.
+- Agenda pública reutilizável por estabelecimento.
+- **URL amigável da agenda**: `/agenda/{slug}` com carregamento por slug e compatibilidade automática com `/schedule?slug={slug}`.
 - Calendário público sensível ao fuso do estabelecimento.
 - Autenticação por e-mail, cadastro e recuperação de senha.
 - Dashboard protegido com agenda, serviços, profissionais, clientes e configurações.
@@ -20,12 +21,10 @@
 - Gestão de bloqueios e status dos agendamentos.
 - Homepage comercial e fluxo público acessível.
 - Acessibilidade básica na agenda pública.
-- **Perfil do estabelecimento**: rota `/dashboard/profile` com edição, para administradores, de nome, descrição, tipo de negócio, fuso horário, telefone, WhatsApp, e-mail, endereço e URL da logo.
-- Pré-visualização da logo e atalho para a agenda pública.
+- Perfil do estabelecimento: edição de dados comerciais e identidade, incluindo logo.
 
 ## Em Desenvolvimento 🟡
 - Equipe: convite e vínculo de profissionais a contas de usuário.
-- URL amigável dedicada: `/agenda/{slug}`.
 
 ## Pendente 🔴
 - Login social.
