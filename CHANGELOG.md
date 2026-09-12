@@ -301,3 +301,15 @@
 - **Testes realizados**: coluna e constraint conferidos no PostgreSQL do ambiente Lovable; revisão estrutural da leitura, persistência e aplicação do preset.
 - **Problemas encontrados**: nenhum bloqueador conhecido.
 - **Pendências relacionadas**: personalização avançada por cores/layout, IA, Google, entrega real de notificações, pagamentos e WhatsApp oficial.
+
+## 2026-09-12 (28)
+- **Objetivo da alteração**: Preparar a fila de notificações para lembretes e reagendamentos sem criar um serviço de envio prematuramente.
+- **Funcionalidades implementadas**:
+  - Ao criar um agendamento futuro, a fila passa a registrar também um lembrete para 24 horas antes do atendimento.
+  - Ao cancelar um agendamento, lembretes ainda não enviados são marcados como cancelados.
+  - Ao alterar o horário de um agendamento não cancelado, o lembrete anterior é invalidado e um novo lembrete é calculado para o novo horário.
+  - Migration versionada em `supabase/migrations/20260912080000_notification_reminders.sql`.
+- **Arquivos alterados**: `supabase/migrations/20260912080000_notification_reminders.sql`, `CHANGELOG.md`.
+- **Testes realizados**: trigger atualizado diretamente no PostgreSQL do ambiente Lovable e conferência da existência do trigger `appointments_create_notifications` para INSERT e UPDATE.
+- **Problemas encontrados**: a entrega física do lembrete ainda depende de um worker/provedor externo.
+- **Pendências relacionadas**: worker de notificações, IA, Google, pagamentos e WhatsApp oficial.
