@@ -24,15 +24,18 @@
 - Gestão de bloqueios e status dos agendamentos.
 - Agenda administrativa com visualizações Dia, Semana e Mês.
 - Agendamento manual pelo administrador usando o mesmo motor de disponibilidade.
+- Gestão de planos de clientes no dashboard, com nome, descrição, duração máxima, ativação/desativação e serviços permitidos.
+- Atribuição de planos aos clientes pelo painel de clientes.
 - Homepage comercial e fluxo público acessível.
 - Acessibilidade básica na agenda pública.
 - Perfil do estabelecimento com edição de dados comerciais e identidade, incluindo logo.
 - Gestão de equipe: convite de profissionais por e-mail, vínculo de contas existentes e remoção de acesso sem apagar a conta.
 - CI de qualidade com TypeScript, ESLint e build de produção em GitHub Actions.
-- Último pipeline validado com sucesso após os ajustes de qualidade.
+- Pipeline recente validado com TypeScript, ESLint e build de produção.
+- Migração versionada das regras RLS restritivas de escopo profissional.
 
 ## Em Desenvolvimento 🟡
-- Refinamentos finais de UX, identidade por tipo de negócio e preparação de publicação.
+- Refinamentos finais de UX e identidade por tipo de negócio.
 
 ## Pendente 🔴
 - Habilitar o provedor Google no ambiente de autenticação.
