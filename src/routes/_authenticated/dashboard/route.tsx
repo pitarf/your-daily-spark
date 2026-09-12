@@ -19,6 +19,7 @@ const NAV = [
   { to: "/dashboard/services", label: "Serviços", exact: false },
   { to: "/dashboard/professionals", label: "Profissionais", exact: false },
   { to: "/dashboard/customers", label: "Clientes", exact: false },
+  { to: "/dashboard/profile", label: "Perfil", exact: false },
   { to: "/dashboard/settings", label: "Configurações", exact: false },
 ] as const;
 
