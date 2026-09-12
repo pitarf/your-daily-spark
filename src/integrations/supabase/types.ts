@@ -23,7 +23,10 @@ export type Database = {
           id: string
           notes: string | null
           professional_id: string
-          service_id: string
+          service_id: string | null
+          custom_title: string | null
+          custom_price: number | null
+          duration_minutes_override: number | null
           starts_at: string
           status: Database["public"]["Enums"]["appointment_status"]
           updated_at: string
@@ -36,7 +39,10 @@ export type Database = {
           id?: string
           notes?: string | null
           professional_id: string
-          service_id: string
+          service_id?: string | null
+          custom_title?: string | null
+          custom_price?: number | null
+          duration_minutes_override?: number | null
           starts_at: string
           status?: Database["public"]["Enums"]["appointment_status"]
           updated_at?: string
@@ -49,7 +55,10 @@ export type Database = {
           id?: string
           notes?: string | null
           professional_id?: string
-          service_id?: string
+          service_id?: string | null
+          custom_title?: string | null
+          custom_price?: number | null
+          duration_minutes_override?: number | null
           starts_at?: string
           status?: Database["public"]["Enums"]["appointment_status"]
           updated_at?: string
@@ -332,6 +341,7 @@ export type Database = {
         Row: {
           active: boolean
           address: string | null
+          allow_custom_duration: boolean
           business_type: string
           created_at: string
           description: string | null
@@ -348,6 +358,7 @@ export type Database = {
         Insert: {
           active?: boolean
           address?: string | null
+          allow_custom_duration?: boolean
           business_type?: string
           created_at?: string
           description?: string | null
@@ -364,6 +375,7 @@ export type Database = {
         Update: {
           active?: boolean
           address?: string | null
+          allow_custom_duration?: boolean
           business_type?: string
           created_at?: string
           description?: string | null
@@ -772,7 +784,7 @@ export type Tables<
   schema: keyof DatabaseWithoutInternals
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R

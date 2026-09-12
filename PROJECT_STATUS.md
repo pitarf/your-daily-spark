@@ -41,6 +41,7 @@
 - Restrição no banco para impedir atendimento sem serviço e sem título personalizado.
 - Tema visual adaptativo na agenda pública conforme o tipo de negócio: barbearia, salão, nail designer, sobrancelhas, estética, clínica, consultório, tatuagem e outro.
 - Apresentação administrativa de atendimentos avulsos sem serviço, exibindo título personalizado, preço quando definido e duração no calendário Dia, Semana e Mês.
+- Painel do profissional exibe corretamente atendimentos avulsos sem serviço, usando o título personalizado e a duração cadastrada.
 
 ## Em Desenvolvimento 🟡
 - Refinamentos finais de UX e identidade visual por tipo de negócio.
