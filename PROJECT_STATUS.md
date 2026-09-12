@@ -22,10 +22,11 @@
 - Homepage comercial e fluxo público acessível.
 - Acessibilidade básica na agenda pública.
 - Perfil do estabelecimento: edição de dados comerciais e identidade, incluindo logo.
-- **CI de qualidade**: GitHub Actions executa TypeScript, ESLint e build de produção em PRs e pushes para `main`.
+- CI de qualidade: GitHub Actions executa TypeScript, ESLint e build de produção em PRs e pushes para `main`.
+- **Equipe**: administradores podem convidar profissionais por e-mail, vincular contas existentes e remover o acesso sem apagar a conta.
 
 ## Em Desenvolvimento 🟡
-- Equipe: convite e vínculo de profissionais a contas de usuário.
+- Restringir a visão do painel de profissionais à própria agenda e aos próprios dados quando o usuário tiver papel `professional`.
 
 ## Pendente 🔴
 - Login social.
