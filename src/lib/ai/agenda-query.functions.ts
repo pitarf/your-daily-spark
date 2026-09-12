@@ -21,7 +21,7 @@ const answerSchema = z.object({
   highlights: z.array(z.string().trim().min(1).max(240)).max(8),
   availability: z.array(z.object({
     label: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
-    url: z.string().url(),
+    url: z.string().min(1).max(500),
     professionalName: z.string().trim().max(160).optional(),
   })).max(12).optional(),
 });
@@ -395,20 +395,22 @@ async function answerAvailability(params: {
   const professionalLabel = resolvedProfessional.match?.name;
   const shown = filteredSlots.slice(0, 12).map((slot) => slot.label);
   const baseUrl = `/agenda/${encodeURIComponent(establishment.slug)}`;
-  const availability = filteredSlots.slice(0, 12).map((slot) => {
-    const params = new URLSearchParams({
-      serviceId: service?.id ?? "",
-      date: intent.date,
-      time: slot.label,
-    });
-    if (resolvedProfessional.match?.id) params.set("professionalId", resolvedProfessional.match.id);
+  const availability = service
+    ? filteredSlots.slice(0, 12).map((slot) => {
+        const params = new URLSearchParams({
+          serviceId: service.id,
+          date: intent.date,
+          time: slot.label,
+        });
+        if (resolvedProfessional.match?.id) params.set("professionalId", resolvedProfessional.match.id);
 
-    return {
-      label: slot.label,
-      url: `${baseUrl}?${params.toString()}`,
-      professionalName: resolvedProfessional.match?.name,
-    };
-  });
+        return {
+          label: slot.label,
+          url: `${baseUrl}?${params.toString()}`,
+          professionalName: resolvedProfessional.match?.name,
+        };
+      })
+    : undefined;
 
   if (shown.length === 0) {
     return {
@@ -427,7 +429,7 @@ async function answerAvailability(params: {
       `Duração: ${durationMinutes} minutos.`,
       professionalLabel ? `Profissional: ${professionalLabel}.` : "O horário pode ser atendido por um dos profissionais que realizam o serviço.",
     ],
-    availability,
+    ...(availability ? { availability } : {}),
   };
 }
 
