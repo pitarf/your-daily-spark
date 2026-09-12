@@ -246,3 +246,11 @@
 - **Testes realizados**: revisão estrutural da leitura e atualização do campo `allow_custom_duration`.
 - **Problemas encontrados**: nenhum novo bloqueador conhecido.
 - **Pendências relacionadas**: refinamentos gerais de UX, IA, Google, notificações reais, pagamentos e WhatsApp.
+
+## 2026-09-12 (23)
+- **Objetivo da alteração**: Atualizar a documentação principal para refletir o produto real Marca Minha Vez.
+- **Funcionalidades implementadas**: README reescrito com proposta do produto, arquitetura, rotas, desenvolvimento local, CI, documentação e próximas integrações.
+- **Arquivos alterados**: `README.md`, `CHANGELOG.md`.
+- **Testes realizados**: revisão manual da documentação contra a estrutura atual do repositório.
+- **Problemas encontrados**: README anterior ainda descrevia o projeto como "Your Daily Spark".
+- **Pendências relacionadas**: refinamentos gerais de UX, IA, Google, notificações reais, pagamentos e WhatsApp.
