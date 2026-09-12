@@ -22,13 +22,13 @@ import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedDashboardAppointmentsRouteImport } from './routes/_authenticated/dashboard/appointments'
 import { Route as AuthenticatedDashboardAssistantRouteImport } from './routes/_authenticated/dashboard/assistant'
 import { Route as AuthenticatedDashboardCustomersRouteImport } from './routes/_authenticated/dashboard/customers'
+import { Route as AuthenticatedDashboardIntegrationsRouteImport } from './routes/_authenticated/dashboard/integrations'
 import { Route as AuthenticatedDashboardPlansRouteImport } from './routes/_authenticated/dashboard/plans'
 import { Route as AuthenticatedDashboardProfessionalsRouteImport } from './routes/_authenticated/dashboard/professionals'
 import { Route as AuthenticatedDashboardProfileRouteImport } from './routes/_authenticated/dashboard/profile'
 import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard/services'
 import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard/settings'
 import { Route as AuthenticatedDashboardTeamRouteImport } from './routes/_authenticated/dashboard/team'
-import { Route as AuthenticatedDashboardIntegrationsRouteImport } from './routes/_authenticated/dashboard/integrations'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -99,6 +99,12 @@ const AuthenticatedDashboardCustomersRoute =
     path: '/customers',
     getParentRoute: () => AuthenticatedDashboardRouteRoute,
   } as any)
+const AuthenticatedDashboardIntegrationsRoute =
+  AuthenticatedDashboardIntegrationsRouteImport.update({
+    id: '/integrations',
+    path: '/integrations',
+    getParentRoute: () => AuthenticatedDashboardRouteRoute,
+  } as any)
 const AuthenticatedDashboardPlansRoute =
   AuthenticatedDashboardPlansRouteImport.update({
     id: '/plans',
@@ -135,12 +141,6 @@ const AuthenticatedDashboardTeamRoute =
     path: '/team',
     getParentRoute: () => AuthenticatedDashboardRouteRoute,
   } as any)
-const AuthenticatedDashboardIntegrationsRoute =
-  AuthenticatedDashboardIntegrationsRouteImport.update({
-    id: '/integrations',
-    path: '/integrations',
-    getParentRoute: () => AuthenticatedDashboardRouteRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -154,13 +154,13 @@ export interface FileRoutesByFullPath {
   '/dashboard/appointments': typeof AuthenticatedDashboardAppointmentsRoute
   '/dashboard/assistant': typeof AuthenticatedDashboardAssistantRoute
   '/dashboard/customers': typeof AuthenticatedDashboardCustomersRoute
+  '/dashboard/integrations': typeof AuthenticatedDashboardIntegrationsRoute
   '/dashboard/plans': typeof AuthenticatedDashboardPlansRoute
   '/dashboard/professionals': typeof AuthenticatedDashboardProfessionalsRoute
   '/dashboard/profile': typeof AuthenticatedDashboardProfileRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/team': typeof AuthenticatedDashboardTeamRoute
-  '/dashboard/integrations': typeof AuthenticatedDashboardIntegrationsRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
 }
 export interface FileRoutesByTo {
@@ -174,13 +174,13 @@ export interface FileRoutesByTo {
   '/dashboard/appointments': typeof AuthenticatedDashboardAppointmentsRoute
   '/dashboard/assistant': typeof AuthenticatedDashboardAssistantRoute
   '/dashboard/customers': typeof AuthenticatedDashboardCustomersRoute
+  '/dashboard/integrations': typeof AuthenticatedDashboardIntegrationsRoute
   '/dashboard/plans': typeof AuthenticatedDashboardPlansRoute
   '/dashboard/professionals': typeof AuthenticatedDashboardProfessionalsRoute
   '/dashboard/profile': typeof AuthenticatedDashboardProfileRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/team': typeof AuthenticatedDashboardTeamRoute
-  '/dashboard/integrations': typeof AuthenticatedDashboardIntegrationsRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
 }
 export interface FileRoutesById {
@@ -197,13 +197,13 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/appointments': typeof AuthenticatedDashboardAppointmentsRoute
   '/_authenticated/dashboard/assistant': typeof AuthenticatedDashboardAssistantRoute
   '/_authenticated/dashboard/customers': typeof AuthenticatedDashboardCustomersRoute
+  '/_authenticated/dashboard/integrations': typeof AuthenticatedDashboardIntegrationsRoute
   '/_authenticated/dashboard/plans': typeof AuthenticatedDashboardPlansRoute
   '/_authenticated/dashboard/professionals': typeof AuthenticatedDashboardProfessionalsRoute
   '/_authenticated/dashboard/profile': typeof AuthenticatedDashboardProfileRoute
   '/_authenticated/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/_authenticated/dashboard/team': typeof AuthenticatedDashboardTeamRoute
-  '/_authenticated/dashboard/integrations': typeof AuthenticatedDashboardIntegrationsRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
 }
 export interface FileRouteTypes {
@@ -220,13 +220,13 @@ export interface FileRouteTypes {
     | '/dashboard/appointments'
     | '/dashboard/assistant'
     | '/dashboard/customers'
+    | '/dashboard/integrations'
     | '/dashboard/plans'
     | '/dashboard/professionals'
     | '/dashboard/profile'
     | '/dashboard/services'
     | '/dashboard/settings'
     | '/dashboard/team'
-    | '/dashboard/integrations'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -240,13 +240,13 @@ export interface FileRouteTypes {
     | '/dashboard/appointments'
     | '/dashboard/assistant'
     | '/dashboard/customers'
+    | '/dashboard/integrations'
     | '/dashboard/plans'
     | '/dashboard/professionals'
     | '/dashboard/profile'
     | '/dashboard/services'
     | '/dashboard/settings'
     | '/dashboard/team'
-    | '/dashboard/integrations'
     | '/dashboard'
   id:
     | '__root__'
@@ -262,13 +262,13 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/appointments'
     | '/_authenticated/dashboard/assistant'
     | '/_authenticated/dashboard/customers'
+    | '/_authenticated/dashboard/integrations'
     | '/_authenticated/dashboard/plans'
     | '/_authenticated/dashboard/professionals'
     | '/_authenticated/dashboard/profile'
     | '/_authenticated/dashboard/services'
     | '/_authenticated/dashboard/settings'
     | '/_authenticated/dashboard/team'
-    | '/_authenticated/dashboard/integrations'
     | '/_authenticated/dashboard/'
   fileRoutesById: FileRoutesById
 }
@@ -285,26 +285,146 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': { id: '/'; path: '/'; fullPath: '/'; preLoaderRoute: typeof IndexRouteImport; parentRoute: typeof rootRouteImport }
-    '/_authenticated': { id: '/_authenticated'; path: ''; fullPath: '/'; preLoaderRoute: typeof AuthenticatedRouteRouteImport; parentRoute: typeof rootRouteImport }
-    '/auth': { id: '/auth'; path: '/auth'; fullPath: '/auth'; preLoaderRoute: typeof AuthRouteImport; parentRoute: typeof rootRouteImport }
-    '/reset-password': { id: '/reset-password'; path: '/reset-password'; fullPath: '/reset-password'; preLoaderRoute: typeof ResetPasswordRouteImport; parentRoute: typeof rootRouteImport }
-    '/schedule': { id: '/schedule'; path: '/schedule'; fullPath: '/schedule'; preLoaderRoute: typeof ScheduleRouteImport; parentRoute: typeof rootRouteImport }
-    '/_authenticated/dashboard': { id: '/_authenticated/dashboard'; path: '/dashboard'; fullPath: '/dashboard'; preLoaderRoute: typeof AuthenticatedDashboardRouteRouteImport; parentRoute: typeof AuthenticatedRouteRoute }
-    '/agenda/$slug': { id: '/agenda/$slug'; path: '/agenda/$slug'; fullPath: '/agenda/$slug'; preLoaderRoute: typeof AgendaSlugRouteImport; parentRoute: typeof rootRouteImport }
-    '/establishment/plans': { id: '/establishment/plans'; path: '/establishment/plans'; fullPath: '/establishment/plans'; preLoaderRoute: typeof EstablishmentPlansRouteImport; parentRoute: typeof rootRouteImport }
-    '/establishment/settings': { id: '/establishment/settings'; path: '/establishment/settings'; fullPath: '/establishment/settings'; preLoaderRoute: typeof EstablishmentSettingsRouteImport; parentRoute: typeof rootRouteImport }
-    '/_authenticated/dashboard/': { id: '/_authenticated/dashboard/'; path: '/'; fullPath: '/dashboard/'; preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport; parentRoute: typeof AuthenticatedDashboardRouteRoute }
-    '/_authenticated/dashboard/appointments': { id: '/_authenticated/dashboard/appointments'; path: '/appointments'; fullPath: '/dashboard/appointments'; preLoaderRoute: typeof AuthenticatedDashboardAppointmentsRouteImport; parentRoute: typeof AuthenticatedDashboardRouteRoute }
-    '/_authenticated/dashboard/assistant': { id: '/_authenticated/dashboard/assistant'; path: '/assistant'; fullPath: '/dashboard/assistant'; preLoaderRoute: typeof AuthenticatedDashboardAssistantRouteImport; parentRoute: typeof AuthenticatedDashboardRouteRoute }
-    '/_authenticated/dashboard/customers': { id: '/_authenticated/dashboard/customers'; path: '/customers'; fullPath: '/dashboard/customers'; preLoaderRoute: typeof AuthenticatedDashboardCustomersRouteImport; parentRoute: typeof AuthenticatedDashboardRouteRoute }
-    '/_authenticated/dashboard/plans': { id: '/_authenticated/dashboard/plans'; path: '/plans'; fullPath: '/dashboard/plans'; preLoaderRoute: typeof AuthenticatedDashboardPlansRouteImport; parentRoute: typeof AuthenticatedDashboardRouteRoute }
-    '/_authenticated/dashboard/professionals': { id: '/_authenticated/dashboard/professionals'; path: '/professionals'; fullPath: '/dashboard/professionals'; preLoaderRoute: typeof AuthenticatedDashboardProfessionalsRouteImport; parentRoute: typeof AuthenticatedDashboardRouteRoute }
-    '/_authenticated/dashboard/profile': { id: '/_authenticated/dashboard/profile'; path: '/profile'; fullPath: '/dashboard/profile'; preLoaderRoute: typeof AuthenticatedDashboardProfileRouteImport; parentRoute: typeof AuthenticatedDashboardRouteRoute }
-    '/_authenticated/dashboard/services': { id: '/_authenticated/dashboard/services'; path: '/services'; fullPath: '/dashboard/services'; preLoaderRoute: typeof AuthenticatedDashboardServicesRouteImport; parentRoute: typeof AuthenticatedDashboardRouteRoute }
-    '/_authenticated/dashboard/settings': { id: '/_authenticated/dashboard/settings'; path: '/settings'; fullPath: '/dashboard/settings'; preLoaderRoute: typeof AuthenticatedDashboardSettingsRouteImport; parentRoute: typeof AuthenticatedDashboardRouteRoute }
-    '/_authenticated/dashboard/team': { id: '/_authenticated/dashboard/team'; path: '/team'; fullPath: '/dashboard/team'; preLoaderRoute: typeof AuthenticatedDashboardTeamRouteImport; parentRoute: typeof AuthenticatedDashboardRouteRoute }
-    '/_authenticated/dashboard/integrations': { id: '/_authenticated/dashboard/integrations'; path: '/integrations'; fullPath: '/dashboard/integrations'; preLoaderRoute: typeof AuthenticatedDashboardIntegrationsRouteImport; parentRoute: typeof AuthenticatedDashboardRouteRoute }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/schedule': {
+      id: '/schedule'
+      path: '/schedule'
+      fullPath: '/schedule'
+      preLoaderRoute: typeof ScheduleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/agenda/$slug': {
+      id: '/agenda/$slug'
+      path: '/agenda/$slug'
+      fullPath: '/agenda/$slug'
+      preLoaderRoute: typeof AgendaSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/establishment/plans': {
+      id: '/establishment/plans'
+      path: '/establishment/plans'
+      fullPath: '/establishment/plans'
+      preLoaderRoute: typeof EstablishmentPlansRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/establishment/settings': {
+      id: '/establishment/settings'
+      path: '/establishment/settings'
+      fullPath: '/establishment/settings'
+      preLoaderRoute: typeof EstablishmentSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/dashboard/': {
+      id: '/_authenticated/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
+    '/_authenticated/dashboard/appointments': {
+      id: '/_authenticated/dashboard/appointments'
+      path: '/appointments'
+      fullPath: '/dashboard/appointments'
+      preLoaderRoute: typeof AuthenticatedDashboardAppointmentsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
+    '/_authenticated/dashboard/assistant': {
+      id: '/_authenticated/dashboard/assistant'
+      path: '/assistant'
+      fullPath: '/dashboard/assistant'
+      preLoaderRoute: typeof AuthenticatedDashboardAssistantRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
+    '/_authenticated/dashboard/customers': {
+      id: '/_authenticated/dashboard/customers'
+      path: '/customers'
+      fullPath: '/dashboard/customers'
+      preLoaderRoute: typeof AuthenticatedDashboardCustomersRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
+    '/_authenticated/dashboard/integrations': {
+      id: '/_authenticated/dashboard/integrations'
+      path: '/integrations'
+      fullPath: '/dashboard/integrations'
+      preLoaderRoute: typeof AuthenticatedDashboardIntegrationsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
+    '/_authenticated/dashboard/plans': {
+      id: '/_authenticated/dashboard/plans'
+      path: '/plans'
+      fullPath: '/dashboard/plans'
+      preLoaderRoute: typeof AuthenticatedDashboardPlansRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
+    '/_authenticated/dashboard/professionals': {
+      id: '/_authenticated/dashboard/professionals'
+      path: '/professionals'
+      fullPath: '/dashboard/professionals'
+      preLoaderRoute: typeof AuthenticatedDashboardProfessionalsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
+    '/_authenticated/dashboard/profile': {
+      id: '/_authenticated/dashboard/profile'
+      path: '/profile'
+      fullPath: '/dashboard/profile'
+      preLoaderRoute: typeof AuthenticatedDashboardProfileRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
+    '/_authenticated/dashboard/services': {
+      id: '/_authenticated/dashboard/services'
+      path: '/services'
+      fullPath: '/dashboard/services'
+      preLoaderRoute: typeof AuthenticatedDashboardServicesRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
+    '/_authenticated/dashboard/settings': {
+      id: '/_authenticated/dashboard/settings'
+      path: '/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof AuthenticatedDashboardSettingsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
+    '/_authenticated/dashboard/team': {
+      id: '/_authenticated/dashboard/team'
+      path: '/team'
+      fullPath: '/dashboard/team'
+      preLoaderRoute: typeof AuthenticatedDashboardTeamRouteImport
+      parentRoute: typeof AuthenticatedDashboardRouteRoute
+    }
   }
 }
 
@@ -312,13 +432,13 @@ interface AuthenticatedDashboardRouteRouteChildren {
   AuthenticatedDashboardAppointmentsRoute: typeof AuthenticatedDashboardAppointmentsRoute
   AuthenticatedDashboardAssistantRoute: typeof AuthenticatedDashboardAssistantRoute
   AuthenticatedDashboardCustomersRoute: typeof AuthenticatedDashboardCustomersRoute
+  AuthenticatedDashboardIntegrationsRoute: typeof AuthenticatedDashboardIntegrationsRoute
   AuthenticatedDashboardPlansRoute: typeof AuthenticatedDashboardPlansRoute
   AuthenticatedDashboardProfessionalsRoute: typeof AuthenticatedDashboardProfessionalsRoute
   AuthenticatedDashboardProfileRoute: typeof AuthenticatedDashboardProfileRoute
   AuthenticatedDashboardServicesRoute: typeof AuthenticatedDashboardServicesRoute
   AuthenticatedDashboardSettingsRoute: typeof AuthenticatedDashboardSettingsRoute
   AuthenticatedDashboardTeamRoute: typeof AuthenticatedDashboardTeamRoute
-  AuthenticatedDashboardIntegrationsRoute: typeof AuthenticatedDashboardIntegrationsRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
 }
 
@@ -328,6 +448,8 @@ const AuthenticatedDashboardRouteRouteChildren: AuthenticatedDashboardRouteRoute
       AuthenticatedDashboardAppointmentsRoute,
     AuthenticatedDashboardAssistantRoute: AuthenticatedDashboardAssistantRoute,
     AuthenticatedDashboardCustomersRoute: AuthenticatedDashboardCustomersRoute,
+    AuthenticatedDashboardIntegrationsRoute:
+      AuthenticatedDashboardIntegrationsRoute,
     AuthenticatedDashboardPlansRoute: AuthenticatedDashboardPlansRoute,
     AuthenticatedDashboardProfessionalsRoute:
       AuthenticatedDashboardProfessionalsRoute,
@@ -335,8 +457,6 @@ const AuthenticatedDashboardRouteRouteChildren: AuthenticatedDashboardRouteRoute
     AuthenticatedDashboardServicesRoute: AuthenticatedDashboardServicesRoute,
     AuthenticatedDashboardSettingsRoute: AuthenticatedDashboardSettingsRoute,
     AuthenticatedDashboardTeamRoute: AuthenticatedDashboardTeamRoute,
-    AuthenticatedDashboardIntegrationsRoute:
-      AuthenticatedDashboardIntegrationsRoute,
     AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
   }
 
