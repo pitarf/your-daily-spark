@@ -164,3 +164,15 @@
 - **Testes realizados**: revisão estrutural da integração entre loader, parâmetros de rota, motor de disponibilidade e criação de agendamento; build/typecheck automático segue indisponível sem pipeline configurado.
 - **Problemas encontrados**: nenhum conhecido nesta etapa.
 - **Pendências relacionadas**: atualizar os links internos do painel para preferirem `/agenda/{slug}`; convite/vínculo de equipe; login social; IA; notificações; pagamentos e WhatsApp.
+
+## 2026-09-12 (11)
+- **Objetivo da alteração**: Adicionar uma verificação contínua de qualidade ao repositório para detectar regressões sem depender do Lovable.
+- **Funcionalidades implementadas**:
+  - GitHub Actions em `.github/workflows/ci.yml`.
+  - Executa em pull requests e em pushes para `main`.
+  - Instala dependências com Bun usando `bun.lock`.
+  - Executa TypeScript (`tsc --noEmit`), ESLint e build de produção.
+- **Arquivos alterados**: `.github/workflows/ci.yml`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
+- **Testes realizados**: pipeline configurado; a execução efetiva será validada pelo GitHub Actions no próximo push/PR.
+- **Problemas encontrados**: nenhum conhecido nesta etapa.
+- **Pendências relacionadas**: equipe; login social; IA; notificações; pagamentos e WhatsApp.
