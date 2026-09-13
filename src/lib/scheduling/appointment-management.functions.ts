@@ -9,6 +9,7 @@ import {
   type WeeklyScheduleInput,
 } from "@/lib/scheduling/availability";
 import { dayRangeUtc } from "@/lib/scheduling/format";
+import { signManagementToken, verifyManagementToken } from "@/lib/security/management-token.server";
 
 const managementTokenInput = z.object({
   appointmentId: z.string().uuid(),
@@ -37,25 +38,6 @@ const rescheduleInput = z.object({
 
 function normalizePhone(value: string) {
   return value.replace(/\D/g, "");
-}
-
-function getSecret() {
-  const secret = process.env["SUPABASE_SERVICE_ROLE_KEY"];
-  if (!secret) throw new Error("SUPABASE_SERVICE_ROLE_KEY is required for appointment management tokens.");
-  return secret;
-}
-
-async function signToken(appointmentId: string, customerPhone: string, expiresAtMs: number) {
-  const { createHmac } = await import("node:crypto");
-  const payload = `${appointmentId}:${expiresAtMs}:${normalizePhone(customerPhone)}`;
-  return createHmac("sha256", getSecret()).update(payload).digest("base64url");
-}
-
-async function verifyToken(appointmentId: string, customerPhone: string, token: string) {
-  const [expiryRaw, signature] = token.split(".");
-  const expiresAtMs = Number(expiryRaw);
-  if (!Number.isSafeInteger(expiresAtMs) || !signature || expiresAtMs <= Date.now()) return false;
-  return signature === await signToken(appointmentId, customerPhone, expiresAtMs);
 }
 
 async function loadAppointmentForManagement(appointmentId: string) {
@@ -213,7 +195,7 @@ export const findCustomerAppointments = createServerFn({ method: "POST" })
     return Promise.all((appointments ?? []).map(async (appointment) => {
       const loaded = await loadAppointmentForManagement(appointment.id);
       const expiresAtMs = new Date(loaded.appointment.ends_at).getTime() + 30 * 24 * 60 * 60 * 1000;
-      const token = `${expiresAtMs}.${await signToken(appointment.id, loaded.customer.phone!, expiresAtMs)}`;
+      const token = `${expiresAtMs}.${signManagementToken(appointment.id, loaded.customer.phone!, expiresAtMs)}`;
       return {
         id: appointment.id,
         customerName: loaded.customer.name,
@@ -236,7 +218,7 @@ export const getAppointmentManagementUrl = createServerFn({ method: "POST" })
     if (loaded.establishment.slug !== data.slug) throw new Error("Agendamento inválido para este estabelecimento.");
     if (normalizePhone(customerPhone) !== normalizePhone(data.customerPhone)) throw new Error("Telefone não confere com o agendamento.");
     const expiresAtMs = new Date(loaded.appointment.ends_at).getTime() + 30 * 24 * 60 * 60 * 1000;
-    const token = `${expiresAtMs}.${await signToken(data.appointmentId, customerPhone, expiresAtMs)}`;
+    const token = `${expiresAtMs}.${signManagementToken(data.appointmentId, customerPhone, expiresAtMs)}`;
     return {
       path: `/agenda/${encodeURIComponent(data.slug)}?manage=${encodeURIComponent(data.appointmentId)}&token=${encodeURIComponent(token)}`,
       expiresAt: new Date(expiresAtMs).toISOString(),
@@ -249,7 +231,7 @@ export const getManagedAppointment = createServerFn({ method: "GET" })
     const loaded = await loadAppointmentForManagement(data.appointmentId);
     const customerPhone = loaded.customer.phone;
     if (!customerPhone) throw new Error("Não foi possível validar o telefone do cliente.");
-    const valid = await verifyToken(data.appointmentId, customerPhone, data.token);
+    const valid = verifyManagementToken(data.appointmentId, customerPhone, data.token);
     if (!valid) throw new Error("Link de gerenciamento inválido ou expirado.");
     const durationMinutes = durationForAppointment(loaded.appointment, loaded.service);
     return {
@@ -278,7 +260,7 @@ export const getManagedRescheduleAvailability = createServerFn({ method: "POST" 
     const loaded = await loadAppointmentForManagement(data.appointmentId);
     const customerPhone = loaded.customer.phone;
     if (!customerPhone) throw new Error("Não foi possível validar o telefone do cliente.");
-    const valid = await verifyToken(data.appointmentId, customerPhone, data.token);
+    const valid = verifyManagementToken(data.appointmentId, customerPhone, data.token);
     if (!valid) throw new Error("Link de gerenciamento inválido ou expirado.");
     const result = await getRescheduleAvailability(data.appointmentId, data.date);
     return result.slots;
@@ -290,7 +272,7 @@ export const rescheduleManagedAppointment = createServerFn({ method: "POST" })
     const loaded = await loadAppointmentForManagement(data.appointmentId);
     const customerPhone = loaded.customer.phone;
     if (!customerPhone) throw new Error("Não foi possível validar o telefone do cliente.");
-    const valid = await verifyToken(data.appointmentId, customerPhone, data.token);
+    const valid = verifyManagementToken(data.appointmentId, customerPhone, data.token);
     if (!valid) throw new Error("Link de gerenciamento inválido ou expirado.");
     if (!canCustomerChangeAppointment(loaded.appointment)) throw new Error("Este agendamento não pode mais ser reagendado.");
 
@@ -324,7 +306,7 @@ export const cancelManagedAppointment = createServerFn({ method: "POST" })
     const loaded = await loadAppointmentForManagement(data.appointmentId);
     const customerPhone = loaded.customer.phone;
     if (!customerPhone) throw new Error("Não foi possível validar o telefone do cliente.");
-    const valid = await verifyToken(data.appointmentId, customerPhone, data.token);
+    const valid = verifyManagementToken(data.appointmentId, customerPhone, data.token);
     if (!valid) throw new Error("Link de gerenciamento inválido ou expirado.");
     if (!["pending", "confirmed"].includes(loaded.appointment.status)) throw new Error("Este agendamento não pode mais ser cancelado.");
     if (new Date(loaded.appointment.starts_at).getTime() <= Date.now()) throw new Error("Não é possível cancelar um atendimento que já começou.");
