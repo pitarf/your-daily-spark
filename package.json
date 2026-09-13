@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
+    "typecheck": "tsc --noEmit",
     "notifications:dispatch": "bun scripts/dispatch-notifications.ts"
   },
   "overrides": {
