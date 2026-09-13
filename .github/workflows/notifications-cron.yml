@@ -29,10 +29,13 @@ jobs:
           fi
 
           status=$(curl -sS -o response.json -w '%{http_code}' \
+            --retry 3 \
+            --retry-delay 5 \
+            --connect-timeout 10 \
+            --max-time 120 \
             -X POST \
             -H "x-cron-secret: ${CRON_SECRET}" \
             -H "Content-Type: application/json" \
-            --max-time 120 \
             "${ENDPOINT}")
 
           echo "HTTP ${status}"
@@ -43,7 +46,8 @@ jobs:
           fi
 
           python3 - <<'PY'
-          import json, sys
+          import json
+          import sys
 
           with open("response.json", encoding="utf-8") as handle:
               raw = handle.read()
@@ -54,6 +58,15 @@ jobs:
               print("Resposta inesperada do endpoint.")
               sys.exit(1)
 
-          summary = {key: payload.get(key) for key in ("processed", "sent", "failed", "skipped")}
-          print("Resumo:", json.dumps(summary))
+          required = ("processed", "sent", "failed", "skipped")
+          if any(not isinstance(payload.get(key), int) or payload.get(key) < 0 for key in required):
+              print("Resumo de processamento inválido.")
+              sys.exit(1)
+
+          summary = {key: payload[key] for key in required}
+          print("Resumo:", json.dumps(summary, ensure_ascii=False))
+
+          if payload["failed"] > 0:
+              print("A fila teve notificações com falha de entrega.")
+              sys.exit(1)
           PY
