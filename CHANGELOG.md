@@ -432,3 +432,16 @@
 - **Testes realizados**: revisão estrutural da integração entre a resposta da IA, parâmetros da rota pública e seleção automática de horário; validação de esquema JSON da resposta.
 - **Problemas encontrados**: o primeiro formato de validação de URL rejeitava links relativos; corrigido para aceitar caminhos internos do próprio estabelecimento.
 - **Pendências relacionadas**: validação end-to-end com secrets de produção, scheduler Brevo, Google, WhatsApp/SMS, pagamentos e refinamentos gerais de UX.
+
+## 2026-09-13 (38)
+- **Objetivo da alteração**: Automatizar o processamento da fila de notificações Brevo em produção por scheduler externo, sem execução manual e sem expor secrets.
+- **Funcionalidades implementadas**:
+  - Nova rota `POST /api/public/hooks/dispatch-notifications` que executa `dispatchDueNotifications`.
+  - Autenticação por header `x-cron-secret` (ou `Authorization: Bearer`) validado contra `LOVABLE_CRON_SECRET` em comparação de tempo constante.
+  - Resposta de sucesso limitada ao resumo `processed/sent/failed/skipped`, sem dados de clientes; erros passam por `toSafeIntegrationError` antes de sair.
+  - Parâmetro opcional `limit` com padrão 25 e teto 100; `bun run notifications:dispatch` permanece funcionando com a mesma rotina.
+  - Documentação com endpoint, header e exemplo de chamada por cron externo.
+- **Arquivos alterados**: `src/routes/api/public/hooks/dispatch-notifications.ts`, `docs/notifications.md`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
+- **Testes realizados**: chamada sem header e com header inválido retornaram 401 sem tocar na fila; chamada autenticada retornou 200 com o resumo; typecheck, lint e build sem erros.
+- **Problemas encontrados**: o servidor de desenvolvimento só passou a enxergar a nova secret após reinício do processo.
+- **Pendências relacionadas**: configurar o scheduler externo apontando para a URL de produção, Google Login, WhatsApp/SMS e pagamentos.
