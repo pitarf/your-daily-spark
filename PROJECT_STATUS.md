@@ -14,6 +14,7 @@
 - Agendamento manual pelo administrador.
 - Agenda administrativa Dia, Semana e Mês.
 - Bloqueios e gestão de status.
+- Busca e filtros de agenda administrativa por cliente, telefone, serviço, status e profissional.
 
 ### Cliente
 - Cadastro e login por e-mail.
@@ -24,7 +25,8 @@
 - Link de gerenciamento após a confirmação.
 - Links de gerenciamento também nos e-mails de confirmação e lembrete.
 - Exportação do agendamento em `.ics`.
-- Rotação de segredo de assinatura preparada: novos links usam `NOTIFICATION_SIGNING_SECRET` quando configurado e tokens legados continuam verificáveis durante a transição.
+- Rotação de segredo de assinatura: novos links usam `NOTIFICATION_SIGNING_SECRET` quando configurado e tokens legados continuam verificáveis durante a transição.
+- Busca e filtros de clientes por nome, telefone, e-mail e plano.
 
 ### Estabelecimento e equipe
 - Onboarding.
@@ -59,12 +61,19 @@
 - O endpoint do scheduler aceita somente `POST`.
 - Smoke test de produção verifica homepage e proteção do scheduler.
 
-### Qualidade, operação e documentação
+### SEO, segurança e operação
+- Canonical URL por agenda pública.
+- Metadados Open Graph e Twitter para compartilhamento.
+- `robots=index,follow` nas agendas públicas.
+- `SECURITY.md` com política de secrets e resposta a incidentes.
+- `docs/production-checklist.md` para preparação de produção.
+- Dependabot para atualizações semanais.
+- Nenhum valor de secret deve ser versionado.
+
+### Qualidade e documentação
 - CI com TypeScript, ESLint e build de produção.
-- Dependabot configurado para atualizações semanais de dependências npm e GitHub Actions.
-- `CHANGELOG.md` mantido como histórico permanente.
+- `CHANGELOG.md` mantido como histórico permanente e append-only.
 - `README.md` atualizado para o produto Marca Minha Vez.
-- `SECURITY.md` e `docs/production-checklist.md` adicionados.
 - `docs/notifications.md` documenta Brevo, scheduler e rotação do segredo de gerenciamento.
 
 ## Em Desenvolvimento 🟡
