@@ -46,10 +46,10 @@ export function BookingPage({
 }: {
   data: EstablishmentSchedulingData;
   slug: string;
-  initialServiceId?: string;
-  initialProfessionalId?: string;
-  initialDate?: string;
-  initialSlotLabel?: string;
+  initialServiceId?: string | undefined;
+  initialProfessionalId?: string | undefined;
+  initialDate?: string | undefined;
+  initialSlotLabel?: string | undefined;
 }) {
   const fetchAvailability = useServerFn(getAvailability);
   const submitAppointment = useServerFn(createAppointment);

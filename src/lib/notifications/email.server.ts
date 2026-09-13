@@ -1,3 +1,5 @@
+import { describeHttpFailure, redactSecrets } from "@/lib/integrations/secret-safe.server";
+
 export type NotificationEmail = {
   to: string;
   subject: string;
@@ -42,8 +44,10 @@ export async function sendNotificationEmail(message: NotificationEmail) {
   });
 
   if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`Brevo rejected the notification (${response.status}): ${body.slice(0, 300)}`);
+    const body = await response.text().catch(() => "");
+    throw new Error(
+      `${describeHttpFailure("A Brevo", response.status)} ${redactSecrets(body.slice(0, 200))}`.trim(),
+    );
   }
 
   return (await response.json()) as { messageId?: string };

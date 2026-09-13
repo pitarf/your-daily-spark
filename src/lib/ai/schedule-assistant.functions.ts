@@ -1,3 +1,4 @@
+import { describeHttpFailure, redactSecrets } from "@/lib/integrations/secret-safe.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -40,7 +41,7 @@ const DAY_NAMES = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "
 
 function getGeminiConfig() {
   const apiKey = process.env["GEMINI_API_KEY"];
-  const model = process.env["GEMINI_SCHEDULE_MODEL"] ?? "gemini-2.5-flash-lite";
+  const model = process.env["GEMINI_SCHEDULE_MODEL"] ?? "gemini-3.5-flash-lite";
 
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY ainda não foi configurada no ambiente.");
@@ -136,7 +137,7 @@ async function callGemini(prompt: string, currentSchedule?: string) {
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Falha ao consultar o assistente (${response.status}). ${body.slice(0, 300)}`);
+    throw new Error(`${describeHttpFailure("O Gemini", response.status)} ${redactSecrets(body.slice(0, 200))}`.trim());
   }
 
   const payload = (await response.json()) as {
