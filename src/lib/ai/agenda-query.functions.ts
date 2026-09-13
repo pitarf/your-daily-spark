@@ -1,3 +1,4 @@
+import { describeHttpFailure, redactSecrets } from "@/lib/integrations/secret-safe.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
@@ -178,7 +179,7 @@ async function parseQuestionWithGemini(params: {
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Falha ao interpretar a pergunta (${response.status}). ${body.slice(0, 300)}`);
+    throw new Error(`${describeHttpFailure("O Gemini", response.status)} ${redactSecrets(body.slice(0, 200))}`.trim());
   }
 
   const payload = (await response.json()) as {
@@ -480,7 +481,7 @@ async function askGemini(question: string, context: string) {
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Falha ao consultar o assistente (${response.status}). ${body.slice(0, 300)}`);
+    throw new Error(`${describeHttpFailure("O Gemini", response.status)} ${redactSecrets(body.slice(0, 200))}`.trim());
   }
 
   const payload = (await response.json()) as {
