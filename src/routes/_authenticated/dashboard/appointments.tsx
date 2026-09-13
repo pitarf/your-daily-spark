@@ -69,6 +69,9 @@ function AppointmentsPage() {
   const [blockReason, setBlockReason] = useState("");
   const [blockError, setBlockError] = useState<string | null>(null);
   const [manualOpen, setManualOpen] = useState(false);
+  const [appointmentSearch, setAppointmentSearch] = useState("");
+  const [appointmentStatusFilter, setAppointmentStatusFilter] = useState("all");
+  const [appointmentProfessionalFilter, setAppointmentProfessionalFilter] = useState("all");
 
   const period = periodRangeUtc(view, date, tz);
   const dates = periodDates(view, date, tz);
@@ -199,7 +202,30 @@ function AppointmentsPage() {
   const professionals = professionalsQuery.data ?? [];
   const rows = appointmentsQuery.data ?? [];
   const blocks = blocksQuery.data ?? [];
-  const occupiedCount = useMemo(() => rows.filter((row) => row.status !== "cancelled").length, [rows]);
+
+  const filteredRows = useMemo(() => {
+    const query = appointmentSearch.trim().toLocaleLowerCase("pt-BR");
+    return rows.filter((row) => {
+      const matchesSearch =
+        query.length === 0 ||
+        [
+          row.customers?.name,
+          row.customers?.phone,
+          row.services?.name,
+          row.custom_title,
+          row.professionals?.name,
+        ]
+          .filter(Boolean)
+          .some((value) => value!.toLocaleLowerCase("pt-BR").includes(query));
+      const matchesStatus = appointmentStatusFilter === "all" || row.status === appointmentStatusFilter;
+      const matchesProfessional =
+        appointmentProfessionalFilter === "all" ||
+        (row.professionals?.name && professionals.find((professional) => professional.id === appointmentProfessionalFilter)?.name === row.professionals.name);
+      return matchesSearch && matchesStatus && matchesProfessional;
+    });
+  }, [appointmentProfessionalFilter, appointmentSearch, appointmentStatusFilter, professionals, rows]);
+
+  const occupiedCount = useMemo(() => filteredRows.filter((row) => row.status !== "cancelled").length, [filteredRows]);
 
   function movePeriod(delta: number) {
     setDate(view === "day" ? addCalendarDays(date, delta) : view === "week" ? addCalendarDays(date, delta * 7) : addCalendarMonths(date, delta));
@@ -211,14 +237,14 @@ function AppointmentsPage() {
 
   const grouped = useMemo(() => {
     const map = new Map<string, Row[]>();
-    for (const row of rows) {
+    for (const row of filteredRows) {
       const key = dateKeyInTimezone(row.starts_at, tz);
       const current = map.get(key) ?? [];
       current.push(row);
       map.set(key, current);
     }
     return map;
-  }, [rows, tz]);
+  }, [filteredRows, tz]);
 
   const title = getPeriodTitle(view, date, tz);
 
@@ -228,7 +254,7 @@ function AppointmentsPage() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Gestão de agenda</p>
           <h1 className="mt-1 text-2xl font-bold text-foreground">Agenda</h1>
-          <p className="text-sm text-muted-foreground">{occupiedCount} atendimento(s) ocupando o período.</p>
+          <p className="text-sm text-muted-foreground">{occupiedCount} atendimento(s) ocupando o período{filteredRows.length !== rows.length ? ` · ${filteredRows.length} exibido(s)` : ""}.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button type="button" onClick={() => movePeriod(-1)} className={navButton}>Anterior</button>
@@ -262,8 +288,61 @@ function AppointmentsPage() {
         </div>
       </div>
 
-      {view === "day" ? (
-        <DayView rows={rows} tz={tz} updateStatus={updateStatus.mutate} />
+      <section className="grid gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-[1fr_190px_220px_auto]">
+        <label className="space-y-1 text-sm">
+          <span className="font-medium text-foreground">Buscar atendimento</span>
+          <input
+            type="search"
+            value={appointmentSearch}
+            onChange={(event) => setAppointmentSearch(event.target.value)}
+            placeholder="Cliente, telefone, serviço ou profissional"
+            className="w-full rounded-md border border-input bg-background px-3 py-2"
+          />
+        </label>
+        <label className="space-y-1 text-sm">
+          <span className="font-medium text-foreground">Status</span>
+          <select
+            value={appointmentStatusFilter}
+            onChange={(event) => setAppointmentStatusFilter(event.target.value)}
+            className="w-full rounded-md border border-input bg-background px-3 py-2"
+          >
+            <option value="all">Todos</option>
+            {STATUSES.map((status) => <option key={status} value={status}>{STATUS_LABEL[status]}</option>)}
+          </select>
+        </label>
+        <label className="space-y-1 text-sm">
+          <span className="font-medium text-foreground">Profissional</span>
+          <select
+            value={appointmentProfessionalFilter}
+            onChange={(event) => setAppointmentProfessionalFilter(event.target.value)}
+            className="w-full rounded-md border border-input bg-background px-3 py-2"
+          >
+            <option value="all">Todos</option>
+            {professionals.map((professional) => <option key={professional.id} value={professional.id}>{professional.name}</option>)}
+          </select>
+        </label>
+        <div className="flex items-end">
+          <button
+            type="button"
+            onClick={() => {
+              setAppointmentSearch("");
+              setAppointmentStatusFilter("all");
+              setAppointmentProfessionalFilter("all");
+            }}
+            className="w-full rounded-md border border-input px-4 py-2 text-sm sm:w-auto"
+          >
+            Limpar filtros
+          </button>
+        </div>
+      </section>
+
+      {filteredRows.length === 0 ? (
+        <section className="rounded-xl border border-border bg-card p-8 text-center">
+          <p className="font-medium text-foreground">Nenhum atendimento encontrado.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Ajuste os filtros ou escolha outro período.</p>
+        </section>
+      ) : view === "day" ? (
+        <DayView rows={filteredRows} tz={tz} updateStatus={updateStatus.mutate} />
       ) : view === "week" ? (
         <WeekView dates={dates} grouped={grouped} tz={tz} />
       ) : (
