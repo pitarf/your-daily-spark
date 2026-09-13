@@ -71,3 +71,9 @@ O dashboard também possui uma área de Integrações que verifica se os secrets
 ## Limitação atual
 
 A entrega implementada nesta etapa é somente por e-mail via Brevo. WhatsApp oficial e SMS continuam como integrações futuras, sem alterar o formato da fila persistente.
+
+## Scheduler automático no GitHub Actions
+
+O repositório já inclui `.github/workflows/notifications-cron.yml`, que roda a cada 5 minutos (e também pode ser disparado manualmente) e faz `POST` para o endpoint de produção com o header `x-cron-secret`. O workflow falha quando a resposta não for 2xx e registra somente o resumo seguro (`processed`, `sent`, `failed`, `skipped`). Nenhuma chave aparece no YAML.
+
+Único passo manual: cadastrar o secret `LOVABLE_CRON_SECRET` em **Settings → Secrets and variables → Actions** do repositório GitHub, com exatamente o mesmo valor usado no ambiente de produção. Sem esse secret o workflow falha logo no início com uma mensagem explícita.
