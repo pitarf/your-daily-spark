@@ -27,7 +27,7 @@ function parseLimit(raw: string | null) {
 }
 
 async function handle(request: Request) {
-  const configured = process.env["LOVABLE_CRON_SECRET"];
+  const configured = process.env["NOTIFICATIONS_CRON_SECRET"];
   if (!configured) return unauthorized();
 
   const provided =
