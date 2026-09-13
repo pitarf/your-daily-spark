@@ -1,0 +1,59 @@
+name: Notifications cron
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: notifications-cron
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch due notifications
+        env:
+          CRON_SECRET: ${{ secrets.LOVABLE_CRON_SECRET }}
+          ENDPOINT: https://marca-minha-vez.lovable.app/api/public/hooks/dispatch-notifications?limit=25
+        run: |
+          set -euo pipefail
+
+          if [ -z "${CRON_SECRET}" ]; then
+            echo "Secret LOVABLE_CRON_SECRET não está configurada no repositório."
+            exit 1
+          fi
+
+          status=$(curl -sS -o response.json -w '%{http_code}' \
+            -X POST \
+            -H "x-cron-secret: ${CRON_SECRET}" \
+            -H "Content-Type: application/json" \
+            --max-time 120 \
+            "${ENDPOINT}")
+
+          echo "HTTP ${status}"
+
+          if [ "${status}" -lt 200 ] || [ "${status}" -ge 300 ]; then
+            echo "Falha ao processar a fila de notificações."
+            exit 1
+          fi
+
+          python3 - <<'PY'
+          import json, sys
+
+          with open("response.json", encoding="utf-8") as handle:
+              raw = handle.read()
+
+          try:
+              payload = json.loads(raw)
+          except json.JSONDecodeError:
+              print("Resposta inesperada do endpoint.")
+              sys.exit(1)
+
+          summary = {key: payload.get(key) for key in ("processed", "sent", "failed", "skipped")}
+          print("Resumo:", json.dumps(summary))
+          PY

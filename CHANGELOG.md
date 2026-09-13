@@ -445,3 +445,16 @@
 - **Testes realizados**: chamada sem header e com header inválido retornaram 401 sem tocar na fila; chamada autenticada retornou 200 com o resumo; typecheck, lint e build sem erros.
 - **Problemas encontrados**: o servidor de desenvolvimento só passou a enxergar a nova secret após reinício do processo.
 - **Pendências relacionadas**: configurar o scheduler externo apontando para a URL de produção, Google Login, WhatsApp/SMS e pagamentos.
+
+## 2026-09-13 (39)
+- **Objetivo da alteração**: Deixar o processamento da fila de notificações rodando sozinho por um scheduler gratuito, sem execução manual.
+- **Funcionalidades implementadas**:
+  - Novo workflow `.github/workflows/notifications-cron.yml` executando a cada 5 minutos, com disparo manual opcional e concorrência limitada a uma execução por vez.
+  - O workflow faz `POST` para `/api/public/hooks/dispatch-notifications?limit=25` usando o secret de repositório `LOVABLE_CRON_SECRET` no header `x-cron-secret`, sem nenhuma chave literal no YAML.
+  - Falha explícita quando o secret não está configurado ou quando a resposta HTTP não é 2xx.
+  - Registro limitado ao resumo seguro `processed`, `sent`, `failed` e `skipped`.
+  - Documentação atualizada com o único passo manual necessário.
+- **Arquivos alterados**: `.github/workflows/notifications-cron.yml`, `docs/notifications.md`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
+- **Testes realizados**: typecheck, lint e build sem erros; revisão do fluxo do workflow e do tratamento de resposta.
+- **Problemas encontrados**: nenhum.
+- **Pendências relacionadas**: cadastrar `LOVABLE_CRON_SECRET` nos Secrets do repositório GitHub, Google Login, WhatsApp/SMS e pagamentos.
