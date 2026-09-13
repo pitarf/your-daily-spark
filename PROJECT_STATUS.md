@@ -95,12 +95,12 @@
 - Refinamentos finais de UX e identidade visual por tipo de negócio.
 - Melhorias de experiência no fluxo de agendamento e administração.
 - Validação end-to-end das integrações de Gemini e Brevo no ambiente de produção.
-- Automação de envio da fila de notificações: endpoint HTTP pronto e testado; falta apontar um scheduler externo para a URL de produção.
+- Automação de envio da fila de notificações: endpoint HTTP e workflow do GitHub Actions prontos; falta apenas cadastrar o secret no repositório.
 - Teste real de entrega do e-mail de confirmação, cancelamento e lembrete com a conta Brevo configurada.
 
 ## Pendente 🔴
 - Confirmar o remetente `rfpita.work@gmail.com` como remetente autorizado na Brevo e manter `NOTIFICATION_FROM_NAME=Marca Minha Vez`.
-- Cadastrar em um scheduler externo a chamada periódica (a cada 5 minutos) de `POST /api/public/hooks/dispatch-notifications` com o header `x-cron-secret`.
+- Cadastrar o secret `LOVABLE_CRON_SECRET` nos Secrets do repositório GitHub para ativar o workflow `notifications-cron.yml`, que já chama o endpoint a cada 5 minutos.
 - Habilitar o provedor Google no ambiente de autenticação.
 - Worker/provedor para WhatsApp e SMS.
 - Pagamentos e planos de assinatura da plataforma SaaS.
