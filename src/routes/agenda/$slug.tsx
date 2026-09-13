@@ -133,18 +133,31 @@ function PublicHeader({ data }: { data: NonNullable<ReturnType<typeof Route.useL
   const businessLabel = getBusinessTypeLabel(businessType);
   const whatsapp = publicBranding.whatsapp?.replace(/\D/g, "") ?? "";
   const whatsappHref = whatsapp.length >= 10 ? `https://wa.me/${whatsapp}` : null;
+  const phone = establishment.phone?.trim() ?? "";
+  const phoneHref = phone ? `tel:${phone.replace(/[^\d+]/g, "")}` : null;
 
   return (
     <header className="mx-auto max-w-3xl px-4 pt-6 sm:pt-8">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card/90 px-4 py-3 shadow-sm backdrop-blur sm:px-5">
-        <div className="flex min-w-0 items-center gap-3">
-          {publicBranding.logoUrl ? <img src={publicBranding.logoUrl} alt="" className="h-11 w-11 rounded-xl border border-border bg-background object-contain p-1" /> : <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-sm font-black text-primary-foreground" aria-hidden="true">{establishment.name.slice(0, 1).toUpperCase()}</span>}
-          <div className="min-w-0">
-            <p className="truncate text-sm font-bold text-foreground">{establishment.name}</p>
-            <p className="text-xs text-muted-foreground">{businessLabel}</p>
+      <div className="rounded-2xl border border-border bg-card/90 px-4 py-3 shadow-sm backdrop-blur sm:px-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            {publicBranding.logoUrl ? <img src={publicBranding.logoUrl} alt="" className="h-11 w-11 rounded-xl border border-border bg-background object-contain p-1" /> : <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-sm font-black text-primary-foreground" aria-hidden="true">{establishment.name.slice(0, 1).toUpperCase()}</span>}
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold text-foreground">{establishment.name}</p>
+              <p className="text-xs text-muted-foreground">{businessLabel}</p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            {phoneHref ? <a href={phoneHref} aria-label={`Ligar para ${establishment.name}`} className="inline-flex rounded-full border border-input px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-accent">Ligar</a> : null}
+            {whatsappHref ? <a href={whatsappHref} target="_blank" rel="noreferrer" aria-label={`Abrir WhatsApp de ${establishment.name}`} className="inline-flex rounded-full border border-input px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-accent">WhatsApp</a> : null}
           </div>
         </div>
-        {whatsappHref ? <a href={whatsappHref} target="_blank" rel="noreferrer" className="inline-flex shrink-0 rounded-full border border-input px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-accent">WhatsApp</a> : null}
+        {establishment.address || phone ? (
+          <div className="mt-3 flex flex-col gap-1 border-t border-border pt-3 text-xs text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4">
+            {establishment.address ? <span className="truncate" title={establishment.address}>📍 {establishment.address}</span> : null}
+            {phone ? <span>{phone}</span> : null}
+          </div>
+        ) : null}
       </div>
     </header>
   );
