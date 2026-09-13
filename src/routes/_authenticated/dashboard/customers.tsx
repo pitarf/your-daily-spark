@@ -53,6 +53,8 @@ function CustomersPage() {
   const [assigningCustomer, setAssigningCustomer] = useState<Customer | null>(null);
   const [assignPlanId, setAssignPlanId] = useState("");
   const [assignExpiresAt, setAssignExpiresAt] = useState("");
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [customerPlanFilter, setCustomerPlanFilter] = useState("all");
   const [error, setError] = useState<string | null>(null);
 
   const customersQuery = useQuery({
@@ -187,10 +189,11 @@ function CustomersPage() {
     mutationFn: async () => {
       if (!assigningCustomer) throw new Error("Selecione um cliente.");
       if (!assignPlanId) {
-        await supabase
+        const { error: deleteError } = await supabase
           .from("customer_plan_assignments")
           .delete()
           .eq("customer_id", assigningCustomer.id);
+        if (deleteError) throw deleteError;
         return;
       }
 
@@ -234,6 +237,21 @@ function CustomersPage() {
 
   const activePlans = useMemo(() => plans.filter((plan) => plan.active), [plans]);
 
+  const filteredCustomers = useMemo(() => {
+    const query = customerSearch.trim().toLocaleLowerCase("pt-BR");
+    return customers.filter((customer) => {
+      const matchesSearch =
+        query.length === 0 ||
+        [customer.name, customer.phone, customer.email, customer.planName]
+          .filter(Boolean)
+          .some((value) => value!.toLocaleLowerCase("pt-BR").includes(query));
+      const matchesPlan =
+        customerPlanFilter === "all" ||
+        (customerPlanFilter === "none" ? !customer.planId : customer.planId === customerPlanFilter);
+      return matchesSearch && matchesPlan;
+    });
+  }, [customerPlanFilter, customerSearch, customers]);
+
   return (
     <div className="space-y-5">
       <div>
@@ -261,47 +279,97 @@ function CustomersPage() {
       {error ? <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p> : null}
 
       {view === "customers" ? (
-        <section className="overflow-x-auto rounded-xl border border-border bg-card">
-          {customersQuery.isPending ? (
-            <p className="p-4 text-sm text-muted-foreground">Carregando…</p>
-          ) : customers.length === 0 ? (
-            <p className="p-4 text-sm text-muted-foreground">Nenhum cliente ainda.</p>
-          ) : (
-            <table className="w-full text-left text-sm">
-              <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
-                <tr>
-                  <th className="px-3 py-2">Nome</th>
-                  <th className="px-3 py-2">Telefone</th>
-                  <th className="px-3 py-2">E-mail</th>
-                  <th className="px-3 py-2">Plano</th>
-                  <th className="px-3 py-2" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {customers.map((customer) => (
-                  <tr key={customer.id}>
-                    <td className="px-3 py-2 font-medium text-foreground">{customer.name}</td>
-                    <td className="px-3 py-2 text-muted-foreground">{customer.phone ?? "—"}</td>
-                    <td className="px-3 py-2 text-muted-foreground">{customer.email ?? "—"}</td>
-                    <td className="px-3 py-2 text-muted-foreground">{customer.planName ?? "Sem plano"}</td>
-                    <td className="px-3 py-2 text-right">
-                      <button
-                        type="button"
-                        className="text-xs underline"
-                        onClick={() => {
-                          setAssigningCustomer(customer);
-                          setAssignPlanId(customer.planId ?? "");
-                        }}
-                      >
-                        Alterar plano
-                      </button>
-                    </td>
-                  </tr>
+        <div className="space-y-3">
+          <div className="grid gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-[1fr_220px_auto]">
+            <label className="space-y-1 text-sm">
+              <span className="font-medium text-foreground">Buscar cliente</span>
+              <input
+                type="search"
+                value={customerSearch}
+                onChange={(event) => setCustomerSearch(event.target.value)}
+                placeholder="Nome, telefone, e-mail ou plano"
+                className="w-full rounded-md border border-input bg-background px-3 py-2"
+              />
+            </label>
+            <label className="space-y-1 text-sm">
+              <span className="font-medium text-foreground">Filtrar por plano</span>
+              <select
+                value={customerPlanFilter}
+                onChange={(event) => setCustomerPlanFilter(event.target.value)}
+                className="w-full rounded-md border border-input bg-background px-3 py-2"
+              >
+                <option value="all">Todos os planos</option>
+                <option value="none">Sem plano</option>
+                {plans.map((plan) => (
+                  <option key={plan.id} value={plan.id}>
+                    {plan.name}{plan.active ? "" : " (inativo)"}
+                  </option>
                 ))}
-              </tbody>
-            </table>
-          )}
-        </section>
+              </select>
+            </label>
+            <div className="flex items-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setCustomerSearch("");
+                  setCustomerPlanFilter("all");
+                }}
+                className="w-full rounded-md border border-input px-4 py-2 text-sm sm:w-auto"
+              >
+                Limpar filtros
+              </button>
+            </div>
+          </div>
+
+          <section className="overflow-x-auto rounded-xl border border-border bg-card">
+            {customersQuery.isPending ? (
+              <p className="p-4 text-sm text-muted-foreground">Carregando…</p>
+            ) : customers.length === 0 ? (
+              <p className="p-4 text-sm text-muted-foreground">Nenhum cliente ainda.</p>
+            ) : filteredCustomers.length === 0 ? (
+              <p className="p-4 text-sm text-muted-foreground">Nenhum cliente corresponde aos filtros atuais.</p>
+            ) : (
+              <>
+                <div className="border-b border-border px-3 py-2 text-xs text-muted-foreground">
+                  Mostrando {filteredCustomers.length} de {customers.length} cliente(s)
+                </div>
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
+                    <tr>
+                      <th className="px-3 py-2">Nome</th>
+                      <th className="px-3 py-2">Telefone</th>
+                      <th className="px-3 py-2">E-mail</th>
+                      <th className="px-3 py-2">Plano</th>
+                      <th className="px-3 py-2" />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {filteredCustomers.map((customer) => (
+                      <tr key={customer.id}>
+                        <td className="px-3 py-2 font-medium text-foreground">{customer.name}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{customer.phone ?? "—"}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{customer.email ?? "—"}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{customer.planName ?? "Sem plano"}</td>
+                        <td className="px-3 py-2 text-right">
+                          <button
+                            type="button"
+                            className="text-xs underline"
+                            onClick={() => {
+                              setAssigningCustomer(customer);
+                              setAssignPlanId(customer.planId ?? "");
+                            }}
+                          >
+                            Alterar plano
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            )}
+          </section>
+        </div>
       ) : (
         <div className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
