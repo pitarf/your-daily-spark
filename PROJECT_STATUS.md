@@ -57,8 +57,10 @@
 - Workflow com retry e validação do resumo de processamento.
 - O endpoint do scheduler aceita somente `POST`.
 
-### Qualidade e documentação
+### Qualidade, operação e documentação
 - CI com TypeScript, ESLint e build de produção.
+- Smoke test de produção para homepage e endpoint protegido do scheduler.
+- Dependabot configurado para atualizações semanais de dependências npm e GitHub Actions.
 - `CHANGELOG.md` mantido como histórico permanente.
 - `README.md` atualizado para o produto Marca Minha Vez.
 - `SECURITY.md` e `docs/production-checklist.md` adicionados.
