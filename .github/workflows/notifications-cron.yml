@@ -18,13 +18,13 @@ jobs:
     steps:
       - name: Dispatch due notifications
         env:
-          CRON_SECRET: ${{ secrets.NOTIFICATIONS_CRON_SECRET }}
+          CRON_SECRET: ${{ secrets.LOVABLE_CRON_SECRET }}
           ENDPOINT: https://marca-minha-vez.lovable.app/api/public/hooks/dispatch-notifications?limit=25
         run: |
           set -euo pipefail
 
           if [ -z "${CRON_SECRET}" ]; then
-            echo "Secret NOTIFICATIONS_CRON_SECRET não está configurada no repositório."
+            echo "Secret LOVABLE_CRON_SECRET não está configurada no repositório."
             exit 1
           fi
 
