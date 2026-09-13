@@ -1,113 +1,94 @@
 # Status do Projeto
 
 ## Funcionalidades Concluídas ✅
-- Banco de dados multi-tenant com 16 tabelas, FKs, índices e `updated_at` automático.
-- RLS ativo em todas as tabelas, com isolamento por estabelecimento e escopos adicionais para profissionais.
-- Proteção de banco contra horários sobrepostos e conflitos com bloqueios.
-- Dados de demonstração da Barbearia Marca Minha Vez.
-- Motor de disponibilidade com fuso, intervalos, exceções, bloqueios, duração e agenda individual.
+
+### Agenda e disponibilidade
+- Banco multi-tenant PostgreSQL/Supabase com RLS e isolamento por estabelecimento.
+- Proteção contra horários sobrepostos e conflitos com bloqueios.
+- Motor de disponibilidade com fuso, expediente, intervalos, folgas, exceções, bloqueios, duração e agenda individual por profissional.
 - Precedência determinística das exceções: fechamento individual > horário especial individual > fechamento geral > horário especial geral > agenda semanal.
-- Agendamento público com serviço, profissional/qualquer profissional, data, horário, cliente, revisão e confirmação, validado no servidor.
-- Agenda pública reutilizável por estabelecimento.
-- URL amigável da agenda: `/agenda/{slug}` com compatibilidade automática com `/schedule?slug={slug}`.
-- Calendário público sensível ao fuso do estabelecimento.
-- Autenticação por e-mail, cadastro e recuperação de senha.
-- Login social com Google preparado na interface, pendente apenas da habilitação do provedor no ambiente de autenticação.
-- Dashboard protegido com agenda, serviços, profissionais, clientes e configurações.
-- Controle de acesso por papel para impedir que profissionais naveguem nas áreas administrativas.
-- Painel do profissional com os próprios atendimentos.
-- Onboarding de estabelecimento.
-- Gestão de expediente geral, múltiplos intervalos e exceções.
-- Gestão de agenda individual por profissional.
+- Agendamento público normal, personalizado e avulso.
+- Escolha de profissional ou "qualquer profissional".
+- Duração de 15 minutos a 4 horas em múltiplos de 15 quando habilitada.
+- Regras de planos de clientes aplicadas no agendamento.
+- Agendamento manual pelo administrador.
+- Agenda administrativa Dia, Semana e Mês.
+- Bloqueios e gestão de status.
+
+### Cliente
+- Cadastro e login por e-mail.
+- Recuperação de senha.
+- Busca pública de agendamentos por telefone e data.
+- Página segura de gerenciamento por token assinado e expirável.
+- Cancelamento e reagendamento públicos com nova validação server-side.
+- Link de gerenciamento após a confirmação.
+- Links de gerenciamento também nos e-mails de confirmação e lembrete.
+- Exportação do agendamento em `.ics`.
+
+### Estabelecimento e equipe
+- Onboarding.
+- Múltiplos estabelecimentos por conta administrativa.
 - Gestão de serviços, profissionais, clientes e planos.
-- Regras de plano aplicadas no agendamento.
-- Gestão de bloqueios e status dos agendamentos.
-- Agenda administrativa com visualizações Dia, Semana e Mês.
-- Agendamento manual pelo administrador usando o mesmo motor de disponibilidade.
-- Gestão de planos de clientes no dashboard, com nome, descrição, duração máxima, ativação/desativação e serviços permitidos.
-- Atribuição de planos aos clientes pelo painel de clientes.
-- Homepage comercial e fluxo público acessível.
-- Acessibilidade básica na agenda pública.
-- Perfil do estabelecimento com edição de dados comerciais e identidade, incluindo logo.
-- Gestão de equipe: convite de profissionais por e-mail, vínculo de contas existentes e remoção de acesso sem apagar a conta.
-- CI de qualidade com TypeScript, ESLint e build de produção em GitHub Actions.
-- Migração versionada das regras RLS restritivas de escopo profissional.
-- Base de duração personalizada versionada no banco, com `allow_custom_duration` e `duration_minutes_override`.
-- Fluxo público de agendamento personalizado por serviço, com duração de 15 minutos a 4 horas em múltiplos de 15, respeitando profissionais, agenda, intervalos, exceções, bloqueios e conflitos no servidor.
-- Fluxo personalizado consolidado na rota pública `/agenda/{slug}?custom=true`, evitando uma segunda rota dinâmica e mantendo o route tree estável.
-- Verificação do banco do ambiente Lovable: a Barbearia Marca Minha Vez está com `allow_custom_duration = true`.
-- Pipeline final da etapa de duração personalizada validou TypeScript, ESLint e build de produção com sucesso.
-- Agendamento avulso personalizado sem serviço cadastrado, com título do atendimento, duração de 15 minutos a 4 horas, profissional opcional, observações e validação server-side.
-- Restrição no banco para impedir atendimento sem serviço e sem título personalizado.
-- Tema visual adaptativo na agenda pública conforme o tipo de negócio: barbearia, salão, nail designer, sobrancelhas, estética, clínica, consultório, tatuagem e outro.
-- Apresentação administrativa de atendimentos avulsos sem serviço, exibindo título personalizado, preço quando definido e duração no calendário Dia, Semana e Mês.
-- Painel do profissional exibe corretamente atendimentos avulsos sem serviço, usando o título personalizado e a duração cadastrada.
-- Administrador pode ativar/desativar o agendamento personalizado no perfil do estabelecimento.
-- Link público principal do painel utiliza a rota amigável `/agenda/{slug}`.
-- README atualizado para refletir o produto Marca Minha Vez, sua arquitetura, rotas, desenvolvimento e roadmap.
-- Agenda pública oculta as opções de duração personalizada e atendimento avulso quando o estabelecimento desativa o recurso.
-- Tentativas diretas de acessar `?custom=true` ou `?standalone=true` quando o recurso está desativado recebem mensagem de indisponibilidade e retorno para a agenda.
-- Dashboard inicial exibe atendimentos avulsos com título personalizado em vez de apresentar um serviço genérico ausente.
-- Painel do profissional classifica “Hoje” usando a data local do estabelecimento, evitando erros de dia causados por timestamps UTC.
-- Fila de notificações no banco para eventos de confirmação e cancelamento de agendamentos, com histórico visível no dashboard.
-- Lembretes de 24 horas entram automaticamente na fila para agendamentos futuros.
-- Lembretes pendentes são invalidados quando um agendamento é cancelado ou reagendado.
-- Tema persistente por estabelecimento com presets Automático, Minimalista, Suave, Marcante, Escuro e Quente.
-- Administrador pode escolher o preset visual no perfil do estabelecimento com pré-visualização antes de salvar.
-- Agenda pública aplica o preset selecionado sem perder o tema automático específico do tipo de negócio.
-- Cabeçalho público apresenta logo, tipo de negócio e atalho para WhatsApp quando há telefone cadastrado.
-- Tipos TypeScript do Supabase sincronizados com `theme_preset`.
-- Confirmação pública oferece exportação do agendamento para calendário no formato `.ics`.
-- Exportação de calendário disponível nos fluxos normal, duração personalizada e agendamento avulso.
-- Busca pública de agendamentos por telefone e data, com link de gerenciamento assinado e expiração.
-- Página segura de gerenciamento de agendamento por token.
-- Cancelamento público de agendamentos pendentes ou confirmados antes do início, respeitando o trigger de notificações.
-- Reagendamento público seguro mantendo o mesmo profissional e duração, com data e horário recalculados pela agenda real.
-- Revalidação server-side do novo horário antes de atualizar o agendamento, excluindo o próprio atendimento da lista de conflitos.
-- Lembrete existente é invalidado e recriado automaticamente pelo trigger quando o agendamento é reagendado.
-- Após a confirmação pública, o cliente recebe um botão seguro para abrir diretamente o gerenciamento do próprio agendamento.
-- O acesso direto ao gerenciamento reutiliza o token HMAC já existente e não expõe a chave de assinatura ao navegador.
-- O atalho de gerenciamento está disponível nos fluxos de agendamento normal, duração personalizada e atendimento avulso.
-- Worker de entrega de notificações por e-mail implementado de forma independente do aplicativo web, usando a fila persistente existente.
-- Entrega transacional de e-mail preparada com a API da Brevo para confirmação, cancelamento e lembrete.
-- Comando `bun run notifications:dispatch` criado para processar a fila em lotes e permitir execução por cron/scheduler.
-- Worker usa atualização atômica de status para reduzir risco de processamento concorrente da mesma notificação.
-- Assistente de agenda com IA criado para interpretar linguagem natural em português e gerar uma prévia estruturada de expediente geral.
-- Assistente de agenda limitado a administradores e integrado à navegação `/dashboard/assistant`.
-- Prévia da IA mostra sete dias, janelas, intervalos e avisos antes de qualquer alteração.
-- Aplicação da configuração de IA exige confirmação explícita e altera somente o expediente geral, preservando agendas individuais dos profissionais.
-- O assistente foi preparado para uso com a API Gemini, com `GEMINI_API_KEY` somente no servidor e saída JSON estruturada validada por Zod.
-- Assistente operacional em modo somente leitura consulta, no servidor, estabelecimento, profissionais, serviços, agendamentos e bloqueios dos próximos 30 dias.
-- Consulta operacional da IA exige membership de administrador e não envia telefone, e-mail ou outros dados pessoais de clientes ao Gemini.
-- Respostas operacionais do Gemini usam JSON estruturado e validação Zod antes de serem exibidas.
-- Assistente de disponibilidade em linguagem natural interpreta data, período, serviço, profissional e duração usando Gemini.
-- Assistente de disponibilidade resolve serviços e profissionais contra os cadastros reais do estabelecimento.
-- Assistente consulta o motor real de disponibilidade no servidor e respeita fuso, expediente, intervalos, exceções, bloqueios, agendamentos, conflitos e múltiplos profissionais.
-- Assistente de disponibilidade retorna somente horários confirmados como livres pelo motor de agenda, sem inventar horários.
-- Assistente de configuração de agenda com IA agora exige autorização server-side dentro da própria server function antes de consultar o Gemini.
-- Assistente de disponibilidade retorna atalhos internos de agendamento para horários reais encontrados, permitindo abrir a agenda pública já com serviço, data, horário e profissional selecionado quando aplicável.
-- Agenda pública aceita os parâmetros de sugestão do assistente e posiciona automaticamente o fluxo no horário disponível informado.
-- A resposta da IA não gera atalhos incorretos para atendimentos personalizados sem serviço base.
-- Endpoint `POST /api/public/hooks/dispatch-notifications` disponível para scheduler externo processar a fila de notificações, protegido por `NOTIFICATIONS_CRON_SECRET` em header e validação de tempo constante no servidor.
-- O endpoint responde apenas o resumo `processed/sent/failed/skipped`, sem dados de clientes, e higieniza mensagens de erro antes de responder.
+- Agenda individual por profissional.
+- Gestão de equipe e permissões.
+- Perfil, contato, logo e identidade do estabelecimento.
+- Presets visuais adaptativos por tipo de negócio.
+- Compartilhamento da agenda pública.
+- Resumo semanal no dashboard.
+
+### IA
+- Assistente de configuração de expediente com Gemini.
+- Consultas operacionais somente leitura.
+- Consulta de disponibilidade real em linguagem natural.
+- Serviço e profissional resolvidos contra cadastros reais.
+- Horários retornados exclusivamente pelo motor real de disponibilidade.
+- Atalhos diretos para a agenda a partir de respostas da IA.
+- PII de clientes não é enviado ao Gemini.
+- Autorização server-side dentro das funções de IA.
+
+### Notificações
+- Fila persistente de notificações.
+- Confirmação, cancelamento e lembrete de 24 horas.
+- Invalidação/recriação de lembretes após cancelamento ou reagendamento.
+- Worker independente com `bun run notifications:dispatch`.
+- Entrega por e-mail via Brevo.
+- Endpoint HTTP protegido para scheduler.
+- GitHub Actions executando a fila a cada 5 minutos.
+- Workflow com retry e validação do resumo de processamento.
+- O endpoint do scheduler aceita somente `POST`.
+
+### Qualidade e documentação
+- CI com TypeScript, ESLint e build de produção.
+- `CHANGELOG.md` mantido como histórico permanente.
+- `README.md` atualizado para o produto Marca Minha Vez.
+- `SECURITY.md` e `docs/production-checklist.md` adicionados.
 
 ## Em Desenvolvimento 🟡
-- Refinamentos finais de UX e identidade visual por tipo de negócio.
-- Melhorias de experiência no fluxo de agendamento e administração.
-- Validação end-to-end das integrações de Gemini e Brevo no ambiente de produção.
-- Automação de envio da fila de notificações: endpoint HTTP e workflow do GitHub Actions prontos; falta apenas cadastrar o secret no repositório.
-- Teste real de entrega do e-mail de confirmação, cancelamento e lembrete com a conta Brevo configurada.
+- Refinamentos finais de UX em desktop e mobile.
+- Personalização visual avançada por cores e layout.
+- Testes end-to-end completos no ambiente publicado.
+- Domínio personalizado por estabelecimento.
+- Relatórios e métricas mais completos.
 
 ## Pendente 🔴
-- Confirmar o remetente `rfpita.work@gmail.com` como remetente autorizado na Brevo e manter `NOTIFICATION_FROM_NAME=Marca Minha Vez`.
-- Cadastrar o secret `NOTIFICATIONS_CRON_SECRET` nos Secrets do repositório GitHub para ativar o workflow `notifications-cron.yml`, que já chama o endpoint a cada 5 minutos.
 - Habilitar o provedor Google no ambiente de autenticação.
-- Worker/provedor para WhatsApp e SMS.
-- Pagamentos e planos de assinatura da plataforma SaaS.
-- Integração oficial com WhatsApp.
+- WhatsApp oficial.
+- SMS.
+- Pagamentos e assinaturas SaaS.
+- Limites comerciais por plano SaaS.
+- Revisão e revogação de qualquer chave antiga que tenha aparecido no histórico Git.
 
-## Bloqueado ⚠️
-- Nenhum no momento.
+## Configurado no ambiente
+
+- `GEMINI_API_KEY`
+- `BREVO_API_KEY`
+- `LOVABLE_CRON_SECRET`
+
+O código nunca deve conter os valores dessas variáveis.
+
+## Segurança conhecida
+
+O repositório teve um alerta público de token antigo da Brevo no histórico Git. A chave antiga deve permanecer revogada. A remoção do arquivo atual, sozinha, não remove o segredo do histórico.
 
 ---
-*Última atualização: 2026-09-12*
+*Última atualização: 2026-09-13*
