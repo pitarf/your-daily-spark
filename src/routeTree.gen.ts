@@ -29,6 +29,7 @@ import { Route as AuthenticatedDashboardProfileRouteImport } from './routes/_aut
 import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard/services'
 import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard/settings'
 import { Route as AuthenticatedDashboardTeamRouteImport } from './routes/_authenticated/dashboard/team'
+import { Route as ApiPublicHooksDispatchNotificationsRouteImport } from './routes/api/public/hooks/dispatch-notifications'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -141,6 +142,12 @@ const AuthenticatedDashboardTeamRoute =
     path: '/team',
     getParentRoute: () => AuthenticatedDashboardRouteRoute,
   } as any)
+const ApiPublicHooksDispatchNotificationsRoute =
+  ApiPublicHooksDispatchNotificationsRouteImport.update({
+    id: '/api/public/hooks/dispatch-notifications',
+    path: '/api/public/hooks/dispatch-notifications',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -162,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/team': typeof AuthenticatedDashboardTeamRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
+  '/api/public/hooks/dispatch-notifications': typeof ApiPublicHooksDispatchNotificationsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -182,6 +190,7 @@ export interface FileRoutesByTo {
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/team': typeof AuthenticatedDashboardTeamRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
+  '/api/public/hooks/dispatch-notifications': typeof ApiPublicHooksDispatchNotificationsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -205,6 +214,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/_authenticated/dashboard/team': typeof AuthenticatedDashboardTeamRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
+  '/api/public/hooks/dispatch-notifications': typeof ApiPublicHooksDispatchNotificationsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -228,6 +238,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/dashboard/team'
     | '/dashboard/'
+    | '/api/public/hooks/dispatch-notifications'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -248,6 +259,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/dashboard/team'
     | '/dashboard'
+    | '/api/public/hooks/dispatch-notifications'
   id:
     | '__root__'
     | '/'
@@ -270,6 +282,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/settings'
     | '/_authenticated/dashboard/team'
     | '/_authenticated/dashboard/'
+    | '/api/public/hooks/dispatch-notifications'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -281,6 +294,7 @@ export interface RootRouteChildren {
   AgendaSlugRoute: typeof AgendaSlugRoute
   EstablishmentPlansRoute: typeof EstablishmentPlansRoute
   EstablishmentSettingsRoute: typeof EstablishmentSettingsRoute
+  ApiPublicHooksDispatchNotificationsRoute: typeof ApiPublicHooksDispatchNotificationsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -425,6 +439,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardTeamRouteImport
       parentRoute: typeof AuthenticatedDashboardRouteRoute
     }
+    '/api/public/hooks/dispatch-notifications': {
+      id: '/api/public/hooks/dispatch-notifications'
+      path: '/api/public/hooks/dispatch-notifications'
+      fullPath: '/api/public/hooks/dispatch-notifications'
+      preLoaderRoute: typeof ApiPublicHooksDispatchNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -486,6 +507,8 @@ const rootRouteChildren: RootRouteChildren = {
   AgendaSlugRoute: AgendaSlugRoute,
   EstablishmentPlansRoute: EstablishmentPlansRoute,
   EstablishmentSettingsRoute: EstablishmentSettingsRoute,
+  ApiPublicHooksDispatchNotificationsRoute:
+    ApiPublicHooksDispatchNotificationsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

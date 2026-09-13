@@ -88,17 +88,19 @@
 - Assistente de disponibilidade retorna atalhos internos de agendamento para horários reais encontrados, permitindo abrir a agenda pública já com serviço, data, horário e profissional selecionado quando aplicável.
 - Agenda pública aceita os parâmetros de sugestão do assistente e posiciona automaticamente o fluxo no horário disponível informado.
 - A resposta da IA não gera atalhos incorretos para atendimentos personalizados sem serviço base.
+- Endpoint `POST /api/public/hooks/dispatch-notifications` disponível para scheduler externo processar a fila de notificações, protegido por `LOVABLE_CRON_SECRET` em header e validação de tempo constante no servidor.
+- O endpoint responde apenas o resumo `processed/sent/failed/skipped`, sem dados de clientes, e higieniza mensagens de erro antes de responder.
 
 ## Em Desenvolvimento 🟡
 - Refinamentos finais de UX e identidade visual por tipo de negócio.
 - Melhorias de experiência no fluxo de agendamento e administração.
 - Validação end-to-end das integrações de Gemini e Brevo no ambiente de produção.
-- Automação de envio da fila de notificações por scheduler de produção.
+- Automação de envio da fila de notificações: endpoint HTTP pronto e testado; falta apontar um scheduler externo para a URL de produção.
 - Teste real de entrega do e-mail de confirmação, cancelamento e lembrete com a conta Brevo configurada.
 
 ## Pendente 🔴
 - Confirmar o remetente `rfpita.work@gmail.com` como remetente autorizado na Brevo e manter `NOTIFICATION_FROM_NAME=Marca Minha Vez`.
-- Configurar um cron/scheduler de produção para executar `bun run notifications:dispatch` periodicamente.
+- Cadastrar em um scheduler externo a chamada periódica (a cada 5 minutos) de `POST /api/public/hooks/dispatch-notifications` com o header `x-cron-secret`.
 - Habilitar o provedor Google no ambiente de autenticação.
 - Worker/provedor para WhatsApp e SMS.
 - Pagamentos e planos de assinatura da plataforma SaaS.

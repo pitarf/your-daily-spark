@@ -35,6 +35,33 @@ bun run notifications:dispatch 25
 
 O segundo argumento define o número máximo de notificações por execução, limitado internamente a 100.
 
+## Endpoint HTTP para scheduler externo
+
+Em produção a fila também pode ser processada por HTTP, sem execução manual:
+
+```text
+POST https://project--a302acfa-e5c7-4e7b-bd53-63f8d1ece480.lovable.app/api/public/hooks/dispatch-notifications?limit=25
+x-cron-secret: <valor de LOVABLE_CRON_SECRET>
+```
+
+Regras da rota:
+
+- exige o header `x-cron-secret` (ou `Authorization: Bearer <secret>`) com o valor de `LOVABLE_CRON_SECRET`, comparado em tempo constante no servidor;
+- sem o header correto, responde `401 {"error":"unauthorized"}` e não toca na fila;
+- em sucesso responde apenas o resumo `{"ok":true,"processed":n,"sent":n,"failed":n,"skipped":n}`, sem dados de clientes;
+- em falha responde `500` com uma mensagem já higienizada, nunca com credenciais;
+- `limit` é opcional, padrão 25 e teto 100.
+
+Exemplo de chamada por um scheduler externo (cron-job.org, GitHub Actions, cron do provedor):
+
+```bash
+curl -fsS -X POST \
+  -H "x-cron-secret: $LOVABLE_CRON_SECRET" \
+  "https://project--a302acfa-e5c7-4e7b-bd53-63f8d1ece480.lovable.app/api/public/hooks/dispatch-notifications?limit=25"
+```
+
+Intervalo recomendado: a cada 5 minutos. O comando `bun run notifications:dispatch` continua funcionando e usa exatamente a mesma rotina.
+
 ## Teste seguro
 
 A integração pode ser validada em modo sandbox da Brevo antes de fazer entregas reais. Nesse modo, a API confirma a requisição sem enviar o e-mail ao destinatário.
