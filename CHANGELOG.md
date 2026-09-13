@@ -437,7 +437,7 @@
 - **Objetivo da alteração**: Automatizar o processamento da fila de notificações Brevo em produção por scheduler externo, sem execução manual e sem expor secrets.
 - **Funcionalidades implementadas**:
   - Nova rota `POST /api/public/hooks/dispatch-notifications` que executa `dispatchDueNotifications`.
-  - Autenticação por header `x-cron-secret` (ou `Authorization: Bearer`) validado contra `LOVABLE_CRON_SECRET` em comparação de tempo constante.
+  - Autenticação por header `x-cron-secret` (ou `Authorization: Bearer`) validado contra `NOTIFICATIONS_CRON_SECRET` em comparação de tempo constante.
   - Resposta de sucesso limitada ao resumo `processed/sent/failed/skipped`, sem dados de clientes; erros passam por `toSafeIntegrationError` antes de sair.
   - Parâmetro opcional `limit` com padrão 25 e teto 100; `bun run notifications:dispatch` permanece funcionando com a mesma rotina.
   - Documentação com endpoint, header e exemplo de chamada por cron externo.
@@ -450,11 +450,11 @@
 - **Objetivo da alteração**: Deixar o processamento da fila de notificações rodando sozinho por um scheduler gratuito, sem execução manual.
 - **Funcionalidades implementadas**:
   - Novo workflow `.github/workflows/notifications-cron.yml` executando a cada 5 minutos, com disparo manual opcional e concorrência limitada a uma execução por vez.
-  - O workflow faz `POST` para `/api/public/hooks/dispatch-notifications?limit=25` usando o secret de repositório `LOVABLE_CRON_SECRET` no header `x-cron-secret`, sem nenhuma chave literal no YAML.
+  - O workflow faz `POST` para `/api/public/hooks/dispatch-notifications?limit=25` usando o secret de repositório `NOTIFICATIONS_CRON_SECRET` no header `x-cron-secret`, sem nenhuma chave literal no YAML.
   - Falha explícita quando o secret não está configurado ou quando a resposta HTTP não é 2xx.
   - Registro limitado ao resumo seguro `processed`, `sent`, `failed` e `skipped`.
   - Documentação atualizada com o único passo manual necessário.
 - **Arquivos alterados**: `.github/workflows/notifications-cron.yml`, `docs/notifications.md`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
 - **Testes realizados**: typecheck, lint e build sem erros; revisão do fluxo do workflow e do tratamento de resposta.
 - **Problemas encontrados**: nenhum.
-- **Pendências relacionadas**: cadastrar `LOVABLE_CRON_SECRET` nos Secrets do repositório GitHub, Google Login, WhatsApp/SMS e pagamentos.
+- **Pendências relacionadas**: cadastrar `NOTIFICATIONS_CRON_SECRET` nos Secrets do repositório GitHub, Google Login, WhatsApp/SMS e pagamentos.

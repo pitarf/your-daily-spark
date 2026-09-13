@@ -41,12 +41,12 @@ Em produção a fila também pode ser processada por HTTP, sem execução manual
 
 ```text
 POST https://project--a302acfa-e5c7-4e7b-bd53-63f8d1ece480.lovable.app/api/public/hooks/dispatch-notifications?limit=25
-x-cron-secret: <valor de LOVABLE_CRON_SECRET>
+x-cron-secret: <valor de NOTIFICATIONS_CRON_SECRET>
 ```
 
 Regras da rota:
 
-- exige o header `x-cron-secret` (ou `Authorization: Bearer <secret>`) com o valor de `LOVABLE_CRON_SECRET`, comparado em tempo constante no servidor;
+- exige o header `x-cron-secret` (ou `Authorization: Bearer <secret>`) com o valor de `NOTIFICATIONS_CRON_SECRET`, comparado em tempo constante no servidor;
 - sem o header correto, responde `401 {"error":"unauthorized"}` e não toca na fila;
 - em sucesso responde apenas o resumo `{"ok":true,"processed":n,"sent":n,"failed":n,"skipped":n}`, sem dados de clientes;
 - em falha responde `500` com uma mensagem já higienizada, nunca com credenciais;
@@ -56,7 +56,7 @@ Exemplo de chamada por um scheduler externo (cron-job.org, GitHub Actions, cron 
 
 ```bash
 curl -fsS -X POST \
-  -H "x-cron-secret: $LOVABLE_CRON_SECRET" \
+  -H "x-cron-secret: $NOTIFICATIONS_CRON_SECRET" \
   "https://project--a302acfa-e5c7-4e7b-bd53-63f8d1ece480.lovable.app/api/public/hooks/dispatch-notifications?limit=25"
 ```
 
@@ -76,4 +76,4 @@ A entrega implementada nesta etapa é somente por e-mail via Brevo. WhatsApp ofi
 
 O repositório já inclui `.github/workflows/notifications-cron.yml`, que roda a cada 5 minutos (e também pode ser disparado manualmente) e faz `POST` para o endpoint de produção com o header `x-cron-secret`. O workflow falha quando a resposta não for 2xx e registra somente o resumo seguro (`processed`, `sent`, `failed`, `skipped`). Nenhuma chave aparece no YAML.
 
-Único passo manual: cadastrar o secret `LOVABLE_CRON_SECRET` em **Settings → Secrets and variables → Actions** do repositório GitHub, com exatamente o mesmo valor usado no ambiente de produção. Sem esse secret o workflow falha logo no início com uma mensagem explícita.
+Único passo manual: cadastrar o secret `NOTIFICATIONS_CRON_SECRET` em **Settings → Secrets and variables → Actions** do repositório GitHub, com exatamente o mesmo valor usado no ambiente de produção. Sem esse secret o workflow falha logo no início com uma mensagem explícita.

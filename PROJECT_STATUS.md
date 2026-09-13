@@ -88,7 +88,7 @@
 - Assistente de disponibilidade retorna atalhos internos de agendamento para horários reais encontrados, permitindo abrir a agenda pública já com serviço, data, horário e profissional selecionado quando aplicável.
 - Agenda pública aceita os parâmetros de sugestão do assistente e posiciona automaticamente o fluxo no horário disponível informado.
 - A resposta da IA não gera atalhos incorretos para atendimentos personalizados sem serviço base.
-- Endpoint `POST /api/public/hooks/dispatch-notifications` disponível para scheduler externo processar a fila de notificações, protegido por `LOVABLE_CRON_SECRET` em header e validação de tempo constante no servidor.
+- Endpoint `POST /api/public/hooks/dispatch-notifications` disponível para scheduler externo processar a fila de notificações, protegido por `NOTIFICATIONS_CRON_SECRET` em header e validação de tempo constante no servidor.
 - O endpoint responde apenas o resumo `processed/sent/failed/skipped`, sem dados de clientes, e higieniza mensagens de erro antes de responder.
 
 ## Em Desenvolvimento 🟡
@@ -100,7 +100,7 @@
 
 ## Pendente 🔴
 - Confirmar o remetente `rfpita.work@gmail.com` como remetente autorizado na Brevo e manter `NOTIFICATION_FROM_NAME=Marca Minha Vez`.
-- Cadastrar o secret `LOVABLE_CRON_SECRET` nos Secrets do repositório GitHub para ativar o workflow `notifications-cron.yml`, que já chama o endpoint a cada 5 minutos.
+- Cadastrar o secret `NOTIFICATIONS_CRON_SECRET` nos Secrets do repositório GitHub para ativar o workflow `notifications-cron.yml`, que já chama o endpoint a cada 5 minutos.
 - Habilitar o provedor Google no ambiente de autenticação.
 - Worker/provedor para WhatsApp e SMS.
 - Pagamentos e planos de assinatura da plataforma SaaS.
