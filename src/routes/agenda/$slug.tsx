@@ -42,14 +42,26 @@ export const Route = createFileRoute("/agenda/$slug")({
       publicSettings,
     };
   },
-  head: ({ loaderData }) => ({
+  head: ({ loaderData, params }) => ({
     meta: [
       { title: `${loaderData?.establishment.name ?? "Agendamento"} | Marca Minha Vez` },
       { name: "description", content: loaderData?.establishment.description ?? "Agende seu atendimento online pelo Marca Minha Vez." },
+      { name: "robots", content: "index,follow" },
+      { name: "theme-color", content: "#ffffff" },
       { property: "og:title", content: loaderData?.establishment.name ?? "Agendamento" },
       { property: "og:description", content: loaderData?.establishment.description ?? "Agende seu atendimento online." },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: `https://marca-minha-vez.lovable.app/agenda/${encodeURIComponent(params.slug)}` },
+      ...(loaderData?.publicBranding.logoUrl ? [{ property: "og:image", content: loaderData.publicBranding.logoUrl }] : []),
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: loaderData?.establishment.name ?? "Agendamento" },
+      { name: "twitter:description", content: loaderData?.establishment.description ?? "Agende seu atendimento online." },
+    ],
+    links: [
+      {
+        rel: "canonical",
+        href: `https://marca-minha-vez.lovable.app/agenda/${encodeURIComponent(params.slug)}`,
+      },
     ],
   }),
   component: AgendaPage,

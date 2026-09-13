@@ -1,10 +1,9 @@
-import { createHmac } from "node:crypto";
-
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 import { sendNotificationEmail } from "@/lib/notifications/email.server";
 import { redactSecrets } from "@/lib/integrations/secret-safe.server";
 import type { NotificationType } from "@/lib/notifications";
+import { signManagementToken } from "@/lib/security/management-token.server";
 
 type NotificationRow = {
   id: string;
@@ -62,15 +61,13 @@ function formatMoney(value: number | null) {
 
 function getManagementPath(row: NotificationRow) {
   if (!row.customer?.phone || !row.establishment || !row.appointment) return null;
-  if (!process.env["SUPABASE_SERVICE_ROLE_KEY"]) return null;
 
   const expiresAtMs = new Date(row.appointment.ends_at).getTime() + 30 * 24 * 60 * 60 * 1000;
-  const normalizedPhone = row.customer.phone.replace(/\D/g, "");
-  const payload = `${row.appointment.id}:${expiresAtMs}:${normalizedPhone}`;
-  const signature = createHmac("sha256", process.env["SUPABASE_SERVICE_ROLE_KEY"])
-    .update(payload)
-    .digest("base64url");
-  const token = `${expiresAtMs}.${signature}`;
+  const token = `${expiresAtMs}.${signManagementToken(
+    row.appointment.id,
+    row.customer.phone,
+    expiresAtMs,
+  )}`;
   const appUrl = (process.env["PUBLIC_APP_URL"] || "https://marca-minha-vez.lovable.app").replace(/\/$/, "");
 
   return `${appUrl}/agenda/${encodeURIComponent(row.establishment.slug)}?manage=${encodeURIComponent(row.appointment.id)}&token=${encodeURIComponent(token)}`;

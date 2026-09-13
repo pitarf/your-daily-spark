@@ -19,7 +19,10 @@ A implementação não adiciona segredos ao repositório. Configure apenas no am
 BREVO_API_KEY=...
 NOTIFICATION_FROM_EMAIL=rfpita.work@gmail.com
 NOTIFICATION_FROM_NAME=Marca Minha Vez
+NOTIFICATION_SIGNING_SECRET=...
 ```
+
+`NOTIFICATION_SIGNING_SECRET` é o segredo preferencial para assinar os links de gerenciamento de agendamento. Durante a rotação, a aplicação ainda aceita tokens legados assinados com `SUPABASE_SERVICE_ROLE_KEY` para não invalidar links já emitidos. Novos links passam a usar o segredo dedicado quando ele estiver configurado.
 
 O endereço `NOTIFICATION_FROM_EMAIL` deve estar cadastrado e autorizado como remetente na Brevo antes do envio real.
 
