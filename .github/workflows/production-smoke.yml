@@ -1,0 +1,38 @@
+name: Production smoke
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 * * * *"
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check homepage
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 --retry-delay 3 --connect-timeout 10 --max-time 30 \
+            https://marca-minha-vez.lovable.app/ \
+            -o homepage.html
+          grep -q "Marca Minha Vez" homepage.html
+
+      - name: Check protected scheduler endpoint
+        run: |
+          set -euo pipefail
+          endpoint="https://marca-minha-vez.lovable.app/api/public/hooks/dispatch-notifications"
+
+          get_status=$(curl -sS -o /tmp/get-response.json -w '%{http_code}' \
+            --retry 2 --connect-timeout 10 --max-time 30 \
+            -X GET "${endpoint}")
+          test "${get_status}" = "405"
+
+          post_status=$(curl -sS -o /tmp/post-response.json -w '%{http_code}' \
+            --retry 2 --connect-timeout 10 --max-time 30 \
+            -X POST "${endpoint}")
+          test "${post_status}" = "401"
