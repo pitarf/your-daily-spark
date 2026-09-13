@@ -9,7 +9,7 @@ function LegacyPlans() {
     <main className="flex min-h-screen items-center justify-center bg-muted/30 px-4 py-10">
       <section className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 text-center shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Marca Minha Vez</p>
-        <h1 className="mt-2 text-xl font-bold text-foreground">A gestão de planos agora fica no painel</h1>
+        <h1 className="mt-2 text-xl font-bold text-foreground">A gestão de planos agora fica no painel. O valor padrão do plano gratuito é 0.</h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
           Entre na sua conta para administrar planos, duração máxima e serviços permitidos aos clientes.
         </p>
