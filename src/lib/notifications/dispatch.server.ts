@@ -1,14 +1,18 @@
+import { createHmac } from "node:crypto";
+
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 import { sendNotificationEmail } from "@/lib/notifications/email.server";
+import { redactSecrets } from "@/lib/integrations/secret-safe.server";
 import type { NotificationType } from "@/lib/notifications";
 
 type NotificationRow = {
   id: string;
   type: NotificationType;
   scheduled_at: string;
-  customer: { name: string; email: string | null } | null;
+  customer: { name: string; email: string | null; phone: string | null } | null;
   appointment: {
+    id: string;
     starts_at: string;
     ends_at: string;
     custom_title: string | null;
@@ -18,6 +22,7 @@ type NotificationRow = {
   } | null;
   establishment: {
     name: string;
+    slug: string;
     timezone: string;
   } | null;
 };
@@ -55,6 +60,22 @@ function formatMoney(value: number | null) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 }
 
+function getManagementPath(row: NotificationRow) {
+  if (!row.customer?.phone || !row.establishment || !row.appointment) return null;
+  if (!process.env["SUPABASE_SERVICE_ROLE_KEY"]) return null;
+
+  const expiresAtMs = new Date(row.appointment.ends_at).getTime() + 30 * 24 * 60 * 60 * 1000;
+  const normalizedPhone = row.customer.phone.replace(/\D/g, "");
+  const payload = `${row.appointment.id}:${expiresAtMs}:${normalizedPhone}`;
+  const signature = createHmac("sha256", process.env["SUPABASE_SERVICE_ROLE_KEY"])
+    .update(payload)
+    .digest("base64url");
+  const token = `${expiresAtMs}.${signature}`;
+  const appUrl = (process.env["PUBLIC_APP_URL"] || "https://marca-minha-vez.lovable.app").replace(/\/$/, "");
+
+  return `${appUrl}/agenda/${encodeURIComponent(row.establishment.slug)}?manage=${encodeURIComponent(row.appointment.id)}&token=${encodeURIComponent(token)}`;
+}
+
 function notificationCopy(type: NotificationType, establishmentName: string) {
   switch (type) {
     case "confirmation":
@@ -89,8 +110,8 @@ function buildEmail(row: NotificationRow) {
   const durationMinutes = Math.max(15, Math.round((new Date(row.appointment.ends_at).getTime() - new Date(row.appointment.starts_at).getTime()) / 60000));
   const price = formatMoney(row.appointment.custom_price ?? row.appointment.service?.price ?? null);
   const copy = notificationCopy(row.type, row.establishment.name);
+  const managementUrl = row.type === "cancellation" ? null : getManagementPath(row);
 
-  const subject = copy.subject;
   const text = [
     copy.heading,
     "",
@@ -102,6 +123,7 @@ function buildEmail(row: NotificationRow) {
     `Período: ${startTime} às ${endTime}`,
     `Duração: ${durationMinutes} minutos`,
     ...(price ? [`Valor: ${price}`] : []),
+    ...(managementUrl ? ["", `Gerenciar agendamento: ${managementUrl}`] : []),
     "",
     "Marca Minha Vez",
   ].join("\n");
@@ -122,13 +144,14 @@ function buildEmail(row: NotificationRow) {
           <p style="margin:4px 0;">${escapeHtml(startTime)} às ${escapeHtml(endTime)} · ${durationMinutes} minutos</p>
           ${price ? `<p style="margin:4px 0;">${escapeHtml(price)}</p>` : ""}
         </div>
+        ${managementUrl ? `<div style="margin:24px 0 0;text-align:center;"><a href="${escapeHtml(managementUrl)}" style="display:inline-block;background:#17181a;color:#ffffff;text-decoration:none;border-radius:10px;padding:12px 18px;font-weight:700;">Gerenciar agendamento</a></div>` : ""}
         <p style="margin:20px 0 0;font-size:12px;color:#6b7280;">Este e-mail foi gerado automaticamente pelo sistema de agendamento.</p>
       </div>
     </div>
   </body>
 </html>`;
 
-  return { to: row.customer.email, subject, html, text };
+  return { to: row.customer.email, subject: copy.subject, html, text };
 }
 
 async function markNotificationSent(id: string) {
@@ -157,7 +180,7 @@ export async function dispatchDueNotifications(limit = 25): Promise<DispatchResu
   const now = new Date().toISOString();
   const { data, error } = await supabaseAdmin
     .from("notifications")
-    .select("id, type, scheduled_at, customer:customer_id(name, email), appointment:appointment_id(starts_at, ends_at, custom_title, custom_price, service:service_id(name, price), professional:professional_id(name)), establishment:establishment_id(name, timezone)")
+    .select("id, type, scheduled_at, customer:customer_id(name, email, phone), appointment:appointment_id(id, starts_at, ends_at, custom_title, custom_price, service:service_id(name, price), professional:professional_id(name)), establishment:establishment_id(name, slug, timezone)")
     .eq("status", "scheduled")
     .lte("scheduled_at", now)
     .order("scheduled_at", { ascending: true })
@@ -201,7 +224,7 @@ export async function dispatchDueNotifications(limit = 25): Promise<DispatchResu
       result.failed += 1;
       console.error("Notification delivery failed", {
         notificationId: notification.id,
-        error: error instanceof Error ? error.message : String(error),
+        error: error instanceof Error ? redactSecrets(error.message) : "unknown error",
       });
     }
   }
