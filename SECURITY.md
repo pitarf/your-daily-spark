@@ -4,6 +4,8 @@
 
 Nenhuma chave de API deve ser armazenada no repositório, em arquivos `.env` versionados ou no código enviado ao navegador.
 
+Arquivos de ambiente locais devem permanecer fora do Git. O repositório usa `.gitignore` para bloquear `.env` e `.env.*`, mantendo somente `.env.example` como referência não sensível.
+
 As integrações usam variáveis de ambiente:
 
 - `GEMINI_API_KEY`
