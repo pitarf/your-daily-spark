@@ -40,7 +40,7 @@ const DAY_NAMES = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "
 
 function getGeminiConfig() {
   const apiKey = process.env["GEMINI_API_KEY"];
-  const model = process.env["GEMINI_SCHEDULE_MODEL"] ?? "gemini-2.5-flash-lite";
+  const model = process.env["GEMINI_SCHEDULE_MODEL"] ?? "gemini-3.5-flash-lite";
 
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY ainda não foi configurada no ambiente.");

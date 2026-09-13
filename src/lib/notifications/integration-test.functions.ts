@@ -34,7 +34,7 @@ export const getIntegrationStatus = createServerFn({ method: "POST" })
     return {
       brevoConfigured: Boolean(process.env["BREVO_API_KEY"]),
       geminiConfigured: Boolean(process.env["GEMINI_API_KEY"]),
-      geminiModel: process.env["GEMINI_SCHEDULE_MODEL"] ?? "gemini-2.5-flash-lite",
+      geminiModel: process.env["GEMINI_SCHEDULE_MODEL"] ?? "gemini-3.5-flash-lite",
       notificationFromEmail: process.env["NOTIFICATION_FROM_EMAIL"] || "rfpita.work@gmail.com",
       notificationFromName: process.env["NOTIFICATION_FROM_NAME"]?.trim() || "Marca Minha Vez",
     };
@@ -46,7 +46,7 @@ export const testGeminiIntegration = createServerFn({ method: "POST" })
     await requireAdmin(data.establishmentId, data.accessToken);
 
     const apiKey = process.env["GEMINI_API_KEY"];
-    const model = process.env["GEMINI_SCHEDULE_MODEL"] ?? "gemini-2.5-flash-lite";
+    const model = process.env["GEMINI_SCHEDULE_MODEL"] ?? "gemini-3.5-flash-lite";
 
     if (!apiKey) {
       return { ok: false as const, model, error: "GEMINI_API_KEY ainda não foi configurada no ambiente." };
