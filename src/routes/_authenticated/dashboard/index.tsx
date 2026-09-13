@@ -116,11 +116,55 @@ function DashboardHome() {
     },
   });
 
+  const servicesCountQuery = useQuery({
+    queryKey: ["dash-setup-services", membership.establishmentId],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("services")
+        .select("id", { count: "exact", head: true })
+        .eq("establishment_id", membership.establishmentId)
+        .eq("active", true);
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
+  const professionalsCountQuery = useQuery({
+    queryKey: ["dash-setup-professionals", membership.establishmentId],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("professionals")
+        .select("id", { count: "exact", head: true })
+        .eq("establishment_id", membership.establishmentId)
+        .eq("active", true);
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
+  const schedulesCountQuery = useQuery({
+    queryKey: ["dash-setup-schedules", membership.establishmentId],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("weekly_schedules")
+        .select("id", { count: "exact", head: true })
+        .eq("establishment_id", membership.establishmentId)
+        .eq("active", true);
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
   const todayAppointments = todayQuery.data ?? [];
   const activeToday = todayAppointments.filter((item) => item.status !== "cancelled");
   const confirmedToday = todayAppointments.filter((item) => item.status === "confirmed");
   const pendingToday = todayAppointments.filter((item) => item.status === "pending");
   const recentNotifications = notificationsQuery.data ?? [];
+  const showSetup = membership.role === "admin" && (
+    (servicesCountQuery.data ?? 0) === 0 ||
+    (professionalsCountQuery.data ?? 0) === 0 ||
+    (schedulesCountQuery.data ?? 0) === 0
+  );
 
   return (
     <div className="space-y-6">
@@ -146,6 +190,39 @@ function DashboardHome() {
         <Stat label="Horários livres" value={slotsQuery.isPending ? "…" : String(slotsQuery.data?.free ?? 0)} detail="Para o serviço mais curto" />
         <Stat label="Horários ocupados" value={slotsQuery.isPending ? "…" : String(slotsQuery.data?.busy ?? 0)} detail="Inclui indisponibilidades" />
       </div>
+
+      {showSetup ? (
+        <section className="rounded-xl border border-primary/20 bg-primary/5 p-4 sm:p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Primeiros passos</p>
+              <h2 className="mt-1 text-lg font-bold text-foreground">Deixe sua agenda pronta para receber clientes</h2>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">Você já criou o estabelecimento. Agora configure o que o cliente precisa para encontrar horários reais.</p>
+            </div>
+            <Link to="/dashboard/profile" className="text-xs font-semibold underline">Editar perfil</Link>
+          </div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            <SetupStep
+              done={(servicesCountQuery.data ?? 0) > 0}
+              label="Cadastrar serviços"
+              detail="Defina nome, duração e preço."
+              to="/dashboard/services"
+            />
+            <SetupStep
+              done={(professionalsCountQuery.data ?? 0) > 0}
+              label="Adicionar profissionais"
+              detail="Cadastre quem realiza os atendimentos."
+              to="/dashboard/professionals"
+            />
+            <SetupStep
+              done={(schedulesCountQuery.data ?? 0) > 0}
+              label="Configurar expediente"
+              detail="Informe horários, intervalos e exceções."
+              to="/dashboard/settings"
+            />
+          </div>
+        </section>
+      ) : null}
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <QuickLink to="/dashboard/appointments" title="Gerenciar agenda" description="Dia, semana, mês e bloqueios" />
@@ -270,6 +347,30 @@ function Stat({ label, value, detail }: { label: string; value: string; detail: 
       <p className="mt-1 text-3xl font-bold text-foreground">{value}</p>
       <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
     </div>
+  );
+}
+
+function SetupStep({
+  done,
+  label,
+  detail,
+  to,
+}: {
+  done: boolean;
+  label: string;
+  detail: string;
+  to: "/dashboard/services" | "/dashboard/professionals" | "/dashboard/settings";
+}) {
+  return (
+    <Link to={to} className="rounded-lg border border-border bg-card p-4 transition-colors hover:bg-accent">
+      <div className="flex items-center gap-2">
+        <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${done ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`} aria-hidden="true">
+          {done ? "✓" : "!"}
+        </span>
+        <span className="text-sm font-semibold text-foreground">{label}</span>
+      </div>
+      <p className="mt-2 pl-8 text-xs leading-5 text-muted-foreground">{done ? "Configurado" : detail}</p>
+    </Link>
   );
 }
 
