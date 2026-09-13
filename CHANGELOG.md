@@ -209,8 +209,8 @@
   - Migration versionada em `supabase/migrations/20260912060000_standalone_custom_appointments.sql`.
 - **Arquivos alterados**: `src/lib/scheduling/standalone-custom-booking.functions.ts`, `src/components/scheduling/StandaloneCustomBookingPage.tsx`, `src/routes/agenda/$slug.tsx`, nova migration, `PROJECT_STATUS.md`, `CHANGELOG.md`.
 - **Testes realizados**: alteração do schema aplicada no PostgreSQL do ambiente Lovable e verificação estrutural do fluxo server-side.
-- **Problemas encontrados**: a apresentação administrativa de atendimentos sem serviço ainda precisa de um refinamento para exibir o título personalizado no calendário.
-- **Pendências relacionadas**: UI administrativa de atendimentos avulsos, IA, Google, notificações reais, pagamentos e WhatsApp.
+- **Problemas encontrados**: a apresentação administrativa de atendimentos avulsos ainda precisava de refinamento, entregue nas etapas seguintes.
+- **Pendências relacionadas**: IA, Google, notificações reais, pagamentos e WhatsApp.
 
 ## 2026-09-12 (20)
 - **Objetivo da alteração**: Refinar a apresentação administrativa dos atendimentos avulsos sem serviço.
@@ -253,7 +253,7 @@
 - **Arquivos alterados**: `README.md`, `CHANGELOG.md`.
 - **Testes realizados**: revisão manual da documentação contra a estrutura atual do repositório.
 - **Problemas encontrados**: README anterior ainda descrevia o projeto como "Your Daily Spark".
-- **Pendências relacionadas**: refinamentos gerais de UX, IA, Google, notificações reais, pagamentos e WhatsApp.
+- **Pendências relacionadas**: refinamentos gerais de UX, IA, notificações reais, Google, pagamentos e WhatsApp.
 
 ## 2026-09-12 (24)
 - **Objetivo da alteração**: Refinar a experiência da agenda pública conforme a configuração do estabelecimento.
@@ -274,7 +274,7 @@
 - **Arquivos alterados**: `src/routes/_authenticated/dashboard/index.tsx`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
 - **Testes realizados**: revisão estrutural da consulta e da renderização dos campos personalizados.
 - **Problemas encontrados**: nenhum novo bloqueador conhecido.
-- **Pendências relacionadas**: refinamentos gerais de UX, IA, Google, notificações reais, pagamentos e WhatsApp.
+- **Pendências relacionadas**: refinamentos gerais de UX, IA, notificações reais, Google, pagamentos e WhatsApp.
 
 ## 2026-09-12 (26)
 - **Objetivo da alteração**: Registrar eventos de agendamento na fila interna de notificações e expor a atividade no dashboard.
@@ -458,3 +458,40 @@
 - **Testes realizados**: typecheck, lint e build sem erros; revisão do fluxo do workflow e do tratamento de resposta.
 - **Problemas encontrados**: nenhum.
 - **Pendências relacionadas**: cadastrar `NOTIFICATIONS_CRON_SECRET` nos Secrets do repositório GitHub, Google Login, WhatsApp/SMS e pagamentos.
+
+## 2026-09-13 (40)
+- **Objetivo da alteração**: Endurecer a preparação para produção após a configuração dos Secrets de Gemini, Brevo e scheduler.
+- **Funcionalidades implementadas**: endpoint do scheduler passou a aceitar somente POST; workflow de notificações ganhou retry e validação do resumo; adicionados `SECURITY.md` e `docs/production-checklist.md`; README atualizado para o produto Marca Minha Vez.
+- **Arquivos alterados**: `.github/workflows/notifications-cron.yml`, `src/routes/api/public/hooks/dispatch-notifications.ts`, `SECURITY.md`, `docs/production-checklist.md`, `README.md`, `PROJECT_STATUS.md`.
+- **Testes realizados**: TypeScript, ESLint e build de produção no CI.
+- **Problemas encontrados**: documentação anterior ainda citava `NOTIFICATIONS_CRON_SECRET`; o ambiente atual utiliza `LOVABLE_CRON_SECRET`.
+- **Pendências relacionadas**: validar produção e manter o token antigo da Brevo revogado.
+
+## 2026-09-13 (41)
+- **Objetivo da alteração**: Adicionar monitoramento operacional contínuo sem depender de checagem manual.
+- **Funcionalidades implementadas**: smoke test periódico da homepage e proteção do scheduler; validação 405 para GET e 401 para POST sem secret; Dependabot semanal para npm e GitHub Actions.
+- **Arquivos alterados**: `.github/workflows/production-smoke.yml`, `.github/dependabot.yml`, `PROJECT_STATUS.md`.
+- **Testes realizados**: CI validado; smoke test configurado para execução horária, manual e após push na main.
+- **Problemas encontrados**: nenhum bloqueador conhecido.
+- **Pendências relacionadas**: validação end-to-end e integrações externas.
+
+## 2026-09-13 (42)
+- **Objetivo da alteração**: Separar o segredo dos links de gerenciamento do segredo administrativo do Supabase e melhorar compartilhamento das agendas.
+- **Funcionalidades implementadas**: `NOTIFICATION_SIGNING_SECRET` passou a ser o segredo preferencial para novos links; tokens legados continuam verificáveis durante a rotação; comparação de assinatura usa `timingSafeEqual`; Brevo passou a reutilizar o mecanismo centralizado; agenda pública recebeu canonical, robots, Open Graph e Twitter metadata.
+- **Arquivos alterados**: `src/lib/security/management-token.server.ts`, `src/lib/scheduling/appointment-management.functions.ts`, `src/lib/notifications/dispatch.server.ts`, `docs/notifications.md`, `src/routes/agenda/$slug.tsx`, `PROJECT_STATUS.md`.
+- **Testes realizados**: CI validou TypeScript, ESLint e build antes do merge.
+- **Problemas encontrados**: tokens antigos ainda dependem da chave legada até expiração/rotação.
+- **Pendências relacionadas**: definir `NOTIFICATION_SIGNING_SECRET` no ambiente se ainda não configurado.
+
+## 2026-09-13 (43)
+- **Objetivo da alteração**: Melhorar a produtividade no gerenciamento de clientes e da agenda administrativa.
+- **Funcionalidades implementadas**:
+  - Busca por nome, telefone, e-mail ou plano na área de clientes.
+  - Filtro por plano, incluindo clientes sem plano.
+  - Busca por cliente/telefone/serviço/profissional na agenda administrativa.
+  - Filtro por status e profissional nas visões Dia, Semana e Mês.
+  - Botão para limpar todos os filtros.
+- **Arquivos alterados**: `src/routes/_authenticated/dashboard/customers.tsx`, `src/routes/_authenticated/dashboard/appointments.tsx`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
+- **Testes realizados**: aguardando CI da branch de consolidação.
+- **Problemas encontrados**: nenhum conhecido.
+- **Pendências relacionadas**: refinamentos finais de UX e relatórios.
