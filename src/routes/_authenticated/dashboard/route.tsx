@@ -33,6 +33,7 @@ function DashboardLayout() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
 
   const membershipsQuery = useQuery({
     queryKey: ["memberships"],
@@ -64,6 +65,12 @@ function DashboardLayout() {
 
   const visibleNav = membership?.role === "professional" ? NAV.filter((item) => item.exact) : NAV;
 
+  function activateEstablishment(id: string) {
+    setActiveId(id);
+    window.localStorage.setItem(ACTIVE_KEY, id);
+    setShowCreate(false);
+  }
+
   return (
     <div className="min-h-screen bg-muted/30">
       <header className="border-b border-border bg-card">
@@ -72,20 +79,30 @@ function DashboardLayout() {
             Marca Minha Vez
           </Link>
           <span className="text-xs text-muted-foreground">{membership?.name}</span>
-          <div className="ml-auto flex items-center gap-3">
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
             {memberships.length > 1 ? (
-              <select
-                className="rounded-md border border-input bg-background px-2 py-1 text-xs"
-                value={membership?.establishmentId ?? ""}
-                onChange={(e) => {
-                  setActiveId(e.target.value);
-                  window.localStorage.setItem(ACTIVE_KEY, e.target.value);
-                }}
+              <label className="flex items-center gap-2">
+                <span className="sr-only">Estabelecimento ativo</span>
+                <select
+                  aria-label="Selecionar estabelecimento ativo"
+                  className="max-w-48 rounded-md border border-input bg-background px-2 py-1 text-xs"
+                  value={membership?.establishmentId ?? ""}
+                  onChange={(e) => activateEstablishment(e.target.value)}
+                >
+                  {memberships.map((m) => (
+                    <option key={m.establishmentId} value={m.establishmentId}>{m.name}</option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+            {membership?.role === "admin" ? (
+              <button
+                type="button"
+                onClick={() => setShowCreate(true)}
+                className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
               >
-                {memberships.map((m) => (
-                  <option key={m.establishmentId} value={m.establishmentId}>{m.name}</option>
-                ))}
-              </select>
+                Novo estabelecimento
+              </button>
             ) : null}
             <button
               type="button"
@@ -97,7 +114,7 @@ function DashboardLayout() {
           </div>
         </div>
         {membership ? (
-          <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-2 pb-2 text-sm">
+          <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-2 pb-2 text-sm" aria-label="Navegação do painel">
             {visibleNav.map((item) => {
               const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
               return (
@@ -120,16 +137,16 @@ function DashboardLayout() {
         ) : membershipsQuery.isError ? (
           <p className="text-sm text-destructive">Não foi possível carregar seus estabelecimentos.</p>
         ) : !membership ? (
-          <Onboarding onDone={() => membershipsQuery.refetch()} />
+          <Onboarding onDone={(id) => {
+            if (id) activateEstablishment(id);
+            void membershipsQuery.refetch();
+          }} />
         ) : (
           <EstablishmentProvider
             value={{
               membership,
               memberships,
-              setActive: (id) => {
-                setActiveId(id);
-                window.localStorage.setItem(ACTIVE_KEY, id);
-              },
+              setActive: activateEstablishment,
               refresh: () => void membershipsQuery.refetch(),
             }}
           >
@@ -137,6 +154,21 @@ function DashboardLayout() {
           </EstablishmentProvider>
         )}
       </main>
+
+      {showCreate && membership?.role === "admin" ? (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-10 backdrop-blur-sm">
+          <div className="w-full max-w-lg">
+            <Onboarding
+              onDone={(id) => {
+                if (id) activateEstablishment(id);
+                void membershipsQuery.refetch();
+              }}
+              allowCancel
+              onCancel={() => setShowCreate(false)}
+            />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -150,7 +182,15 @@ function slugify(value: string) {
     .replace(/^-|-$/g, "");
 }
 
-function Onboarding({ onDone }: { onDone: () => void }) {
+function Onboarding({
+  onDone,
+  allowCancel = false,
+  onCancel,
+}: {
+  onDone: (establishmentId?: string) => void;
+  allowCancel?: boolean;
+  onCancel?: () => void;
+}) {
   const [name, setName] = useState("");
   const [businessType, setBusinessType] = useState("barbearia");
   const [busy, setBusy] = useState(false);
@@ -167,9 +207,15 @@ function Onboarding({ onDone }: { onDone: () => void }) {
       setBusy(false);
       return;
     }
+    const trimmedName = name.trim();
+    if (trimmedName.length < 2) {
+      setError("Informe um nome válido para o estabelecimento.");
+      setBusy(false);
+      return;
+    }
     const { data, error: err } = await supabase
       .from("establishments")
-      .insert({ name, slug: `${slugify(name)}-${Date.now().toString(36)}`, business_type: businessType })
+      .insert({ name: trimmedName, slug: `${slugify(trimmedName)}-${Date.now().toString(36)}`, business_type: businessType })
       .select("id")
       .single();
     if (err || !data) {
@@ -185,7 +231,8 @@ function Onboarding({ onDone }: { onDone: () => void }) {
       setError(memberError.message);
       return;
     }
-    onDone();
+    setName("");
+    onDone(data.id);
   }
 
   async function claimDemo() {
@@ -211,32 +258,51 @@ function Onboarding({ onDone }: { onDone: () => void }) {
       setError("A barbearia de demonstração já tem um administrador. Crie seu próprio estabelecimento.");
       return;
     }
-    onDone();
+    onDone(demo.id);
   }
 
   return (
-    <div className="mx-auto max-w-lg rounded-2xl border border-border bg-card p-6">
-      <h1 className="text-xl font-bold text-foreground">Vamos configurar seu estabelecimento</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Sua conta ainda não está ligada a nenhum estabelecimento.</p>
+    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-7">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-foreground">{allowCancel ? "Novo estabelecimento" : "Vamos configurar seu estabelecimento"}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{allowCancel ? "Crie outro negócio e alterne entre os seus estabelecimentos pelo painel." : "Sua conta ainda não está ligada a nenhum estabelecimento."}</p>
+        </div>
+        {allowCancel ? (
+          <button type="button" onClick={onCancel} disabled={busy} aria-label="Fechar" className="rounded-md border border-input px-2 py-1 text-xs text-muted-foreground hover:bg-accent disabled:opacity-60">Fechar</button>
+        ) : null}
+      </div>
+
       <form className="mt-6 space-y-3" onSubmit={createEstablishment}>
         <label className="block space-y-1">
           <span className="text-sm font-medium text-foreground">Nome do estabelecimento</span>
-          <input required className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={name} onChange={(e) => setName(e.target.value)} />
+          <input
+            required
+            minLength={2}
+            autoFocus={allowCancel}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Ex.: Barbearia do Rafael"
+          />
         </label>
         <label className="block space-y-1">
           <span className="text-sm font-medium text-foreground">Tipo de negócio</span>
           <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={businessType} onChange={(e) => setBusinessType(e.target.value)}>
-            {["barbearia", "salão", "nail designer", "sobrancelhas", "estética", "clínica", "outro"].map((t) => <option key={t} value={t}>{t}</option>)}
+            {["barbearia", "salão", "nail designer", "sobrancelhas", "estética", "clínica", "consultório", "tatuagem", "outro"].map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
         </label>
-        {error ? <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p> : null}
+        {error ? <p role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p> : null}
         <button type="submit" disabled={busy} className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60">
           {busy ? "Criando…" : "Criar estabelecimento"}
         </button>
       </form>
-      <button type="button" onClick={claimDemo} disabled={busy} className="mt-4 w-full rounded-md border border-input px-4 py-2 text-sm text-foreground hover:bg-accent disabled:opacity-60">
-        Usar a Barbearia Marca Minha Vez (demonstração)
-      </button>
+
+      {!allowCancel ? (
+        <button type="button" onClick={claimDemo} disabled={busy} className="mt-4 w-full rounded-md border border-input px-4 py-2 text-sm text-foreground hover:bg-accent disabled:opacity-60">
+          Usar a Barbearia Marca Minha Vez (demonstração)
+        </button>
+      ) : null}
     </div>
   );
 }
