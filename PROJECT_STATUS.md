@@ -24,6 +24,7 @@
 - Link de gerenciamento após a confirmação.
 - Links de gerenciamento também nos e-mails de confirmação e lembrete.
 - Exportação do agendamento em `.ics`.
+- Rotação de segredo de assinatura preparada: novos links usam `NOTIFICATION_SIGNING_SECRET` quando configurado e tokens legados continuam verificáveis durante a transição.
 
 ### Estabelecimento e equipe
 - Onboarding.
@@ -56,14 +57,15 @@
 - GitHub Actions executando a fila a cada 5 minutos.
 - Workflow com retry e validação do resumo de processamento.
 - O endpoint do scheduler aceita somente `POST`.
+- Smoke test de produção verifica homepage e proteção do scheduler.
 
 ### Qualidade, operação e documentação
 - CI com TypeScript, ESLint e build de produção.
-- Smoke test de produção para homepage e endpoint protegido do scheduler.
 - Dependabot configurado para atualizações semanais de dependências npm e GitHub Actions.
 - `CHANGELOG.md` mantido como histórico permanente.
 - `README.md` atualizado para o produto Marca Minha Vez.
 - `SECURITY.md` e `docs/production-checklist.md` adicionados.
+- `docs/notifications.md` documenta Brevo, scheduler e rotação do segredo de gerenciamento.
 
 ## Em Desenvolvimento 🟡
 - Refinamentos finais de UX em desktop e mobile.
@@ -78,7 +80,7 @@
 - SMS.
 - Pagamentos e assinaturas SaaS.
 - Limites comerciais por plano SaaS.
-- Revisão e revogação de qualquer chave antiga que tenha aparecido no histórico Git.
+- Revogar/invalidar qualquer chave antiga da Brevo exposta no histórico, caso ainda não tenha sido feita.
 
 ## Configurado no ambiente
 
