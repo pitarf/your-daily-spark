@@ -7,6 +7,17 @@ function unauthorized() {
   });
 }
 
+function methodNotAllowed() {
+  return new Response(JSON.stringify({ error: "method_not_allowed" }), {
+    status: 405,
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "no-store",
+      Allow: "POST",
+    },
+  });
+}
+
 /** Comparação de tempo constante, sem revelar o tamanho por atalho de saída. */
 function safeEqual(a: string, b: string) {
   const encoder = new TextEncoder();
@@ -26,9 +37,7 @@ function parseLimit(raw: string | null) {
   return Math.min(Math.floor(value), 100);
 }
 
-async function handle(request: Request) {
-  // LOVABLE_CRON_SECRET is the deployed secret name. Keep the previous
-  // name as a compatibility fallback so existing environments keep working.
+async function handlePost(request: Request) {
   const configured =
     process.env["LOVABLE_CRON_SECRET"] ??
     process.env["NOTIFICATIONS_CRON_SECRET"];
@@ -70,8 +79,8 @@ async function handle(request: Request) {
 export const Route = createFileRoute("/api/public/hooks/dispatch-notifications")({
   server: {
     handlers: {
-      POST: async ({ request }) => handle(request),
-      GET: async ({ request }) => handle(request),
+      POST: async ({ request }) => handlePost(request),
+      GET: async () => methodNotAllowed(),
     },
   },
 });
