@@ -77,6 +77,7 @@ function ProfilePage() {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [hydrated, setHydrated] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [shareMessage, setShareMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const query = useQuery({
@@ -155,6 +156,7 @@ function ProfilePage() {
   const publicPath = establishment.slug
     ? `/agenda/${encodeURIComponent(establishment.slug)}`
     : "/schedule";
+  const publicUrl = typeof window !== "undefined" ? new URL(publicPath, window.location.origin).toString() : publicPath;
   const previewTheme = getBusinessThemeWithPreset(draft?.businessType ?? establishment.business_type, draft?.themePreset ?? establishment.theme_preset);
   const autoTheme = getBusinessTheme(establishment.business_type);
 
@@ -162,6 +164,28 @@ function ProfilePage() {
     setDraft((current) => (current ? { ...current, ...patch } : current));
     setError(null);
     setSaved(false);
+  }
+
+  async function copyPublicLink() {
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      setShareMessage("Link copiado.");
+    } catch {
+      setShareMessage("Não foi possível copiar automaticamente. Abra a agenda e copie o endereço do navegador.");
+    }
+    window.setTimeout(() => setShareMessage(null), 2500);
+  }
+
+  async function sharePublicLink() {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: establishment.name, text: "Agende seu atendimento", url: publicUrl });
+        return;
+      } catch (shareError) {
+        if (shareError instanceof DOMException && shareError.name === "AbortError") return;
+      }
+    }
+    await copyPublicLink();
   }
 
   return (
@@ -283,9 +307,19 @@ function ProfilePage() {
       </section>
 
       <section className="rounded-xl border border-border bg-card p-4">
-        <h2 className="text-base font-semibold text-foreground">Agenda pública</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Veja exatamente o endereço que seus clientes podem acessar.</p>
-        <a href={publicPath} target="_blank" rel="noreferrer" className="mt-4 inline-flex rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Abrir agenda pública</a>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-base font-semibold text-foreground">Agenda pública</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Veja exatamente o endereço que seus clientes podem acessar.</p>
+            <p className="mt-2 break-all rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">{publicUrl}</p>
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <a href={publicPath} target="_blank" rel="noreferrer" className="inline-flex rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Abrir agenda</a>
+            {canEdit ? <button type="button" onClick={() => void copyPublicLink()} className="inline-flex rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Copiar link</button> : null}
+            {canEdit ? <button type="button" onClick={() => void sharePublicLink()} className="inline-flex rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">Compartilhar</button> : null}
+          </div>
+        </div>
+        {shareMessage ? <p className="mt-3 text-xs font-medium text-primary" role="status">{shareMessage}</p> : null}
       </section>
     </div>
   );
