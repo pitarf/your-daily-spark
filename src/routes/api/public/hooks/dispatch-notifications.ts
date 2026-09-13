@@ -27,7 +27,11 @@ function parseLimit(raw: string | null) {
 }
 
 async function handle(request: Request) {
-  const configured = process.env["NOTIFICATIONS_CRON_SECRET"];
+  // LOVABLE_CRON_SECRET is the deployed secret name. Keep the previous
+  // name as a compatibility fallback so existing environments keep working.
+  const configured =
+    process.env["LOVABLE_CRON_SECRET"] ??
+    process.env["NOTIFICATIONS_CRON_SECRET"];
   if (!configured) return unauthorized();
 
   const provided =
