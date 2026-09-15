@@ -31,6 +31,7 @@
 - [ ] Operações administrativas protegidas no servidor
 - [ ] Links de gerenciamento usam assinatura e expiração
 - [ ] Endpoint de scheduler protegido por secret
+- [ ] Service worker não armazena respostas de `/api/` nem dados autenticados
 
 ## Notificações
 
@@ -41,6 +42,13 @@
 - [ ] Scheduler do GitHub Actions executa a cada 5 minutos
 - [ ] Falhas de entrega aparecem no histórico da fila
 
+## WhatsApp
+
+- [ ] Botão `Enviar pelo WhatsApp` abre `wa.me` com mensagem pré-preenchida
+- [ ] O envio continua sob confirmação manual do cliente
+- [ ] Nenhuma integração oficial/API é necessária para o fluxo `wa.me`
+- [ ] WhatsApp oficial só deve ser habilitado depois de definir provedor, templates e custos
+
 ## IA
 
 - [ ] Assistente de configuração de expediente testado
@@ -49,6 +57,15 @@
 - [ ] Serviço e profissional são resolvidos contra cadastros reais
 - [ ] Horários retornados são provenientes do motor de disponibilidade
 - [ ] Dados pessoais desnecessários não são enviados ao Gemini
+
+## PWA e mobile
+
+- [ ] Manifesto e ícone carregam corretamente
+- [ ] Instalação do app testada no navegador compatível
+- [ ] Service worker registrado sem erros
+- [ ] Agenda pública testada em tela pequena
+- [ ] Dashboard testado em tela pequena
+- [ ] Fluxos de agendamento, cancelamento e reagendamento testados no celular
 
 ## Autenticação
 
@@ -70,3 +87,5 @@
 - [ ] Atendimento avulso testado
 - [ ] Cancelamento e reagendamento testados
 - [ ] Novo estabelecimento criado e isolado do estabelecimento demo
+- [ ] E-mail real via Brevo testado em produção
+- [ ] Scheduler de notificações executado com sucesso em produção
