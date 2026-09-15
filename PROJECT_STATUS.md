@@ -24,6 +24,7 @@
 - Link de gerenciamento após a confirmação.
 - Links de gerenciamento também nos e-mails de confirmação e lembrete.
 - Exportação do agendamento em `.ics`.
+- Compartilhamento do gerenciamento pelo WhatsApp via `wa.me`, com mensagem pré-preenchida e envio manual confirmado pelo cliente.
 - Rotação de segredo de assinatura preparada: novos links usam `NOTIFICATION_SIGNING_SECRET` quando configurado e tokens legados continuam verificáveis durante a transição.
 
 ### Estabelecimento e equipe
@@ -36,6 +37,7 @@
 - Presets visuais adaptativos por tipo de negócio.
 - Compartilhamento da agenda pública.
 - Resumo semanal no dashboard.
+- Experiência PWA instalável com manifesto, ícone, service worker seguro e convite de instalação quando suportado pelo navegador.
 
 ### IA
 - Assistente de configuração de expediente com Gemini.
@@ -76,7 +78,7 @@
 
 ## Pendente 🔴
 - Habilitar o provedor Google no ambiente de autenticação.
-- WhatsApp oficial.
+- WhatsApp oficial via API, mantendo o fluxo `wa.me` manual disponível.
 - SMS.
 - Pagamentos e assinaturas SaaS.
 - Limites comerciais por plano SaaS.
@@ -87,6 +89,7 @@
 - `GEMINI_API_KEY`
 - `BREVO_API_KEY`
 - `LOVABLE_CRON_SECRET`
+- `NOTIFICATION_SIGNING_SECRET` (quando configurado, preferido para novos links de gerenciamento)
 
 O código nunca deve conter os valores dessas variáveis.
 
@@ -95,4 +98,4 @@ O código nunca deve conter os valores dessas variáveis.
 O repositório teve um alerta público de token antigo da Brevo no histórico Git. A chave antiga deve permanecer revogada. A remoção do arquivo atual, sozinha, não remove o segredo do histórico.
 
 ---
-*Última atualização: 2026-09-13*
+*Última atualização: 2026-09-15*
