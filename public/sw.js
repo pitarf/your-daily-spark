@@ -21,13 +21,27 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
 
+  // Never cache API/authenticated data. Those responses must remain fresh.
+  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/auth/")) return;
+
+  // Cache static assets and fall back to the app shell when offline.
+  const destination = event.request.destination;
+  const cacheable = destination === "script" || destination === "style" || destination === "image" || destination === "font" || destination === "manifest";
+  if (!cacheable && event.request.mode !== "navigate") return;
+
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-        return response;
-      })
-      .catch(() => caches.match(event.request).then((cached) => cached || caches.match("/"))),
+    caches.match(event.request).then((cached) => {
+      const network = fetch(event.request)
+        .then((response) => {
+          if (response.ok && cacheable) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return response;
+        })
+        .catch(() => cached || caches.match("/"));
+
+      return cached || network;
+    }),
   );
 });
