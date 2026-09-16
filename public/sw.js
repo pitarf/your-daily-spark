@@ -28,7 +28,15 @@ self.addEventListener("fetch", (event) => {
   // referencing an obsolete JavaScript bundle after a deployment.
   if (event.request.mode === "navigate") {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request).then((cached) => cached || Response.error())),
+      fetch(event.request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request).then((cached) => cached || Response.error())),
     );
     return;
   }
