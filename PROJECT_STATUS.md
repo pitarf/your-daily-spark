@@ -37,7 +37,7 @@
 - Presets visuais adaptativos por tipo de negócio.
 - Compartilhamento da agenda pública.
 - Resumo semanal no dashboard.
-- Experiência PWA instalável com manifesto, ícone, service worker seguro, atualização online prioritária nas navegações e convite de instalação quando suportado pelo navegador.
+- Experiência PWA instalável com manifesto, ícone, service worker seguro, atualização online prioritária nas navegações e convite de instalação quando suportado pelo navegador; o cache offline fica desativado na prévia para não misturar dependências temporárias.
 
 ### IA
 - Assistente de configuração de expediente com Gemini.

@@ -1,5 +1,9 @@
-const CACHE_NAME = "marca-minha-vez-v2";
+const CACHE_NAME = "marca-minha-vez-v3";
 const APP_SHELL = ["/manifest.webmanifest", "/app-icon.svg"];
+
+function isDevelopmentOrigin(url) {
+  return url.hostname === "localhost" || url.hostname.endsWith(".lovableproject.com");
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
@@ -20,6 +24,10 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
+
+  // Vite rewrites optimized dependencies while the preview is running. Caching
+  // those URLs can mix React and React DOM generations and break hooks.
+  if (isDevelopmentOrigin(url) || url.pathname.startsWith("/node_modules/.vite/")) return;
 
   // Never cache API/authenticated data. Those responses must remain fresh.
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/auth/")) return;

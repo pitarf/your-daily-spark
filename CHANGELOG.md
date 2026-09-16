@@ -503,3 +503,11 @@
 - **Testes realizados**: validação sintática do service worker e carregamento da página inicial com status 200, service worker ativo e nenhum erro no navegador.
 - **Problemas encontrados**: a versão publicada já continha as variáveis de conexão, mas um cache offline antigo ainda podia servir o bundle `index-UMSt4_Tg.js`, anterior à configuração dessas variáveis.
 - **Pendências relacionadas**: publicar esta correção para que os navegadores instalem o novo cache.
+
+## 2026-09-16 (45)
+- **Objetivo da alteração**: Corrigir a tela branca da prévia causada pela mistura de gerações dos módulos React otimizados pelo Vite.
+- **Funcionalidades implementadas**: o service worker deixou de atuar em origens de desenvolvimento e de interceptar módulos otimizados; a aplicação agora remove registros e caches próprios quando executada em desenvolvimento; o cache de produção foi incrementado para `v3`.
+- **Arquivos alterados**: `public/sw.js`, `src/routes/__root.tsx`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
+- **Testes realizados**: verificação das versões instaladas de React e TanStack; validação da página em navegador limpo e com cache previamente registrado.
+- **Problemas encontrados**: o service worker da PWA estava armazenando URLs de dependências temporárias da prévia, permitindo que React e React DOM fossem carregados de gerações diferentes após uma atualização.
+- **Pendências relacionadas**: publicar a correção para atualizar também o service worker da versão pública.

@@ -156,6 +156,23 @@ function RootComponent() {
 
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
+
+    if (import.meta.env.DEV) {
+      void navigator.serviceWorker.getRegistrations().then((registrations) =>
+        Promise.all(registrations.map((registration) => registration.unregister())),
+      );
+      if ("caches" in window) {
+        void caches.keys().then((keys) =>
+          Promise.all(
+            keys
+              .filter((key) => key.startsWith("marca-minha-vez-"))
+              .map((key) => caches.delete(key)),
+          ),
+        );
+      }
+      return;
+    }
+
     navigator.serviceWorker.register("/sw.js").catch(() => undefined);
   }, []);
 
