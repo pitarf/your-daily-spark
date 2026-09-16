@@ -37,7 +37,7 @@
 - Presets visuais adaptativos por tipo de negócio.
 - Compartilhamento da agenda pública.
 - Resumo semanal no dashboard.
-- Experiência PWA instalável com manifesto, ícone, service worker seguro e convite de instalação quando suportado pelo navegador.
+- Experiência PWA instalável com manifesto, ícone, service worker seguro, atualização online prioritária nas navegações e convite de instalação quando suportado pelo navegador.
 
 ### IA
 - Assistente de configuração de expediente com Gemini.
@@ -98,4 +98,4 @@ O código nunca deve conter os valores dessas variáveis.
 O repositório teve um alerta público de token antigo da Brevo no histórico Git. A chave antiga deve permanecer revogada. A remoção do arquivo atual, sozinha, não remove o segredo do histórico.
 
 ---
-*Última atualização: 2026-09-15*
+*Última atualização: 2026-09-16*

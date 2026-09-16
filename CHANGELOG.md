@@ -495,3 +495,11 @@
 - **Testes realizados**: aguardando CI da branch de consolidação.
 - **Problemas encontrados**: nenhum conhecido.
 - **Pendências relacionadas**: refinamentos finais de UX e relatórios.
+
+## 2026-09-16 (44)
+- **Objetivo da alteração**: Corrigir a tela branca que podia persistir após uma nova publicação.
+- **Funcionalidades implementadas**: o service worker passou a priorizar a rede nas navegações, deixou de armazenar a página inicial no app shell e teve sua versão de cache incrementada para remover documentos e bundles obsoletos.
+- **Arquivos alterados**: `public/sw.js`, `CHANGELOG.md`, `PROJECT_STATUS.md`.
+- **Testes realizados**: validação sintática do service worker e carregamento da página inicial com status 200, service worker ativo e nenhum erro no navegador.
+- **Problemas encontrados**: a versão publicada já continha as variáveis de conexão, mas um cache offline antigo ainda podia servir o bundle `index-UMSt4_Tg.js`, anterior à configuração dessas variáveis.
+- **Pendências relacionadas**: publicar esta correção para que os navegadores instalem o novo cache.
