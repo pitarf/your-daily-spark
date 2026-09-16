@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { GStack } from "gstack";
 
 import { useSession } from "@/lib/auth/auth-client";
 
