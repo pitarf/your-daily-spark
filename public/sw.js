@@ -1,5 +1,5 @@
-const CACHE_NAME = "marca-minha-vez-v1";
-const APP_SHELL = ["/", "/manifest.webmanifest", "/app-icon.svg"];
+const CACHE_NAME = "marca-minha-vez-v2";
+const APP_SHELL = ["/manifest.webmanifest", "/app-icon.svg"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
@@ -24,10 +24,19 @@ self.addEventListener("fetch", (event) => {
   // Never cache API/authenticated data. Those responses must remain fresh.
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/auth/")) return;
 
-  // Cache static assets and fall back to the app shell when offline.
+  // Navigations must prefer the network so an old HTML document never keeps
+  // referencing an obsolete JavaScript bundle after a deployment.
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request).then((cached) => cached || Response.error())),
+    );
+    return;
+  }
+
+  // Cache versioned static assets for offline use.
   const destination = event.request.destination;
   const cacheable = destination === "script" || destination === "style" || destination === "image" || destination === "font" || destination === "manifest";
-  if (!cacheable && event.request.mode !== "navigate") return;
+  if (!cacheable) return;
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
@@ -39,7 +48,7 @@ self.addEventListener("fetch", (event) => {
           }
           return response;
         })
-        .catch(() => cached || caches.match("/"));
+        .catch(() => cached || Response.error());
 
       return cached || network;
     }),
