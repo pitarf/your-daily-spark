@@ -91,7 +91,7 @@ export function ProfessionalWorkspace() {
 
   if (!query.data.professional) {
     return (
-      <section className="mx-auto max-w-xl rounded-2xl border border-dashed border-border bg-card p-8 text-center">
+      <section className="mx-auto max-w-xl rounded-2xl border border-dashed border-border/30 bg-card/90 p-8 text-center backdrop-blur-sm shadow-lg">
         <h1 className="text-xl font-bold text-foreground">
           Acesso profissional ainda não está vinculado
         </h1>

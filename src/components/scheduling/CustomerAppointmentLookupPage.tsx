@@ -50,7 +50,7 @@ export function CustomerAppointmentLookupPage({
             <input required type="date" value={date} min={todayInTimezone(timezone)} onChange={(event) => setDate(event.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-2" />
           </label>
 
-          {error ? <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">{error}</p> : null}
+          {error ? <p className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive shadow-sm" role="alert">{error}</p> : null}
 
           <button type="submit" disabled={search.isPending} className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60">
             {search.isPending ? "Consultando…" : "Consultar agendamento"}
