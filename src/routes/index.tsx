@@ -40,7 +40,7 @@ function Index() {
 
   return (
     <main className="min-h-screen overflow-hidden bg-gradient-to-br from-background/90 to-background/70 text-foreground backdrop-blur-sm">
-      <section className="mx-auto max-w-6xl px-5 pb-16 pt-8 sm:px-8 sm:pb-24 sm:pt-10 shadow-lg rounded-2xl bg-background/80 backdrop-blur-sm">
+      <section className="mx-auto max-w-6xl px-5 pb-16 pt-8 sm:px-8 sm:pb-24 sm:pt-10 shadow-xl rounded-3xl bg-background/90 backdrop-blur-xl">
         <nav className="flex items-center justify-between gap-4" aria-label="Navegação principal">
           <Link to="/" className="text-sm font-bold tracking-tight sm:text-base">
             Marca Minha Vez
@@ -68,7 +68,7 @@ function Index() {
           <span className="inline-flex rounded-full border border-border bg-background/80 px-3 py-1 text-xs font-medium text-muted-foreground shadow-sm">
             Agendamento online para negócios de serviços
           </span>
-          <h1 className="mt-6 text-4xl font-black tracking-tight sm:text-6xl text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/70">
+          <h1 className="mt-6 text-4xl font-black tracking-tight sm:text-6xl text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/80">
             Sua agenda organizada.
             <span className="block text-primary">Seu cliente marca a vez.</span>
           </h1>
@@ -79,7 +79,7 @@ function Index() {
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <Link
               to="/schedule"
-              className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition-transform hover:-translate-y-0.5"
+              className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg transition-all hover:-translate-y-1 hover:shadow-xl"
             >
               Ver agenda de demonstração
             </Link>
